@@ -78,14 +78,13 @@ def main(folding_id, inliner_classes, total_classes, folds=5, bdd100k=False, cfg
         if cfg is not None:
             print(cfg.img_folder)
             channels = cfg.channels
-            train_imgs, valid_imgs, _ , _ = loadbdd100k.load_bdd100k_data_filename_list(cfg.img_folder, cfg.norm_filenames, cfg.out_filenames, cfg.n_train, cfg.n_val, cfg.n_test, cfg.out_frac, cfg.image_height, cfg.image_width, cfg.channels, shuffle=cfg.shuffle)
+            mnist_train_x, valid_imgs, _ , _ = loadbdd100k.load_bdd100k_data_filename_list(cfg.img_folder, cfg.norm_filenames, cfg.out_filenames, cfg.n_train, cfg.n_val, cfg.n_test, cfg.out_frac, cfg.image_height, cfg.image_width, cfg.channels, shuffle=cfg.shuffle)
         else:
             print("No configuration provided for BDD100K, using standard configuration")
             channels = 3
-            # TODO: ADD STANDARD CONFIG (HARD CODED)
+            # TODO: ADD STANDARD CONFIG (HARD CODED) 
 
-        for img in train_imgs:
-            mnist_train.append((0,img))
+        mnist_train_y = np.zeros((len(mnist_train_x),),dtype=np.int)
 
         for img in valid_imgs:
             mnist_valid.append((0,img))
@@ -106,30 +105,18 @@ def main(folding_id, inliner_classes, total_classes, folds=5, bdd100k=False, cfg
         for i in range(total_classes):
             if i not in inliner_classes:
                 outlier_classes.append(i)
-    
-    # TESTING SHAPE OF DATA
-#    print("train data is of type:")
-#    print(type(mnist_train))
-#    print("train_data item is of type")
-#    print(type(mnist_train[0]))
-#    print("In each train item, first element is")
-#    print(type(mnist_train[0][0]))
-#    print(mnist_train[0][0])
-#    print("In each train item, second element is")
-#    print(type(mnist_train[0][1]))
-#    print(mnist_train[0][1])
-#    print("With max value %f" % np.max(mnist_train[0][1]))
-    #keep only train classes
-    mnist_train = [x for x in mnist_train if x[0] in inliner_classes]
 
-    random.shuffle(mnist_train)
+        #keep only train classes
+        mnist_train = [x for x in mnist_train if x[0] in inliner_classes]
 
-    def list_of_pairs_to_numpy(l):
-        return np.asarray([x[1] for x in l], np.float32), np.asarray([x[0] for x in l], np.int)
+        random.shuffle(mnist_train)
 
-    print("Train set size:", len(mnist_train))
+        def list_of_pairs_to_numpy(l):
+            return np.asarray([x[1] for x in l], np.float32), np.asarray([x[0] for x in l], np.int)
 
-    mnist_train_x, mnist_train_y = list_of_pairs_to_numpy(mnist_train)
+        print("Train set size:", len(mnist_train))
+
+        mnist_train_x, mnist_train_y = list_of_pairs_to_numpy(mnist_train)
 
     G = Generator(zsize, channels = channels)
     setup(G)

@@ -1,9 +1,15 @@
+from utils import loadbdd100k
+from pathlib import Path
+
 class Configuration(object):
 
 # put config variable definitions here
-    img_folder = "/data/bdd100k/images/192by320"
-    norm_filenames = "/data/bdd100k/namelists/clear_or_partly_cloudy_or_overcast_and_highway_and_daytime.txt"
-    out_filenames = "/data/bdd100k/namelists/rainy_or_snowy_or_foggy_and_highway_and_daytime_or_dawndusk_or_night.txt"
+    img_folder = Path("/data/bdd100k/images/192by320")
+    norm_file = "/data/bdd100k/namelists/clear_or_partly_cloudy_or_overcast_and_highway_and_daytime.txt"
+    norm_filenames = loadbdd100k.get_namelist_from_file(norm_file)
+
+    out_file = "/data/bdd100k/namelists/rainy_or_snowy_or_foggy_and_highway_and_daytime_or_dawndusk_or_night.txt"
+    out_filenames = loadbdd100k.get_namelist_from_file(out_file)
     norm_spec = [["weather", ["clear","partly cloudy", "overcast"]],["scene", "highway"],["timeofday", "daytime"]]
     out_spec = [["weather", ["rainy", "snowy", "foggy"]],["scene", "highway"],["timeofday",["daytime","dawn/dusk","night"]]]
     n_train = 5000

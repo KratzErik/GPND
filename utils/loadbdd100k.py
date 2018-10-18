@@ -243,5 +243,5 @@ def get_namelist_from_file(files):
         for _file in files:
             _list.append([line.rstrip('\n') for line in open(_file,'r')] )
     else:
-        _list = [line.rstrip('\n') for line in open(_file,'r')]
+        _list = [line.rstrip('\n') for line in open(files,'r')]
     return _list
