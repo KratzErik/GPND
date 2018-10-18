@@ -27,6 +27,7 @@ import pickle
 import time
 import random
 import os
+import loadbdd100k
 
 use_cuda = torch.cuda.is_available()
 
@@ -64,26 +65,60 @@ def extract_batch(data, it, batch_size):
     return Variable(x)
 
 
-def main(folding_id, inliner_classes, total_classes, folds=5):
+def main(folding_id, inliner_classes, total_classes, folds=5, bdd100k=False, bdd100k_config = None):
     batch_size = 128
-    zsize = 32
     mnist_train = []
     mnist_valid = []
 
-    for i in range(folds):
-        if i != folding_id:
-            with open('data_fold_%d.pkl' % i, 'rb') as pkl:
-                fold = pickle.load(pkl, encoding='latin1')
-            if len(mnist_valid) == 0:
-                mnist_valid = fold
-            else:
-                mnist_train += fold
+    if bdd100k:
+        zsize = 32
+        inliner_classes = 0
+        outlier_classes = 1
 
-    outlier_classes = []
-    for i in range(total_classes):
-        if i not in inliner_classes:
-            outlier_classes.append(i)
+        if bdd100k_config is not None:
+            with bdd100k_config as cfg:
+                channels = cfg.channels
+                train_imgs, valid_imgs, _ , _ = loadbdd100k.load_bdd100k_data_filename_list(cfg.img_folder, cfg.norm_filenames, cfg.out_filenames, cfg.n_train, cfg.n_val, cfg.n_test, cfg.out_frac, cfg.image_height, cfg.image_width, cfg.channels, shuffle=cfg.shuffle)
+        else:
+            print("No configuration provided for BDD100K, using standard configuration")
+            channels = 3
+            # TODO: ADD STANDARD CONFIG (HARD CODED)
 
+        for img in train_imgs:
+            mnist_train.append((0,img))
+
+        for img in valid_imgs:
+            mnist_valid.append((0,img))
+
+    else:
+        zsize = 32
+        channels = 1
+        for i in range(folds):
+            if i != folding_id:
+                with open('data_fold_%d.pkl' % i, 'rb') as pkl:
+                    fold = pickle.load(pkl, encoding='latin1')
+                if len(mnist_valid) == 0:
+                    mnist_valid = fold
+                else:
+                    mnist_train += fold
+
+        outlier_classes = []
+        for i in range(total_classes):
+            if i not in inliner_classes:
+                outlier_classes.append(i)
+    
+    # TESTING SHAPE OF DATA
+    print("train data is of type:")
+    print(type(mnist_train))
+    print("train_data item is of type")
+    print(type(mnist_train[0]))
+    print("In each train item, first element is")
+    print(type(mnist_train[0][0]))
+    print(mnist_train[0][0])
+    print("In each train item, second element is")
+    print(type(mnist_train[0][1]))
+    print(mnist_train[0][1])
+    print("With max value %f" % np.max(mnist_train[0][1]))
     #keep only train classes
     mnist_train = [x for x in mnist_train if x[0] in inliner_classes]
 
@@ -96,15 +131,15 @@ def main(folding_id, inliner_classes, total_classes, folds=5):
 
     mnist_train_x, mnist_train_y = list_of_pairs_to_numpy(mnist_train)
 
-    G = Generator(zsize)
+    G = Generator(zsize, channels = channels)
     setup(G)
     G.weight_init(mean=0, std=0.02)
 
-    D = Discriminator()
+    D = Discriminator(channels = channels)
     setup(D)
     D.weight_init(mean=0, std=0.02)
 
-    E = Encoder(zsize)
+    E = Encoder(channels = channels)
     setup(E)
     E.weight_init(mean=0, std=0.02)
 
