@@ -236,4 +236,12 @@ def save_file_list(attribute_spec, file_list):
     with open(list_name+'.txt', 'w') as f:
         for item in file_list:
             f.write("%s\n" % item)
-  
+    
+def get_namelist_from_file(files):
+    if isinstance(files,list):
+        _list = []
+        for _file in files:
+            _list.append([line.rstrip('\n') for line in open(_file,'r')] )
+    else:
+        _list = [line.rstrip('\n') for line in open(_file,'r')]
+    return _list
