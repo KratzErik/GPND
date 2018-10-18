@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # Copyright 2018 Stanislav Pidhorskyi
 # 
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,6 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ==============================================================================
+# 
 from __future__ import print_function
 import torch.utils.data
 from torch import optim
@@ -71,7 +73,7 @@ def main(folding_id, inliner_classes, total_classes, folds=5):
     for i in range(folds):
         if i != folding_id:
             with open('data_fold_%d.pkl' % i, 'rb') as pkl:
-                fold = pickle.load(pkl)
+                fold = pickle.load(pkl, encoding='latin1')
             if len(mnist_valid) == 0:
                 mnist_valid = fold
             else:

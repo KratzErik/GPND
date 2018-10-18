@@ -134,14 +134,14 @@ def main(folding_id, inliner_classes, total_classes, folds=5):
     for i in range(folds):
         if i != folding_id:
             with open('data_fold_%d.pkl' % i, 'rb') as pkl:
-                fold = pickle.load(pkl)
+                fold = pickle.load(pkl, encoding='latin1')
             if len(mnist_valid) == 0:
                 mnist_valid = fold
             else:
                 mnist_train += fold
 
     with open('data_fold_%d.pkl' % folding_id, 'rb') as pkl:
-        mnist_test = pickle.load(pkl)
+        mnist_test = pickle.load(pkl, encoding='latin1')
 
     #keep only train classes
     mnist_train = [x for x in mnist_train if x[0] in inliner_classes]
