@@ -279,4 +279,3 @@ def main(folding_id, inliner_classes, total_classes, folds=5):
 
 if __name__ == '__main__':
     main(0, [0], 10)
-

@@ -236,4 +236,3 @@ def save_file_list(attribute_spec, file_list):
     with open(list_name+'.txt', 'w') as f:
         for item in file_list:
             f.write("%s\n" % item)
-    
