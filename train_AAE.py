@@ -1,3 +1,4 @@
+
 # -*- coding: utf-8 -*-
 # Copyright 2018 Stanislav Pidhorskyi
 # 
@@ -89,10 +90,15 @@ def main(folding_id, inliner_classes, total_classes, folds=5, bdd100k=False, cfg
             image_width = 320
             # TODO: ADD STANDARD CONFIG (HARD CODED)
 
-        print("Transposing data to 'channels first'"
+        print("Transposing data to 'channels first'")
         mnist_train_x = np.moveaxis(mnist_train_x,-1,1)
         valid_imgs = np.moveaxis(valid_imgs,-1,1)
-
+	
+        print("Converting data from uint8 [0,255] to float32 [0,1]")
+        mnist_train_x = np.float32(mnist_train_x / 255.0)
+        valid_imgs = np.float32(valid_imgs / 255.0)
+        
+        # Labels for training data
         mnist_train_y = np.zeros((len(mnist_train_x),),dtype=np.int)
 
         for img in valid_imgs:
@@ -125,10 +131,11 @@ def main(folding_id, inliner_classes, total_classes, folds=5, bdd100k=False, cfg
         def list_of_pairs_to_numpy(l):
             return np.asarray([x[1] for x in l], np.float32), np.asarray([x[0] for x in l], np.int)
 
-        print("Train set size:", len(mnist_train))
-
         mnist_train_x, mnist_train_y = list_of_pairs_to_numpy(mnist_train)
 
+    print("Train set size:", len(mnist_train_x))
+    print("Data type:", mnist_train_x.dtype)
+    print("Max pixel value:", np.amax(mnist_train_x))
     G = Generator(zsize, channels = channels)
     setup(G)
     G.weight_init(mean=0, std=0.02)
@@ -197,8 +204,10 @@ def main(folding_id, inliner_classes, total_classes, folds=5, bdd100k=False, cfg
 
         for it in range(len(mnist_train_x) // batch_size):
             x = extract_batch(mnist_train_x, it, batch_size).view(-1, channels, image_height, image_width)
-            print("Shape of batch:")
-            print(x.shape)
+           # print("Batch type:")
+           # print(type(x))
+           # print("Shape of batch:")
+           # print(x.shape)
             #############################################
 
             D.zero_grad() 
@@ -210,6 +219,7 @@ def main(folding_id, inliner_classes, total_classes, folds=5, bdd100k=False, cfg
             z = Variable(z)
 
             x_fake = G(z).detach()
+            print("Shape of x_fake:",x_fake.shape)
             D_result = D(x_fake).squeeze()
             D_fake_loss = BCE_loss(D_result, y_fake_)
 

@@ -108,9 +108,13 @@ class Discriminator(nn.Module):
     # forward method
     def forward(self, input):
         x = F.leaky_relu(self.conv1_1(input), 0.2)
+        print(x.shape)
         x = F.leaky_relu(self.conv2_bn(self.conv2(x)), 0.2)
+        print(x.shape)
         x = F.leaky_relu(self.conv3_bn(self.conv3(x)), 0.2)
+        print(x.shape)
         x = F.sigmoid(self.conv4(x))
+        print(x.shape)
         return x
 
 
@@ -133,9 +137,13 @@ class Encoder(nn.Module):
     # forward method
     def forward(self, input):
         x = F.leaky_relu(self.conv1_1(input), 0.2)
+        print(x.shape)
         x = F.leaky_relu(self.conv2_bn(self.conv2(x)), 0.2)
+        print(x.shape)
         x = F.leaky_relu(self.conv3_bn(self.conv3(x)), 0.2)
+        print(x.shape)
         x = self.conv4(x)
+        print(x.shape)
         return x
 
 
