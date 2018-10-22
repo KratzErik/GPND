@@ -110,7 +110,7 @@ def GetF1(true_positive, false_positive, false_negative):
     return 2.0 * precision * recall / (precision + recall)
 
 
-def main(folding_id, inliner_classes, total_classes, folds=5):
+def main(folding_id, inliner_classes, total_classes, folds=5, bdd100k = False, cfg = None):
     batch_size = 64
     mnist_train = []
     mnist_valid = []
@@ -126,38 +126,76 @@ def main(folding_id, inliner_classes, total_classes, folds=5):
             shuffled_b[new_index] = b[old_index]
         return shuffled_a, shuffled_b
 
-    outlier_classes = []
-    for i in range(total_classes):
-        if i not in inliner_classes:
-            outlier_classes.append(i)
+    if bdd100k:
+        inliner_classes = [0]
+        outlier_classes = [1]
 
-    for i in range(folds):
-        if i != folding_id:
-            with open('data_fold_%d.pkl' % i, 'rb') as pkl:
-                fold = pickle.load(pkl)
-            if len(mnist_valid) == 0:
-                mnist_valid = fold
-            else:
-                mnist_train += fold
+        if cfg is not None:
+            print("Data path: " + str(cfg.img_folder))
+            channels = cfg.channels
+            image_height = cfg.image_height
+            image_width = cfg.image_width
+            mnist_train_x, valid_imgs, mnist_test , test_labels = loadbdd100k.load_bdd100k_data_filename_list(cfg.img_folder, cfg.norm_filenames, cfg.out_filenames, cfg.n_train, cfg.n_val, cfg.n_test, cfg.out_frac, image_height, image_width, channels, shuffle=cfg.shuffle)
+            architecture = cfg.architecture
+        else:
+            print("No configuration provided for BDD100K, using standard configuration")
+            channels = 3
+            image_height = 192
+            image_width = 320
+            architecture = "b1"
+            # TODO: ADD STANDARD CONFIG (HARD CODED)
 
-    with open('data_fold_%d.pkl' % folding_id, 'rb') as pkl:
-        mnist_test = pickle.load(pkl)
+        print("Transposing data to 'channels first'")
+        mnist_train_x = np.moveaxis(mnist_train_x,-1,1)
+        valid_imgs = np.moveaxis(valid_imgs,-1,1)
+	
+        print("Converting data from uint8 to float32")
+        mnist_train_x = np.float32(mnist_train_x)
+        valid_imgs = np.float32(valid_imgs)
+        
+        # Labels for training data
+        mnist_train_y = np.zeros((len(mnist_train_x),),dtype=np.int)
 
-    #keep only train classes
-    mnist_train = [x for x in mnist_train if x[0] in inliner_classes]
+        for img in valid_imgs:
+            mnist_valid.append((0,img))
+    else:
+        outlier_classes = []
+        architecture = None
+        for i in range(total_classes):
+            if i not in inliner_classes:
+                outlier_classes.append(i)
 
-    random.seed(0)
-    random.shuffle(mnist_train)
+        for i in range(folds):
+            if i != folding_id:
+                with open('data_fold_%d.pkl' % i, 'rb') as pkl:
+                    fold = pickle.load(pkl, encoding='latin1')
+                if len(mnist_valid) == 0:
+                    mnist_valid = fold
+                else:
+                    mnist_train += fold
 
-    def list_of_pairs_to_numpy(l):
-        return np.asarray([x[1] for x in l], np.float32), np.asarray([x[0] for x in l], np.int)
+        with open('data_fold_%d.pkl' % folding_id, 'rb') as pkl:
+            mnist_test = pickle.load(pkl, encoding='latin1')
 
-    print("Train set size:", len(mnist_train))
+        #keep only train classes
+        mnist_train = [x for x in mnist_train if x[0] in inliner_classes]
 
-    mnist_train_x, mnist_train_y = list_of_pairs_to_numpy(mnist_train)
+        random.seed(0)
+        random.shuffle(mnist_train)
 
-    G = Generator(z_size).to(device)
-    E = Encoder(z_size).to(device)
+        def list_of_pairs_to_numpy(l):
+            return np.asarray([x[1] for x in l], np.float32), np.asarray([x[0] for x in l], np.int)
+
+        mnist_train_x, mnist_train_y = list_of_pairs_to_numpy(mnist_train)
+    
+    
+
+
+
+    print("Train set size:", len(mnist_train_x))
+
+    G = Generator(z_size, channels = channels, architecture = architecture).to(device)
+    E = Encoder(z_size, channels = channels, architecture = architecture).to(device)
     setup(E)
     setup(G)
     G.eval()
