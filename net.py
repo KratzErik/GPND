@@ -25,19 +25,34 @@ class VAE(nn.Module):
             self.conv3_bn = nn.BatchNorm2d(d * 4)
             self.conv4_1 = nn.Conv2d(d * 4, zsize, 4, 1, 0)
             self.conv4_2 = nn.Conv2d(d * 4, zsize, 4, 1, 0)
-
-        elif architecture == "bdd100k_1"
-            d = 128
-            self.zsize = zsize
             
+            self.conv4 = nn.Conv2d(d * 4, d * 4, 4, 2, 1)
+            self.conv4_bn = nn.BatchNorm2d(d * 4)
+            self.conv5 = nn.Conv2d(d * 4, d * 8, 4, 2, 1)
+            self.conv5_bn = nn.BatchNorm2d(d * 8)
+            self.conv6_1 = nn.Conv2d(d * 8, d * 8, 4, 1, 0)
+            self.conv6_2 = nn.Conv2d(d * 8, d * 8, 4, 1, 0)
+            
+            self.architecture = architecture
 
     def encode(self, x):
-        x = F.relu(self.conv1(x), 0.2)
-        x = F.relu(self.conv2_bn(self.conv2(x)), 0.2)
-        x = F.relu(self.conv3_bn(self.conv3(x)), 0.2)
-        h1 = self.conv4_1(x)
-        h2 = self.conv4_2(x)
-        return h1, h2
+        if self.architecture is None:
+            x = F.relu(self.conv1(x), 0.2)
+            x = F.relu(self.conv2_bn(self.conv2(x)), 0.2)
+            x = F.relu(self.conv3_bn(self.conv3(x)), 0.2)
+            h1 = self.conv4_1(x)
+            h2 = self.conv4_2(x)
+            return h1, h2
+        
+        elif self.architecture == "b1":
+            x = F.relu(self.conv1(x), 0.2)
+            x = F.relu(self.conv2_bn(self.conv2(x)), 0.2)
+            x = F.relu(self.conv3_bn(self.conv3(x)), 0.2)
+            x = F.relu(self.conv4_bn(self.conv4(x)), 0.2)
+            x = F.relu(self.conv5_bn(self.conv5(x)), 0.2)
+            h1 = self.conv4_1(x)
+            h2 = self.conv4_2(x)
+            return h1, h2
 
     def reparameterize(self, mu, logvar):
         if self.training:
@@ -113,6 +128,7 @@ class Discriminator(nn.Module):
 
     # forward method
     def forward(self, input):
+        print(input.shape)
         x = F.leaky_relu(self.conv1_1(input), 0.2)
         print(x.shape)
         x = F.leaky_relu(self.conv2_bn(self.conv2(x)), 0.2)
