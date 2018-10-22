@@ -97,7 +97,7 @@ class Discriminator(nn.Module):
         self.conv2 = nn.Conv2d(d // 2, d*2, 4, 2, 1)
         self.conv2_bn = nn.BatchNorm2d(d*2)
         self.conv3 = nn.Conv2d(d*2, d*4, 4, 2, 1)
-        self.conv3_bn = nn.BatchNorm2d(d*4)
+        self.conv3_bn = nn.BatchNorm2d(d*4  )
         self.conv4 = nn.Conv2d(d * 4, 1, 4, 1, 0)
 
     # weight_init

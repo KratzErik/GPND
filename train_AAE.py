@@ -66,7 +66,7 @@ def extract_batch(data, it, batch_size):
 None
 
 def main(folding_id, inliner_classes, total_classes, folds=5, bdd100k=False, cfg = None):
-    batch_size = 8
+    batch_size = 64
     mnist_train = []
     mnist_valid = []
 
@@ -78,11 +78,20 @@ def main(folding_id, inliner_classes, total_classes, folds=5, bdd100k=False, cfg
         if cfg is not None:
             print("Data path: " + str(cfg.img_folder))
             channels = cfg.channels
-            mnist_train_x, valid_imgs, _ , _ = loadbdd100k.load_bdd100k_data_filename_list(cfg.img_folder, cfg.norm_filenames, cfg.out_filenames, cfg.n_train, cfg.n_val, cfg.n_test, cfg.out_frac, cfg.image_height, cfg.image_width, cfg.channels, shuffle=cfg.shuffle)
+            image_height = cfg.image_height
+            image_width = cfg.image_width
+            mnist_train_x, valid_imgs, _ , _ = loadbdd100k.load_bdd100k_data_filename_list(cfg.img_folder, cfg.norm_filenames, cfg.out_filenames, cfg.n_train, cfg.n_val, cfg.n_test, cfg.out_frac, image_height, image_width, channels, shuffle=cfg.shuffle)
+            
         else:
             print("No configuration provided for BDD100K, using standard configuration")
             channels = 3
-            # TODO: ADD STANDARD CONFIG (HARD CODED) 
+            image_height = 192
+            image_width = 320
+            # TODO: ADD STANDARD CONFIG (HARD CODED)
+
+        print("Transposing data to 'channels first'"
+        mnist_train_x = np.moveaxis(mnist_train_x,-1,1)
+        valid_imgs = np.moveaxis(valid_imgs,-1,1)
 
         mnist_train_y = np.zeros((len(mnist_train_x),),dtype=np.int)
 
@@ -92,6 +101,8 @@ def main(folding_id, inliner_classes, total_classes, folds=5, bdd100k=False, cfg
     else:
         zsize = 32
         channels = 1
+        image_height = 32
+        image_width = 32
         for i in range(folds):
             if i != folding_id:
                 with open('data_fold_%d.pkl' % i, 'rb') as pkl:
@@ -185,14 +196,14 @@ def main(folding_id, inliner_classes, total_classes, folds=5, bdd100k=False, cfg
             print("learning rate change!")
 
         for it in range(len(mnist_train_x) // batch_size):
-            x = extract_batch(mnist_train_x, it, batch_size).view(-1, 1, 32, 32)
+            x = extract_batch(mnist_train_x, it, batch_size).view(-1, channels, image_height, image_width)
             print("Shape of batch:")
             print(x.shape)
             #############################################
 
-            D.zero_grad()
+            D.zero_grad() 
 
-            D_result = D(x).squeeze()
+            D_result = D(x).squeeze() # removes all dimensions with size 1
             D_real_loss = BCE_loss(D_result, y_real_)
 
             z = torch.randn((batch_size, zsize)).view(-1, zsize, 1, 1)
