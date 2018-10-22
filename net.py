@@ -5,35 +5,52 @@ from torch.nn import functional as F
 
 
 class VAE(nn.Module):
-    def __init__(self, zsize, architecture = None):
+    def __init__(self, zsize, channels = 1, architecture = None):
         super(VAE, self).__init__()
-        if architecture is None:
-            d = 128
-            self.zsize = zsize
-            self.deconv1 = nn.ConvTranspose2d(zsize, d * 2, 4, 1, 0)
-            self.deconv1_bn = nn.BatchNorm2d(d * 2)
-            self.deconv2 = nn.ConvTranspose2d(d * 2, d * 2, 4, 2, 1)
-            self.deconv2_bn = nn.BatchNorm2d(d * 2)
-            self.deconv3 = nn.ConvTranspose2d(d * 2, d, 4, 2, 1)
-            self.deconv3_bn = nn.BatchNorm2d(d)
-            self.deconv4 = nn.ConvTranspose2d(d, 1, 4, 2, 1)
+        d = 128
+        self.zsize = zsize
+        self.deconv1 = nn.ConvTranspose2d(zsize, d * 2, 4, 1, 0)
+        self.deconv1_bn = nn.BatchNorm2d(d * 2)
+        self.deconv2 = nn.ConvTranspose2d(d * 2, d * 2, 4, 2, 1)
+        self.deconv2_bn = nn.BatchNorm2d(d * 2)
+        self.deconv3 = nn.ConvTranspose2d(d * 2, d, 4, 2, 1)
+        self.deconv3_bn = nn.BatchNorm2d(d)
+        self.deconv4 = nn.ConvTranspose2d(d, 1, 4, 2, 1)
+        self.deconv4 = nn.ConvTranspose2d
+        
+        self.b_deconv1_1 = nn.ConvTranspose2d(z_size, d*2, 4, 1, 0)
+        self.b_deconv1_1_bn = nn.BatchNorm2d(d*2)
+        self.b_deconv2 = nn.ConvTranspose2d(d*2, d*2, 4, 2, 1)
+        self.b_deconv2_bn = nn.BatchNorm2d(d*2)
+        self.b_deconv3 = nn.ConvTranspose2d(d*2, d*2, 4, 2, 1)
+        self.b_deconv3_bn = nn.BatchNorm2d(d*2)
+        self.b_deconv4 = nn.ConvTranspose2d(d*2, d*2, 4, 2, 1)
+        self.b_deconv4_bn = nn.BatchNorm2d(d*2)
+        self.b_deconv5 = nn.ConvTranspose2d(d*2, d, 4, 2, 1)
+        self.b_deconv5_bn = nn.BatchNorm2d(d)
+        self.b_deconv6 = nn.ConvTranspose2d(d, channels, 4, (3,5), (1,0), output_padding=(1,1))
 
-            self.conv1 = nn.Conv2d(1, d // 2, 4, 2, 1)
-            self.conv2 = nn.Conv2d(d // 2, d * 2, 4, 2, 1)
-            self.conv2_bn = nn.BatchNorm2d(d * 2)
-            self.conv3 = nn.Conv2d(d * 2, d * 4, 4, 2, 1)
-            self.conv3_bn = nn.BatchNorm2d(d * 4)
-            self.conv4_1 = nn.Conv2d(d * 4, zsize, 4, 1, 0)
-            self.conv4_2 = nn.Conv2d(d * 4, zsize, 4, 1, 0)
-            
-            self.conv4 = nn.Conv2d(d * 4, d * 4, 4, 2, 1)
-            self.conv4_bn = nn.BatchNorm2d(d * 4)
-            self.conv5 = nn.Conv2d(d * 4, d * 8, 4, 2, 1)
-            self.conv5_bn = nn.BatchNorm2d(d * 8)
-            self.conv6_1 = nn.Conv2d(d * 8, d * 8, 4, 1, 0)
-            self.conv6_2 = nn.Conv2d(d * 8, d * 8, 4, 1, 0)
-            
-            self.architecture = architecture
+        self.conv1 = nn.Conv2d(channels, d // 2, 4, 2, 1)
+        self.conv2 = nn.Conv2d(d // 2, d * 2, 4, 2, 1)
+        self.conv2_bn = nn.BatchNorm2d(d * 2)
+        self.conv3 = nn.Conv2d(d * 2, d * 4, 4, 2, 1)
+        self.conv3_bn = nn.BatchNorm2d(d * 4)
+        self.conv4_1 = nn.Conv2d(d * 4, zsize, 4, 1, 0)
+        self.conv4_2 = nn.Conv2d(d * 4, zsize, 4, 1, 0)
+        
+        self.b_conv1_1 = nn.Conv2d(channels, d//2, 4, (3,5), 1)
+        self.b_conv2 = nn.Conv2d(d // 2, d, 4, 2, 1)
+        self.b_conv2_bn = nn.BatchNorm2d(d)
+        self.b_conv3 = nn.Conv2d(d, d*2, 4, 2, 1)
+        self.b_conv3_bn = nn.BatchNorm2d(d*2)
+        self.b_conv4 = nn.Conv2d(d*2, d*4, 4, 2, 1)
+        self.b_conv4_bn = nn.BatchNorm2d(d*4)
+        self.b_conv5 = nn.Conv2d(d*4, d*8, 4, 2, 1)
+        self.b_conv5_bn = nn.BatchNorm2d(d*8)
+        self.b_conv6_1 = nn.Conv2d(d*8, z_size, 4, 1, 0)
+        self.b_conv6_2 = nn.Conv2d(d*8, z_size, 4, 1, 0)
+         
+        self.architecture = architecture
 
     def encode(self, x):
         if self.architecture is None:
@@ -46,12 +63,12 @@ class VAE(nn.Module):
         
         elif self.architecture == "b1":
             x = F.relu(self.conv1(x), 0.2)
-            x = F.relu(self.conv2_bn(self.conv2(x)), 0.2)
-            x = F.relu(self.conv3_bn(self.conv3(x)), 0.2)
-            x = F.relu(self.conv4_bn(self.conv4(x)), 0.2)
-            x = F.relu(self.conv5_bn(self.conv5(x)), 0.2)
-            h1 = self.conv4_1(x)
-            h2 = self.conv4_2(x)
+            x = F.relu(self.b_conv2_bn(self.conv2(x)), 0.2)
+            x = F.relu(self.b_conv3_bn(self.conv3(x)), 0.2)
+            x = F.relu(self.b_conv4_bn(self.conv4(x)), 0.2)
+            x = F.relu(self.b_conv5_bn(self.conv5(x)), 0.2)
+            h1 = self.b_conv6_1(x)
+            h2 = self.b_conv6_2(x)
             return h1, h2
 
     def reparameterize(self, mu, logvar):
@@ -63,12 +80,22 @@ class VAE(nn.Module):
             return mu
 
     def decode(self, z):
-        x = z.view(-1, self.zsize, 1, 1)
-        x = F.relu(self.deconv1_bn(self.deconv1(x)))
-        x = F.relu(self.deconv2_bn(self.deconv2(x)))
-        x = F.relu(self.deconv3_bn(self.deconv3(x)))
-        x = F.tanh(self.deconv4(x)) * 0.5 + 0.5
-        return x
+        if self.architecture is None:
+            x = z.view(-1, self.zsize, 1, 1)
+            x = F.relu(self.deconv1_bn(self.deconv1(x)))
+            x = F.relu(self.deconv2_bn(self.deconv2(x)))
+            x = F.relu(self.deconv3_bn(self.deconv3(x)))
+            x = F.tanh(self.deconv4(x)) * 0.5 + 0.5
+            return x
+        
+        elif self.architecture == 'b1':
+            x = z.view(-1, self.zsize, 1, 1)
+            x = F.relu(self.b_deconv1_bn(self.b_deconv1(x)))
+            x = F.relu(self.b_deconv2_bn(self.b_deconv2(x)))
+            x = F.relu(self.b_deconv3_bn(self.b_deconv3(x)))
+            x = F.relu(self.b_deconv4_bn(self.b_deconv4(x)))
+            x = F.relu(self.b_deconv5_bn(self.b_deconv5(x)))
+            x = F.tanh(self.b_deconv6(x)) * 0.5 + 0.5
 
     def forward(self, x):
         mu, logvar = self.encode(x)
@@ -95,6 +122,18 @@ class Generator(nn.Module):
         self.deconv3 = nn.ConvTranspose2d(d*2, d, 4, 2, 1)
         self.deconv3_bn = nn.BatchNorm2d(d)
         self.deconv4 = nn.ConvTranspose2d(d, channels, 4, 2, 1)
+        
+        self.b_deconv1_1 = nn.ConvTranspose2d(z_size, d*2, 4, 1, 0)
+        self.b_deconv1_1_bn = nn.BatchNorm2d(d*2)
+        self.b_deconv2 = nn.ConvTranspose2d(d*2, d*2, 4, 2, 1)
+        self.b_deconv2_bn = nn.BatchNorm2d(d*2)
+        self.b_deconv3 = nn.ConvTranspose2d(d*2, d*2, 4, 2, 1)
+        self.b_deconv3_bn = nn.BatchNorm2d(d*2)
+        self.b_deconv4 = nn.ConvTranspose2d(d*2, d*2, 4, 2, 1)
+        self.b_deconv4_bn = nn.BatchNorm2d(d*2)
+        self.b_deconv5 = nn.ConvTranspose2d(d*2, d, 4, 2, 1)
+        self.b_deconv5_bn = nn.BatchNorm2d(d)
+        self.b_deconv6 = nn.ConvTranspose2d(d, channels, 4, (3,5), (1,0), output_padding=(1,1))
 
     # weight_init
     def weight_init(self, mean, std):
@@ -103,16 +142,25 @@ class Generator(nn.Module):
 
     # forward method
     def forward(self, input):#, label):
-        x = F.relu(self.deconv1_1_bn(self.deconv1_1(input)))
-        x = F.relu(self.deconv2_bn(self.deconv2(x)))
-        x = F.relu(self.deconv3_bn(self.deconv3(x)))
-        x = F.tanh(self.deconv4(x)) * 0.5 + 0.5
-        return x
+        if self.architecture is None:
+            x = F.relu(self.deconv1_1_bn(self.deconv1_1(input)))
+            x = F.relu(self.deconv2_bn(self.deconv2(x)))
+            x = F.relu(self.deconv3_bn(self.deconv3(x)))
+            x = F.tanh(self.deconv4(x)) * 0.5 + 0.5
+            return x
+        
+        elif self.architecture == 'b1':
+            x = F.relu(self.b_deconv1_1_bn(self.b_deconv1_1(input)))
+            x = F.relu(self.b_deconv2_bn(self.b_deconv2(x)))
+            x = F.relu(self.b_deconv3_bn(self.b_deconv3(x)))
+            x = F.relu(self.b_deconv4_bn(self.b_deconv4(x)))
+            x = F.relu(self.b_deconv5_bn(self.b_deconv5(x)))
+            x = F.tanh(self.b_deconv6(x)) * 0.5 + 0.5
 
 
 class Discriminator(nn.Module):
     # initializers
-    def __init__(self, d=128, channels=1):
+    def __init__(self, d=128, channels=1, architecture = None):
         super(Discriminator, self).__init__()
         self.conv1_1 = nn.Conv2d(channels, d//2, 4, 2, 1)
         self.conv2 = nn.Conv2d(d // 2, d*2, 4, 2, 1)
@@ -120,6 +168,17 @@ class Discriminator(nn.Module):
         self.conv3 = nn.Conv2d(d*2, d*4, 4, 2, 1)
         self.conv3_bn = nn.BatchNorm2d(d*4  )
         self.conv4 = nn.Conv2d(d * 4, 1, 4, 1, 0)
+        
+        self.b_conv1_1 = nn.Conv2d(channels, d//2, 4, (3,5), 1)
+        self.b_conv2 = nn.Conv2d(d // 2, d, 4, 2, 1)
+        self.b_conv2_bn = nn.BatchNorm2d(d)
+        self.b_conv3 = nn.Conv2d(d, d*2, 4, 2, 1)
+        self.b_conv3_bn = nn.BatchNorm2d(d*2)
+        self.b_conv4 = nn.Conv2d(d*2, d*4, 4, 2, 1)
+        self.b_conv4_bn = nn.BatchNorm2d(d*4)
+        self.b_conv5 = nn.Conv2d(d*4, d*8, 4, 2, 1)
+        self.b_conv5_bn = nn.BatchNorm2d(d*8)
+        self.b_conv6 = nn.Conv2d(d*8, 1, 4, 1, 0)
 
     # weight_init
     def weight_init(self, mean, std):
@@ -128,21 +187,25 @@ class Discriminator(nn.Module):
 
     # forward method
     def forward(self, input):
-        print(input.shape)
-        x = F.leaky_relu(self.conv1_1(input), 0.2)
-        print(x.shape)
-        x = F.leaky_relu(self.conv2_bn(self.conv2(x)), 0.2)
-        print(x.shape)
-        x = F.leaky_relu(self.conv3_bn(self.conv3(x)), 0.2)
-        print(x.shape)
-        x = F.sigmoid(self.conv4(x))
-        print(x.shape)
-        return x
+        if self.architecture is None:
+            x = F.leaky_relu(self.conv1_1(input), 0.2)
+            x = F.leaky_relu(self.conv2_bn(self.conv2(x)), 0.2)
+            x = F.leaky_relu(self.conv3_bn(self.conv3(x)), 0.2)
+            x = F.sigmoid(self.conv4(x))
+            return x
+        elif self.architecture == 'b1':
+            x = F.leaky_relu(self.b_conv1_1(input), 0.2)
+            x = F.leaky_relu(self.b_conv2_bn(self.b_conv2(x)), 0.2)
+            x = F.leaky_relu(self.b_conv3_bn(self.b_conv3(x)), 0.2)
+            x = F.leaky_relu(self.b_conv4_bn(self.b_conv4(x)), 0.2)
+            x = F.leaky_relu(self.b_conv5_bn(self.b_conv5(x)), 0.2)
+            x = F.sigmoid(self.conv6(x))
+            return x
 
 
 class Encoder(nn.Module):
     # initializers
-    def __init__(self, z_size, d=128, channels=1):
+    def __init__(self, z_size, d=128, channels=1, architecture = None):
         super(Encoder, self).__init__()
         self.conv1_1 = nn.Conv2d(channels, d//2, 4, 2, 1)
         self.conv2 = nn.Conv2d(d // 2, d*2, 4, 2, 1)
@@ -150,6 +213,17 @@ class Encoder(nn.Module):
         self.conv3 = nn.Conv2d(d*2, d*4, 4, 2, 1)
         self.conv3_bn = nn.BatchNorm2d(d*4)
         self.conv4 = nn.Conv2d(d * 4, z_size, 4, 1, 0)
+        
+        self.b_conv1_1 = nn.Conv2d(channels, d//2, 4, (3,5), 1)
+        self.b_conv2 = nn.Conv2d(d // 2, d, 4, 2, 1)
+        self.b_conv2_bn = nn.BatchNorm2d(d)
+        self.b_conv3 = nn.Conv2d(d, d*2, 4, 2, 1)
+        self.b_conv3_bn = nn.BatchNorm2d(d*2)
+        self.b_conv4 = nn.Conv2d(d*2, d*4, 4, 2, 1)
+        self.b_conv4_bn = nn.BatchNorm2d(d*4)
+        self.b_conv5 = nn.Conv2d(d*4, d*8, 4, 2, 1)
+        self.b_conv5_bn = nn.BatchNorm2d(d*8)
+        self.b_conv6 = nn.Conv2d(d*8, z_size, 4, 1, 0)
 
     # weight_init
     def weight_init(self, mean, std):
@@ -158,16 +232,21 @@ class Encoder(nn.Module):
 
     # forward method
     def forward(self, input):
-        x = F.leaky_relu(self.conv1_1(input), 0.2)
-        print(x.shape)
-        x = F.leaky_relu(self.conv2_bn(self.conv2(x)), 0.2)
-        print(x.shape)
-        x = F.leaky_relu(self.conv3_bn(self.conv3(x)), 0.2)
-        print(x.shape)
-        x = self.conv4(x)
-        print(x.shape)
-        return x
-
+        if self.architecture is None:
+            x = F.leaky_relu(self.conv1_1(input), 0.2)
+            x = F.leaky_relu(self.conv2_bn(self.conv2(x)), 0.2)
+            x = F.leaky_relu(self.conv3_bn(self.conv3(x)), 0.2)
+            x = self.conv4(x)
+            return x
+        
+        elif self.architecture == 'b1':
+            x = F.leaky_relu(self.b_conv1_1(input), 0.2)
+            x = F.leaky_relu(self.b_conv2_bn(self.b_conv2(x)), 0.2)
+            x = F.leaky_relu(self.b_conv3_bn(self.b_conv3(x)), 0.2)
+            x = F.leaky_relu(self.b_conv4_bn(self.b_conv4(x)), 0.2)
+            x = F.leaky_relu(self.b_conv5_bn(self.b_conv5(x)), 0.2)
+            x = F.sigmoid(self.conv6(x))
+            return x
 
 class ZDiscriminator(nn.Module):
     # initializers
