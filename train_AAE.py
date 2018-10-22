@@ -96,9 +96,9 @@ def main(folding_id, inliner_classes, total_classes, folds=5, bdd100k=False, cfg
         mnist_train_x = np.moveaxis(mnist_train_x,-1,1)
         valid_imgs = np.moveaxis(valid_imgs,-1,1)
 	
-        print("Converting data from uint8 [0,255] to float32 [0,1]")
-        mnist_train_x = np.float32(mnist_train_x / 255.0)
-        valid_imgs = np.float32(valid_imgs / 255.0)
+        print("Converting data from uint8 to float32")
+        mnist_train_x = np.float32(mnist_train_x)
+        valid_imgs = np.float32(valid_imgs)
         
         # Labels for training data
         mnist_train_y = np.zeros((len(mnist_train_x),),dtype=np.int)
