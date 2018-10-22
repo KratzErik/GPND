@@ -70,6 +70,7 @@ def main(folding_id, inliner_classes, total_classes, folds=5, bdd100k=False, cfg
     batch_size = 64
     mnist_train = []
     mnist_valid = []
+    architecture = None
 
     if bdd100k:
         zsize = 32
@@ -82,12 +83,13 @@ def main(folding_id, inliner_classes, total_classes, folds=5, bdd100k=False, cfg
             image_height = cfg.image_height
             image_width = cfg.image_width
             mnist_train_x, valid_imgs, _ , _ = loadbdd100k.load_bdd100k_data_filename_list(cfg.img_folder, cfg.norm_filenames, cfg.out_filenames, cfg.n_train, cfg.n_val, cfg.n_test, cfg.out_frac, image_height, image_width, channels, shuffle=cfg.shuffle)
-            
+            architecture = cfg.architecture
         else:
             print("No configuration provided for BDD100K, using standard configuration")
             channels = 3
             image_height = 192
             image_width = 320
+            architecture = "b1"
             # TODO: ADD STANDARD CONFIG (HARD CODED)
 
         print("Transposing data to 'channels first'")
@@ -136,15 +138,15 @@ def main(folding_id, inliner_classes, total_classes, folds=5, bdd100k=False, cfg
     print("Train set size:", len(mnist_train_x))
     print("Data type:", mnist_train_x.dtype)
     print("Max pixel value:", np.amax(mnist_train_x))
-    G = Generator(zsize, channels = channels)
+    G = Generator(zsize, channels = channels, architecture = architecture)
     setup(G)
     G.weight_init(mean=0, std=0.02)
 
-    D = Discriminator(channels = channels)
+    D = Discriminator(channels = channels, architecture = architecture)
     setup(D)
     D.weight_init(mean=0, std=0.02)
 
-    E = Encoder(zsize, channels = channels)
+    E = Encoder(zsize, channels = channels, architecture = architecture)
     setup(E)
     E.weight_init(mean=0, std=0.02)
 

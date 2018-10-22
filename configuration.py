@@ -22,5 +22,5 @@ class Configuration(object):
     labels_file = None
     get_norm_and_out_sets = False
     shuffle=False
-
+    architecture = "b1"
 

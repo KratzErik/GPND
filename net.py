@@ -111,7 +111,7 @@ class VAE(nn.Module):
 
 class Generator(nn.Module):
     # initializers
-    def __init__(self, z_size, d=128, channels=1):
+    def __init__(self, z_size, d=128, channels=1, architecture = None):
         super(Generator, self).__init__()
         self.deconv1_1 = nn.ConvTranspose2d(z_size, d*2, 4, 1, 0)
         self.deconv1_1_bn = nn.BatchNorm2d(d*2)
@@ -135,6 +135,7 @@ class Generator(nn.Module):
         self.b_deconv5_bn = nn.BatchNorm2d(d)
         self.b_deconv6 = nn.ConvTranspose2d(d, channels, 4, (3,5), (1,0), output_padding=(1,1))
 
+        self.architecture = architecture
     # weight_init
     def weight_init(self, mean, std):
         for m in self._modules:
