@@ -63,10 +63,10 @@ def extract_batch(data, it, batch_size):
     x = numpy2torch(data[it * batch_size:(it + 1) * batch_size, :, :]) / 255.0
     #x.sub_(0.5).div_(0.5)
     return Variable(x)
-
+None
 
 def main(folding_id, inliner_classes, total_classes, folds=5, bdd100k=False, cfg = None):
-    batch_size = 128
+    batch_size = 8
     mnist_train = []
     mnist_valid = []
 
@@ -76,7 +76,7 @@ def main(folding_id, inliner_classes, total_classes, folds=5, bdd100k=False, cfg
         outlier_classes = 1
 
         if cfg is not None:
-            print(cfg.img_folder)
+            print("Data path: " + str(cfg.img_folder))
             channels = cfg.channels
             mnist_train_x, valid_imgs, _ , _ = loadbdd100k.load_bdd100k_data_filename_list(cfg.img_folder, cfg.norm_filenames, cfg.out_filenames, cfg.n_train, cfg.n_val, cfg.n_test, cfg.out_frac, cfg.image_height, cfg.image_width, cfg.channels, shuffle=cfg.shuffle)
         else:
@@ -186,7 +186,8 @@ def main(folding_id, inliner_classes, total_classes, folds=5, bdd100k=False, cfg
 
         for it in range(len(mnist_train_x) // batch_size):
             x = extract_batch(mnist_train_x, it, batch_size).view(-1, 1, 32, 32)
-
+            print("Shape of batch:")
+            print(x.shape)
             #############################################
 
             D.zero_grad()
