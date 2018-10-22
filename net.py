@@ -151,13 +151,20 @@ class Generator(nn.Module):
             return x
         
         elif self.architecture == 'b1':
+#            print("Input:",input.shape)
             x = F.relu(self.b_deconv1_1_bn(self.b_deconv1_1(input)))
+#            print(x.shape)
             x = F.relu(self.b_deconv2_bn(self.b_deconv2(x)))
+#            print(x.shape)
             x = F.relu(self.b_deconv3_bn(self.b_deconv3(x)))
+#            print(x.shape)
             x = F.relu(self.b_deconv4_bn(self.b_deconv4(x)))
+#            print(x.shape)
             x = F.relu(self.b_deconv5_bn(self.b_deconv5(x)))
+#            print(x.shape)
             x = F.tanh(self.b_deconv6(x)) * 0.5 + 0.5
-
+#            print(x.shape)
+            return x
 
 class Discriminator(nn.Module):
     # initializers
@@ -181,6 +188,7 @@ class Discriminator(nn.Module):
         self.b_conv5_bn = nn.BatchNorm2d(d*8)
         self.b_conv6 = nn.Conv2d(d*8, 1, 4, 1, 0)
 
+        self.architecture = architecture
     # weight_init
     def weight_init(self, mean, std):
         for m in self._modules:
@@ -200,7 +208,7 @@ class Discriminator(nn.Module):
             x = F.leaky_relu(self.b_conv3_bn(self.b_conv3(x)), 0.2)
             x = F.leaky_relu(self.b_conv4_bn(self.b_conv4(x)), 0.2)
             x = F.leaky_relu(self.b_conv5_bn(self.b_conv5(x)), 0.2)
-            x = F.sigmoid(self.conv6(x))
+            x = F.sigmoid(self.b_conv6(x))
             return x
 
 
@@ -226,6 +234,7 @@ class Encoder(nn.Module):
         self.b_conv5_bn = nn.BatchNorm2d(d*8)
         self.b_conv6 = nn.Conv2d(d*8, z_size, 4, 1, 0)
 
+        self.architecture = architecture
     # weight_init
     def weight_init(self, mean, std):
         for m in self._modules:
@@ -246,7 +255,7 @@ class Encoder(nn.Module):
             x = F.leaky_relu(self.b_conv3_bn(self.b_conv3(x)), 0.2)
             x = F.leaky_relu(self.b_conv4_bn(self.b_conv4(x)), 0.2)
             x = F.leaky_relu(self.b_conv5_bn(self.b_conv5(x)), 0.2)
-            x = F.sigmoid(self.conv6(x))
+            x = F.sigmoid(self.b_conv6(x))
             return x
 
 class ZDiscriminator(nn.Module):

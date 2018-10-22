@@ -67,15 +67,15 @@ def extract_batch(data, it, batch_size):
 None
 
 def main(folding_id, inliner_classes, total_classes, folds=5, bdd100k=False, cfg = None):
-    batch_size = 64
+    batch_size = 128
     mnist_train = []
     mnist_valid = []
     architecture = None
 
     if bdd100k:
         zsize = 32
-        inliner_classes = 0
-        outlier_classes = 1
+        inliner_classes = [0]
+        outlier_classes = [1]
 
         if cfg is not None:
             print("Data path: " + str(cfg.img_folder))
@@ -171,11 +171,12 @@ def main(folding_id, inliner_classes, total_classes, folds=5, bdd100k=False, cfg
     BCE_loss = nn.BCELoss()
     y_real_ = torch.ones(batch_size)
     y_fake_ = torch.zeros(batch_size)
-    
+
     y_real_z = torch.ones(1 if zd_merge else batch_size)
     y_fake_z = torch.zeros(1 if zd_merge else batch_size)
 
-    sample = torch.randn(64, zsize).view(-1, zsize, 1, 1)
+    sample_size = 64
+    sample = torch.randn(sample_size, zsize).view(-1, zsize, 1, 1)
 
     for epoch in range(train_epoch):
         G.train()
@@ -221,7 +222,7 @@ def main(folding_id, inliner_classes, total_classes, folds=5, bdd100k=False, cfg
             z = Variable(z)
 
             x_fake = G(z).detach()
-            print("Shape of x_fake:",x_fake.shape)
+ #           print("Shape of x_fake:",x_fake.shape)
             D_result = D(x_fake).squeeze()
             D_fake_loss = BCE_loss(D_result, y_fake_)
 
@@ -315,7 +316,7 @@ def main(folding_id, inliner_classes, total_classes, folds=5, bdd100k=False, cfg
             resultsample = G(sample).cpu()
             directory = 'results'+str(inliner_classes[0])
             os.makedirs(directory, exist_ok = True)
-            save_image(resultsample.view(64, 1, 32, 32), 'results'+str(inliner_classes[0])+'/sample_' + str(epoch) + '.png')
+            save_image(resultsample.view(sample_size, channels, image_height, image_width), 'results'+str(inliner_classes[0])+'/sample_' + str(epoch) + '.png')
 
 
     print("Training finish!... save training results")
