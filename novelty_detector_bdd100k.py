@@ -32,6 +32,7 @@ import matplotlib.pyplot as plt
 import scipy.stats
 import os
 from sklearn.metrics import roc_auc_score
+from utils import loadbdd100k
 
 title_size = 16
 axis_title_size = 14
