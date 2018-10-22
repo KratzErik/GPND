@@ -5,25 +5,31 @@ from torch.nn import functional as F
 
 
 class VAE(nn.Module):
-    def __init__(self, zsize):
+    def __init__(self, zsize, architecture = None):
         super(VAE, self).__init__()
-        d = 128
-        self.zsize = zsize
-        self.deconv1 = nn.ConvTranspose2d(zsize, d * 2, 4, 1, 0)
-        self.deconv1_bn = nn.BatchNorm2d(d * 2)
-        self.deconv2 = nn.ConvTranspose2d(d * 2, d * 2, 4, 2, 1)
-        self.deconv2_bn = nn.BatchNorm2d(d * 2)
-        self.deconv3 = nn.ConvTranspose2d(d * 2, d, 4, 2, 1)
-        self.deconv3_bn = nn.BatchNorm2d(d)
-        self.deconv4 = nn.ConvTranspose2d(d, 1, 4, 2, 1)
+        if architecture is None:
+            d = 128
+            self.zsize = zsize
+            self.deconv1 = nn.ConvTranspose2d(zsize, d * 2, 4, 1, 0)
+            self.deconv1_bn = nn.BatchNorm2d(d * 2)
+            self.deconv2 = nn.ConvTranspose2d(d * 2, d * 2, 4, 2, 1)
+            self.deconv2_bn = nn.BatchNorm2d(d * 2)
+            self.deconv3 = nn.ConvTranspose2d(d * 2, d, 4, 2, 1)
+            self.deconv3_bn = nn.BatchNorm2d(d)
+            self.deconv4 = nn.ConvTranspose2d(d, 1, 4, 2, 1)
 
-        self.conv1 = nn.Conv2d(1, d // 2, 4, 2, 1)
-        self.conv2 = nn.Conv2d(d // 2, d * 2, 4, 2, 1)
-        self.conv2_bn = nn.BatchNorm2d(d * 2)
-        self.conv3 = nn.Conv2d(d * 2, d * 4, 4, 2, 1)
-        self.conv3_bn = nn.BatchNorm2d(d * 4)
-        self.conv4_1 = nn.Conv2d(d * 4, zsize, 4, 1, 0)
-        self.conv4_2 = nn.Conv2d(d * 4, zsize, 4, 1, 0)
+            self.conv1 = nn.Conv2d(1, d // 2, 4, 2, 1)
+            self.conv2 = nn.Conv2d(d // 2, d * 2, 4, 2, 1)
+            self.conv2_bn = nn.BatchNorm2d(d * 2)
+            self.conv3 = nn.Conv2d(d * 2, d * 4, 4, 2, 1)
+            self.conv3_bn = nn.BatchNorm2d(d * 4)
+            self.conv4_1 = nn.Conv2d(d * 4, zsize, 4, 1, 0)
+            self.conv4_2 = nn.Conv2d(d * 4, zsize, 4, 1, 0)
+
+        elif architecture == "bdd100k_1"
+            d = 128
+            self.zsize = zsize
+            
 
     def encode(self, x):
         x = F.relu(self.conv1(x), 0.2)
