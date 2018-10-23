@@ -112,7 +112,7 @@ def GetF1(true_positive, false_positive, false_negative):
 
 
 def main(folding_id, inliner_classes, total_classes, folds=5, bdd100k = False, cfg = None):
-    batch_size = 64
+    batch_size = 16
     mnist_train = []
     mnist_valid = []
     z_size = 32
@@ -127,6 +127,9 @@ def main(folding_id, inliner_classes, total_classes, folds=5, bdd100k = False, c
             shuffled_b[new_index] = b[old_index]
         return shuffled_a, shuffled_b
 
+    def list_of_pairs_to_numpy(l):
+            return np.asarray([x[1] for x in l], np.float32), np.asarray([x[0] for x in l], np.int)
+
     if bdd100k:
         inliner_classes = [0]
         outlier_classes = [1]
@@ -136,7 +139,7 @@ def main(folding_id, inliner_classes, total_classes, folds=5, bdd100k = False, c
             channels = cfg.channels
             image_height = cfg.image_height
             image_width = cfg.image_width
-            mnist_train_x, valid_imgs, mnist_test , test_labels = loadbdd100k.load_bdd100k_data_filename_list(cfg.img_folder, cfg.norm_filenames, cfg.out_filenames, cfg.n_train, cfg.n_val, cfg.n_test, cfg.out_frac, image_height, image_width, channels, shuffle=cfg.shuffle)
+            mnist_train_x, mnist_valid, mnist_test , test_labels = loadbdd100k.load_bdd100k_data_filename_list(cfg.img_folder, cfg.norm_filenames, cfg.out_filenames, cfg.n_train, cfg.n_val, cfg.n_test, cfg.out_frac, image_height, image_width, channels, shuffle=cfg.shuffle)
             architecture = cfg.architecture
         else:
             print("No configuration provided for BDD100K, using standard configuration")
@@ -162,6 +165,10 @@ def main(folding_id, inliner_classes, total_classes, folds=5, bdd100k = False, c
     else:
         outlier_classes = []
         architecture = None
+        image_height = 32
+        image_width = 32
+        channels = 1
+
         for i in range(total_classes):
             if i not in inliner_classes:
                 outlier_classes.append(i)
@@ -184,9 +191,6 @@ def main(folding_id, inliner_classes, total_classes, folds=5, bdd100k = False, c
         random.seed(0)
         random.shuffle(mnist_train)
 
-        def list_of_pairs_to_numpy(l):
-            return np.asarray([x[1] for x in l], np.float32), np.asarray([x[0] for x in l], np.int)
-
         mnist_train_x, mnist_train_y = list_of_pairs_to_numpy(mnist_train)
     
     
@@ -205,17 +209,18 @@ def main(folding_id, inliner_classes, total_classes, folds=5, bdd100k = False, c
     G.load_state_dict(torch.load("Gmodel.pkl"))
     E.load_state_dict(torch.load("Emodel.pkl"))
 
-    sample = torch.randn(64, z_size).to(device)
+    sample_size = 64
+    sample = torch.randn(sample_size, z_size).to(device)
     sample = G(sample.view(-1, z_size, 1, 1)).cpu()
-    save_image(sample.view(64, 1, 32, 32), 'sample.png')
+    save_image(sample.view(sample_size, channels, image_height, image_width), 'sample.png')
 
     if True:
         zlist = []
         rlist = []
 
         for it in range(len(mnist_train_x) // batch_size):
-            x = Variable(extract_batch(mnist_train_x, it, batch_size).view(-1, 32 * 32).data, requires_grad=True)
-            z = E(x.view(-1, 1, 32, 32))
+            x = Variable(extract_batch(mnist_train_x, it, batch_size).view(-1, channels*image_height * image_width).data, requires_grad=True)
+            z = E(x.view(-1, channels, image_height, image_width))
             recon_batch = G(z)
             z = z.squeeze()
 
@@ -317,10 +322,10 @@ def main(folding_id, inliner_classes, total_classes, folds=5, bdd100k = False, c
         novel = []
 
         for it in range(len(mnist_valid_x) // batch_size):
-            x = Variable(extract_batch(mnist_valid_x, it, batch_size).view(-1, 32 * 32).data, requires_grad=True)
+            x = Variable(extract_batch(mnist_valid_x, it, batch_size).view(-1, image_height * image_width).data, requires_grad=True)
             label = extract_batch_(mnist_valid_y, it, batch_size)
 
-            z = E(x.view(-1, 1, 32, 32))
+            z = E(x.view(-1, channels, image_height, image_width))
             recon_batch = G(z)
             z = z.squeeze()
 
@@ -347,16 +352,18 @@ def main(folding_id, inliner_classes, total_classes, folds=5, bdd100k = False, c
                 distance = np.sum(np.power(x[i].flatten() - recon_batch[i].flatten(), power))
 
                 logPe = np.log(r_pdf(distance, bin_edges, counts)) # p_{\|W^{\perp}\|} (\|w^{\perp}\|)
-                logPe -= np.log(distance) * (32 * 32 - z_size) # \| w^{\perp} \|}^{m-n}
+                logPe -= np.log(distance) * (image_height * image_width - z_size) # \| w^{\perp} \|}^{m-n}
 
                 P = logD + logPz + logPe
 
+#                print(P)
                 result.append(P)
                 novel.append(label[i].item() in inliner_classes)
 
         result = np.asarray(result, dtype=np.float32)
         novel = np.asarray(novel, dtype=np.float32)
 
+#        print(result)
         minP = min(result) - 1
         maxP = max(result) + 1
 
@@ -418,10 +425,10 @@ def main(folding_id, inliner_classes, total_classes, folds=5, bdd100k = False, c
         result = []
 
         for it in range(len(mnist_test_x) // batch_size):
-            x = Variable(extract_batch(mnist_test_x, it, batch_size).view(-1, 32 * 32).data, requires_grad=True)
+            x = Variable(extract_batch(mnist_test_x, it, batch_size).view(-1, image_height * image_width).data, requires_grad=True)
             label = extract_batch_(mnist_test_y, it, batch_size)
 
-            z = E(x.view(-1, 1, 32, 32))
+            z = E(x.view(-1, channels, imag_height, image_width))
             recon_batch = G(z)
             z = z.squeeze()
 
@@ -450,7 +457,7 @@ def main(folding_id, inliner_classes, total_classes, folds=5, bdd100k = False, c
                 distance = np.sum(np.power(x[i].flatten() - recon_batch[i].flatten(), power))
 
                 logPe = np.log(r_pdf(distance, bin_edges, counts))
-                logPe -= np.log(distance) * (32 * 32 - z_size)
+                logPe -= np.log(distance) * (image_height * image_width - z_size)
 
                 count += 1
 
