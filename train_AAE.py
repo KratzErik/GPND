@@ -71,7 +71,7 @@ def main(folding_id, inliner_classes, total_classes, folds=5, bdd100k=False, cfg
     mnist_train = []
     mnist_valid = []
     architecture = None
-
+    image_dest = "/data/GPND/bdd100k/"
     if bdd100k:
         zsize = 32
         inliner_classes = [0]
@@ -95,11 +95,11 @@ def main(folding_id, inliner_classes, total_classes, folds=5, bdd100k=False, cfg
         print("Transposing data to 'channels first'")
         mnist_train_x = np.moveaxis(mnist_train_x,-1,1)
         valid_imgs = np.moveaxis(valid_imgs,-1,1)
-	
+
         print("Converting data from uint8 to float32")
         mnist_train_x = np.float32(mnist_train_x)
         valid_imgs = np.float32(valid_imgs)
-        
+
         # Labels for training data
         mnist_train_y = np.zeros((len(mnist_train_x),),dtype=np.int)
 
@@ -294,11 +294,11 @@ def main(folding_id, inliner_classes, total_classes, folds=5, bdd100k=False, cfg
             Etrain_loss += E_loss.item()
 
             if it == 0:
-                directory = 'results'+str(inliner_classes[0])
+                directory = image_dest+'results'+str(inliner_classes[0])
                 if not os.path.exists(directory):
                     os.makedirs(directory)
                 comparison = torch.cat([x[:64], x_d[:64]])
-                save_image(comparison.cpu(),
+                save_image(comparison.cpu(),image_dest+
                            'results'+str(inliner_classes[0])+'/reconstruction_' + str(epoch) + '.png', nrow=64)
 
         Gtrain_loss /= (len(mnist_train_x))
@@ -316,7 +316,7 @@ def main(folding_id, inliner_classes, total_classes, folds=5, bdd100k=False, cfg
             resultsample = G(sample).cpu()
             directory = 'results'+str(inliner_classes[0])
             os.makedirs(directory, exist_ok = True)
-            save_image(resultsample.view(sample_size, channels, image_height, image_width), 'results'+str(inliner_classes[0])+'/sample_' + str(epoch) + '.png')
+            save_image(resultsample.view(sample_size, channels, image_height, image_width), image_dest + 'results'+str(inliner_classes[0])+'/sample_' + str(epoch) + '.png')
 
 
     print("Training finish!... save training results")

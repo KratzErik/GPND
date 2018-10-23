@@ -116,6 +116,7 @@ def main(folding_id, inliner_classes, total_classes, folds=5, bdd100k = False, c
     mnist_train = []
     mnist_valid = []
     z_size = 32
+    image_dest = '/data/GPND/bdd100k/'
 
     def shuffle_in_unison(a, b):
         assert len(a) == len(b)
@@ -214,14 +215,14 @@ def main(folding_id, inliner_classes, total_classes, folds=5, bdd100k = False, c
     sample_size = 64
     sample = torch.randn(sample_size, z_size).to(device)
     sample = G(sample.view(-1, z_size, 1, 1)).cpu()
-    save_image(sample.view(sample_size, channels, image_height, image_width), 'sample.png')
+    save_image(sample.view(sample_size, channels, image_height, image_width), image_dest +  'sample.png')
 
     if True:
         zlist = []
         rlist = []
 
         for it in range(len(mnist_train_x) // batch_size):
-            x = Variable(extract_batch(mnist_train_x, it, batch_size).view(-1, channels*image_height * image_width).data, requires_grad=True)
+            x = Variable(extract_batch(mnist_train_x, it, batch_size).view(-1, channels * image_height * image_width).data, requires_grad=True)
             z = E(x.view(-1, channels, image_height, image_width))
             recon_batch = G(z)
             z = z.squeeze()
@@ -260,8 +261,10 @@ def main(folding_id, inliner_classes, total_classes, folds=5, bdd100k = False, c
     plt.xticks(fontsize=ticks_size)
     plt.yticks(fontsize=ticks_size)
     plt.tight_layout(rect=(0.0, 0.0, 1, 0.95))
-    plt.savefig('mnist_d%d_randomsearch.pdf' % inliner_classes[0])
-    plt.savefig('mnist_d%d_randomsearch.eps' % inliner_classes[0])
+    str_tmp = image_dest + 'mnist_d%d_randomsearch.pdf'
+    plt.savefig(str_tmp % inliner_classes[0])
+    str_tmp = image_dest + 'mnist_d%d_randomsearch.eps'
+    plt.savefig(str_tmp % inliner_classes[0])
     plt.clf()
     plt.cla()
     plt.close()
@@ -275,8 +278,8 @@ def main(folding_id, inliner_classes, total_classes, folds=5, bdd100k = False, c
         return max(count[id], 1e-308)
 
     zlist = np.concatenate(zlist)
-    for i in range(z_size):
-        plt.hist(zlist[:, i], bins='auto', histtype='step')
+#    for i in range(z_size):
+#        plt.hist(zlist[:, i], bins='auto', histtype='step')
 
     plt.xlabel(r"$z$", fontsize=axis_title_size)
     plt.ylabel('Probability density', fontsize=axis_title_size)
@@ -285,8 +288,10 @@ def main(folding_id, inliner_classes, total_classes, folds=5, bdd100k = False, c
     plt.xticks(fontsize=ticks_size)
     plt.yticks(fontsize=ticks_size)
     plt.tight_layout(rect=(0.0, 0.0, 1, 0.95))
-    plt.savefig('mnist_d%d_embeding.pdf' % inliner_classes[0])
-    plt.savefig('mnist_d%d_embeding.eps' % inliner_classes[0])
+    str_tmp = image_dest + 'mnist_d%d_embeding.pdf'
+    plt.savefig(str_tmp  % inliner_classes[0])
+    str_tmp = image_dest + 'mnist_d%d_embeding.eps'
+    plt.savefig(str_tmp  % inliner_classes[0])
     plt.clf()
     plt.cla()
     plt.close()
@@ -429,10 +434,10 @@ def main(folding_id, inliner_classes, total_classes, folds=5, bdd100k = False, c
         result = []
 
         for it in range(len(mnist_test_x) // batch_size):
-            x = Variable(extract_batch(mnist_test_x, it, batch_size).view(-1, image_height * image_width).data, requires_grad=True)
+            x = Variable(extract_batch(mnist_test_x, it, batch_size).view(-1, channels * image_height * image_width).data, requires_grad=True)
             label = extract_batch_(mnist_test_y, it, batch_size)
 
-            z = E(x.view(-1, channels, imag_height, image_width))
+            z = E(x.view(-1, channels, image_height, image_width))
             recon_batch = G(z)
             z = z.squeeze()
 

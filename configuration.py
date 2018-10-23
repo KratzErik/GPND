@@ -11,10 +11,10 @@ class Configuration(object):
     out_filenames = loadbdd100k.get_namelist_from_file(out_file)
     norm_spec = [["weather", ["clear","partly cloudy", "overcast"]],["scene", "highway"],["timeofday", "daytime"]]
     out_spec = [["weather", ["rainy", "snowy", "foggy"]],["scene", "highway"],["timeofday",["daytime","dawn/dusk","night"]]]
-    n_train = 500
+    n_train = 5000
     n_val = 0
-    n_test = 200
-    out_frac = 0.2
+    n_test = 4000
+    out_frac = 0.5
     image_height = 192
     image_width = 320
     channels = 3
