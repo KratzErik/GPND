@@ -139,7 +139,7 @@ def main(folding_id, inliner_classes, total_classes, folds=5, bdd100k = False, c
             channels = cfg.channels
             image_height = cfg.image_height
             image_width = cfg.image_width
-            mnist_train_x, mnist_valid, mnist_test , test_labels = loadbdd100k.load_bdd100k_data_filename_list(cfg.img_folder, cfg.norm_filenames, cfg.out_filenames, cfg.n_train, cfg.n_val, cfg.n_test, cfg.out_frac, image_height, image_width, channels, shuffle=cfg.shuffle)
+            mnist_train_x, mnist_valid_x, mnist_test_x , test_labels = loadbdd100k.load_bdd100k_data_filename_list(cfg.img_folder, cfg.norm_filenames, cfg.out_filenames, cfg.n_train, cfg.n_val, cfg.n_test, cfg.out_frac, image_height, image_width, channels, shuffle=cfg.shuffle)
             architecture = cfg.architecture
         else:
             print("No configuration provided for BDD100K, using standard configuration")
@@ -159,6 +159,12 @@ def main(folding_id, inliner_classes, total_classes, folds=5, bdd100k = False, c
         
         # Labels for training data
         mnist_train_y = np.zeros((len(mnist_train_x),),dtype=np.int)
+
+        # Validation data
+        mnist_valid = [[0 img] for img in mnist_valid_x]
+
+        # Test data
+        mnist_test = [[lbl img] for lbl, img in zip(test_labels, mnist_test_x)]
 
         for img in valid_imgs:
             mnist_valid.append((0,img))
