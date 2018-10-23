@@ -139,7 +139,7 @@ def main(folding_id, inliner_classes, total_classes, folds=5, bdd100k = False, c
             channels = cfg.channels
             image_height = cfg.image_height
             image_width = cfg.image_width
-            mnist_train_x, mnist_valid_x, mnist_test_x , test_labels = loadbdd100k.load_bdd100k_data_filename_list(cfg.img_folder, cfg.norm_filenames, cfg.out_filenames, cfg.n_train, cfg.n_val, cfg.n_test, cfg.out_frac, image_height, image_width, channels, shuffle=cfg.shuffle)
+            mnist_train_x, _, mnist_test_x , test_labels = loadbdd100k.load_bdd100k_data_filename_list(cfg.img_folder, cfg.norm_filenames, cfg.out_filenames, cfg.n_train, cfg.n_val, cfg.n_test, cfg.out_frac, image_height, image_width, channels, shuffle=cfg.shuffle)
             architecture = cfg.architecture
         else:
             print("No configuration provided for BDD100K, using standard configuration")
@@ -151,23 +151,19 @@ def main(folding_id, inliner_classes, total_classes, folds=5, bdd100k = False, c
 
         print("Transposing data to 'channels first'")
         mnist_train_x = np.moveaxis(mnist_train_x,-1,1)
-        valid_imgs = np.moveaxis(valid_imgs,-1,1)
-	
+        mnist_test_x = np.moveaxis(mnist_test_x,-1,1)
+
         print("Converting data from uint8 to float32")
         mnist_train_x = np.float32(mnist_train_x)
-        valid_imgs = np.float32(valid_imgs)
-        
+        mnist_test_x = np.float32(mnist_test_x)
+
         # Labels for training data
         mnist_train_y = np.zeros((len(mnist_train_x),),dtype=np.int)
 
-        # Validation data
-        mnist_valid = [[0 img] for img in mnist_valid_x]
+        # Test and validation data both have outliers: split in two parts
+        mnist_valid = [(lbl,img) for i, lbl, img in zip(range(len(test_labels)),test_labels, mnist_test_x) if i % 2 is 0]
+        mnist_test = [(lbl,img) for i, lbl, img in zip(range(len(test_labels)),test_labels, mnist_test_x) if i % 2 is not 0]
 
-        # Test data
-        mnist_test = [[lbl img] for lbl, img in zip(test_labels, mnist_test_x)]
-
-        for img in valid_imgs:
-            mnist_valid.append((0,img))
     else:
         outlier_classes = []
         architecture = None
@@ -323,12 +319,11 @@ def main(folding_id, inliner_classes, total_classes, folds=5, bdd100k = False, c
         random.shuffle(_mnist_valid)
 
         mnist_valid_x, mnist_valid_y = list_of_pairs_to_numpy(_mnist_valid)
-
         result = []
         novel = []
 
         for it in range(len(mnist_valid_x) // batch_size):
-            x = Variable(extract_batch(mnist_valid_x, it, batch_size).view(-1, image_height * image_width).data, requires_grad=True)
+            x = Variable(extract_batch(mnist_valid_x, it, batch_size).view(-1, channels * image_height * image_width).data, requires_grad=True)
             label = extract_batch_(mnist_valid_y, it, batch_size)
 
             z = E(x.view(-1, channels, image_height, image_width))
@@ -351,27 +346,30 @@ def main(folding_id, inliner_classes, total_classes, folds=5, bdd100k = False, c
 
                 # Sometimes, due to rounding some element in p may be zero resulting in Inf in logPz
                 # In this case, just assign some large negative value to make sure that the sample 
-                # is classified as unknown. 
+                # is classified as unknown. Edit by Kratz: same with logD. 
                 if not np.isfinite(logPz):
                     logPz = -1000
+
+                if not np.isfinite(logD):
+                    logPz = -1000
+
 
                 distance = np.sum(np.power(x[i].flatten() - recon_batch[i].flatten(), power))
 
                 logPe = np.log(r_pdf(distance, bin_edges, counts)) # p_{\|W^{\perp}\|} (\|w^{\perp}\|)
-                logPe -= np.log(distance) * (image_height * image_width - z_size) # \| w^{\perp} \|}^{m-n}
+                logPe -= np.log(distance) * (channels*image_height * image_width - z_size) # \| w^{\perp} \|}^{m-n}
 
                 P = logD + logPz + logPe
 
-#                print(P)
                 result.append(P)
                 novel.append(label[i].item() in inliner_classes)
 
         result = np.asarray(result, dtype=np.float32)
         novel = np.asarray(novel, dtype=np.float32)
 
-#        print(result)
         minP = min(result) - 1
         maxP = max(result) + 1
+        print(maxP)
 
         best_e = 0
         best_f = 0
@@ -460,10 +458,13 @@ def main(folding_id, inliner_classes, total_classes, folds=5, bdd100k = False, c
                 if not np.isfinite(logPz):
                     logPz = -1000
 
+                if not np.isfinite(logD):
+                    logPz = -1000
+
                 distance = np.sum(np.power(x[i].flatten() - recon_batch[i].flatten(), power))
 
                 logPe = np.log(r_pdf(distance, bin_edges, counts))
-                logPe -= np.log(distance) * (image_height * image_width - z_size)
+                logPe -= np.log(distance) * (channels * image_height * image_width - z_size)
 
                 count += 1
 

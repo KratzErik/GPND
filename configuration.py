@@ -12,9 +12,9 @@ class Configuration(object):
     norm_spec = [["weather", ["clear","partly cloudy", "overcast"]],["scene", "highway"],["timeofday", "daytime"]]
     out_spec = [["weather", ["rainy", "snowy", "foggy"]],["scene", "highway"],["timeofday",["daytime","dawn/dusk","night"]]]
     n_train = 500
-    n_val = 100
+    n_val = 0
     n_test = 200
-    out_frac = 0.5
+    out_frac = 0.2
     image_height = 192
     image_width = 320
     channels = 3
