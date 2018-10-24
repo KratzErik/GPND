@@ -214,8 +214,8 @@ def main(folding_id, inliner_classes, total_classes, folds=5, bdd100k = False, c
     E.eval()
 
     if bdd100k:
-        G.load_state_dict(torch.load("Gmodel"+name_spec+".pkl"))
-        E.load_state_dict(torch.load("Emodel"+name_spec+".pkl"))
+        G.load_state_dict(torch.load("Gmodel_"+name_spec+".pkl"))
+        E.load_state_dict(torch.load("Emodel_"+name_spec+".pkl"))
     else:
         G.load_state_dict(torch.load("Gmodel.pkl"))
         E.load_state_dict(torch.load("Emodel.pkl"))
@@ -364,7 +364,7 @@ def main(folding_id, inliner_classes, total_classes, folds=5, bdd100k = False, c
                     logPz = -1000
 
                 if not np.isfinite(logD):
-                    logPz = -1000
+                    logD = -1000
 
 
                 distance = np.sum(np.power(x[i].flatten() - recon_batch[i].flatten(), power))
@@ -382,7 +382,7 @@ def main(folding_id, inliner_classes, total_classes, folds=5, bdd100k = False, c
 
         minP = min(result) - 1
         maxP = max(result) + 1
-        print(maxP)
+        #print(maxP)
 
         best_e = 0
         best_f = 0
@@ -391,7 +391,13 @@ def main(folding_id, inliner_classes, total_classes, folds=5, bdd100k = False, c
 
         not_novel = np.logical_not(novel)
 
-        for e in np.arange(minP, maxP, 0.1):
+        max_vals = 100000000
+        print("maxP,minP:",maxP, minP)
+        if (maxP-minP)//0.1 > max_vals:
+            p_range = np.linspace(minP,maxP,num=max_vals)
+        else:
+            p_range = np.arange(minP, maxP, 0.1)
+        for e in p_range:
             y = np.greater(result, e)
 
             true_positive = np.sum(np.logical_and(y, novel))
@@ -472,7 +478,7 @@ def main(folding_id, inliner_classes, total_classes, folds=5, bdd100k = False, c
                     logPz = -1000
 
                 if not np.isfinite(logD):
-                    logPz = -1000
+                    logD = -1000
 
                 distance = np.sum(np.power(x[i].flatten() - recon_batch[i].flatten(), power))
 

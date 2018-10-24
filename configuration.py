@@ -23,4 +23,4 @@ class Configuration(object):
     get_norm_and_out_sets = False
     shuffle=False
     architecture = "b1"
-
+    name_spec = "bdd100k_first_full"
