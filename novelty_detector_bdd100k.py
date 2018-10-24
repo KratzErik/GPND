@@ -33,6 +33,7 @@ import scipy.stats
 import os
 from sklearn.metrics import roc_auc_score
 from utils import loadbdd100k
+import datetime
 
 title_size = 16
 axis_title_size = 14
@@ -142,12 +143,15 @@ def main(folding_id, inliner_classes, total_classes, folds=5, bdd100k = False, c
             image_width = cfg.image_width
             mnist_train_x, _, mnist_test_x , test_labels = loadbdd100k.load_bdd100k_data_filename_list(cfg.img_folder, cfg.norm_filenames, cfg.out_filenames, cfg.n_train, cfg.n_val, cfg.n_test, cfg.out_frac, image_height, image_width, channels, shuffle=cfg.shuffle)
             architecture = cfg.architecture
+            name_spec = cfg.name_spec
         else:
             print("No configuration provided for BDD100K, using standard configuration")
             channels = 3
             image_height = 192
             image_width = 320
             architecture = "b1"
+            now = datetime.datetime.now()
+            name_spec = "bdd100k_"+now.year+"_"+now.month+"_"+now.day
             # TODO: ADD STANDARD CONFIG (HARD CODED)
 
         print("Transposing data to 'channels first'")
@@ -209,8 +213,12 @@ def main(folding_id, inliner_classes, total_classes, folds=5, bdd100k = False, c
     G.eval()
     E.eval()
 
-    G.load_state_dict(torch.load("Gmodel.pkl"))
-    E.load_state_dict(torch.load("Emodel.pkl"))
+    if bdd100k:
+        G.load_state_dict(torch.load("Gmodel"+name_spec+".pkl"))
+        E.load_state_dict(torch.load("Emodel"+name_spec+".pkl"))
+    else:
+        G.load_state_dict(torch.load("Gmodel.pkl"))
+        E.load_state_dict(torch.load("Emodel.pkl"))
 
     sample_size = 64
     sample = torch.randn(sample_size, z_size).to(device)

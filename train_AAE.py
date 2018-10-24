@@ -29,6 +29,7 @@ import time
 import random
 import os
 from utils import loadbdd100k
+import datetime
 
 use_cuda = torch.cuda.is_available()
 
@@ -84,12 +85,15 @@ def main(folding_id, inliner_classes, total_classes, folds=5, bdd100k=False, cfg
             image_width = cfg.image_width
             mnist_train_x, valid_imgs, _ , _ = loadbdd100k.load_bdd100k_data_filename_list(cfg.img_folder, cfg.norm_filenames, cfg.out_filenames, cfg.n_train, cfg.n_val, cfg.n_test, cfg.out_frac, image_height, image_width, channels, shuffle=cfg.shuffle)
             architecture = cfg.architecture
+            name_spec = "bdd100k_"+cgf.name_spec
         else:
             print("No configuration provided for BDD100K, using standard configuration")
             channels = 3
             image_height = 192
             image_width = 320
             architecture = "b1"
+            now = datetime.datetime.now()
+            name_spec = "bdd100k_"+now.year+"_"+now.month+"_"+now.day
             # TODO: ADD STANDARD CONFIG (HARD CODED)
 
         print("Transposing data to 'channels first'")
@@ -320,10 +324,16 @@ def main(folding_id, inliner_classes, total_classes, folds=5, bdd100k=False, cfg
 
 
     print("Training finish!... save training results")
-    torch.save(G.state_dict(), "Gmodel.pkl")
-    torch.save(E.state_dict(), "Emodel.pkl")
-    torch.save(D.state_dict(), "Dmodel.pkl")
-    torch.save(ZD.state_dict(), "ZDmodel.pkl")
+    if bdd100k: # for saving separate models for separate inliers/outliers
+        torch.save(G.state_dict(), "Gmodel_"+name_spec".pkl")
+        torch.save(E.state_dict(), "Emodel_"+name_spec".pkl")
+        torch.save(D.state_dict(), "Dmodel_"+name_spec".pkl")
+        torch.save(ZD.state_dict(), "ZDmodel_"+name_spec".pkl")
+    else:
+        torch.save(G.state_dict(), "Gmodel_mnist.pkl")
+        torch.save(E.state_dict(), "Emodel_mnist.pkl")
+        torch.save(D.state_dict(), "Dmodel_mnist.pkl")
+        torch.save(ZD.state_dict(), "ZDmodel_mnist.pkl")
 
 if __name__ == '__main__':
     main(0, [0], 10)
