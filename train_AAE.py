@@ -67,23 +67,24 @@ def extract_batch(data, it, batch_size):
     return Variable(x)
 None
 
-def main(folding_id, inliner_classes, total_classes, folds=5, bdd100k=False, cfg = None):
+def main(folding_id, inliner_classes, total_classes, folds=5, dataset="mnist", cfg = None):
     batch_size = 128
-    mnist_train = []
-    mnist_valid = []
+    data_train = []
+    data_valid = []
     architecture = None
-    image_dest = "/data/GPND/bdd100k/"
-    if bdd100k:
+
+    if dataset == "bdd100k":
         zsize = 32
         inliner_classes = [0]
         outlier_classes = [1]
+        image_dest = "/data/GPND/bdd100k/"
 
         if cfg is not None:
             print("Data path: " + str(cfg.img_folder))
             channels = cfg.channels
             image_height = cfg.image_height
             image_width = cfg.image_width
-            mnist_train_x, valid_imgs, _ , _ = loadbdd100k.load_bdd100k_data_filename_list(cfg.img_folder, cfg.norm_filenames, cfg.out_filenames, cfg.n_train, cfg.n_val, cfg.n_test, cfg.out_frac, image_height, image_width, channels, shuffle=cfg.shuffle)
+            data_train_x, valid_imgs, _ , _ = loadbdd100k.load_bdd100k_data_filename_list(cfg.img_folder, cfg.norm_filenames, cfg.out_filenames, cfg.n_train, cfg.n_val, cfg.n_test, cfg.out_frac, image_height, image_width, channels, shuffle=cfg.shuffle)
             architecture = cfg.architecture
             name_spec = "bdd100k_"+cgf.name_spec
         else:
@@ -97,32 +98,36 @@ def main(folding_id, inliner_classes, total_classes, folds=5, bdd100k=False, cfg
             # TODO: ADD STANDARD CONFIG (HARD CODED)
 
         print("Transposing data to 'channels first'")
-        mnist_train_x = np.moveaxis(mnist_train_x,-1,1)
+        data_train_x = np.moveaxis(data_train_x,-1,1)
         valid_imgs = np.moveaxis(valid_imgs,-1,1)
 
         print("Converting data from uint8 to float32")
-        mnist_train_x = np.float32(mnist_train_x)
+        data_train_x = np.float32(data_train_x)
         valid_imgs = np.float32(valid_imgs)
 
         # Labels for training data
-        mnist_train_y = np.zeros((len(mnist_train_x),),dtype=np.int)
+        data_train_y = np.zeros((len(data_train_x),),dtype=np.int)
 
         for img in valid_imgs:
-            mnist_valid.append((0,img))
+            data_valid.append((0,img))
 
-    else:
+    elif dataset == "prosivic":
+        # Load prosivic data
+        
+    elif dataset == "mnist":
         zsize = 32
         channels = 1
         image_height = 32
         image_width = 32
+        name_spec = "mnist"
         for i in range(folds):
             if i != folding_id:
                 with open('data_fold_%d.pkl' % i, 'rb') as pkl:
                     fold = pickle.load(pkl, encoding='latin1')
-                if len(mnist_valid) == 0:
-                    mnist_valid = fold
+                if len(data_valid) == 0:
+                    data_valid = fold
                 else:
-                    mnist_train += fold
+                    data_train += fold
 
         outlier_classes = []
         for i in range(total_classes):
@@ -130,18 +135,18 @@ def main(folding_id, inliner_classes, total_classes, folds=5, bdd100k=False, cfg
                 outlier_classes.append(i)
 
         #keep only train classes
-        mnist_train = [x for x in mnist_train if x[0] in inliner_classes]
+        data_train = [x for x in data_train if x[0] in inliner_classes]
 
-        random.shuffle(mnist_train)
+        random.shuffle(data_train)
 
         def list_of_pairs_to_numpy(l):
             return np.asarray([x[1] for x in l], np.float32), np.asarray([x[0] for x in l], np.int)
 
-        mnist_train_x, mnist_train_y = list_of_pairs_to_numpy(mnist_train)
+        data_train_x, data_train_y = list_of_pairs_to_numpy(data_train)
 
-    print("Train set size:", len(mnist_train_x))
-    print("Data type:", mnist_train_x.dtype)
-    print("Max pixel value:", np.amax(mnist_train_x))
+    print("Train set size:", len(data_train_x))
+    print("Data type:", data_train_x.dtype)
+    print("Max pixel value:", np.amax(data_train_x))
     G = Generator(zsize, channels = channels, architecture = architecture)
     setup(G)
     G.weight_init(mean=0, std=0.02)
@@ -199,7 +204,7 @@ def main(folding_id, inliner_classes, total_classes, folds=5, bdd100k=False, cfg
         def shuffle(X):
             np.take(X, np.random.permutation(X.shape[0]), axis=0, out=X)
 
-        shuffle(mnist_train_x)
+        shuffle(data_train_x)
 
         if (epoch + 1) % 30 == 0:
             G_optimizer.param_groups[0]['lr'] /= 4
@@ -209,8 +214,8 @@ def main(folding_id, inliner_classes, total_classes, folds=5, bdd100k=False, cfg
             ZD_optimizer.param_groups[0]['lr'] /= 4
             print("learning rate change!")
 
-        for it in range(len(mnist_train_x) // batch_size):
-            x = extract_batch(mnist_train_x, it, batch_size).view(-1, channels, image_height, image_width)
+        for it in range(len(data_train_x) // batch_size):
+            x = extract_batch(data_train_x, it, batch_size).view(-1, channels, image_height, image_width)
            # print("Batch type:")
            # print(type(x))
            # print("Shape of batch:")
@@ -305,11 +310,11 @@ def main(folding_id, inliner_classes, total_classes, folds=5, bdd100k=False, cfg
                 save_image(comparison.cpu(),image_dest+
                            'results'+str(inliner_classes[0])+'/reconstruction_' + str(epoch) + '.png', nrow=64)
 
-        Gtrain_loss /= (len(mnist_train_x))
-        Dtrain_loss /= (len(mnist_train_x))
-        ZDtrain_loss /= (len(mnist_train_x))
-        GEtrain_loss /= (len(mnist_train_x))
-        Etrain_loss /= (len(mnist_train_x))
+        Gtrain_loss /= (len(data_train_x))
+        Dtrain_loss /= (len(data_train_x))
+        ZDtrain_loss /= (len(data_train_x))
+        GEtrain_loss /= (len(data_train_x))
+        Etrain_loss /= (len(data_train_x))
 
         epoch_end_time = time.time()
         per_epoch_ptime = epoch_end_time - epoch_start_time
@@ -324,16 +329,10 @@ def main(folding_id, inliner_classes, total_classes, folds=5, bdd100k=False, cfg
 
 
     print("Training finish!... save training results")
-    if bdd100k: # for saving separate models for separate inliers/outliers
-        torch.save(G.state_dict(), "Gmodel_"+name_spec".pkl")
-        torch.save(E.state_dict(), "Emodel_"+name_spec".pkl")
-        torch.save(D.state_dict(), "Dmodel_"+name_spec".pkl")
-        torch.save(ZD.state_dict(), "ZDmodel_"+name_spec".pkl")
-    else:
-        torch.save(G.state_dict(), "Gmodel_mnist.pkl")
-        torch.save(E.state_dict(), "Emodel_mnist.pkl")
-        torch.save(D.state_dict(), "Dmodel_mnist.pkl")
-        torch.save(ZD.state_dict(), "ZDmodel_mnist.pkl")
+    torch.save(G.state_dict(), "Gmodel_"+name_spec".pkl")
+    torch.save(E.state_dict(), "Emodel_"+name_spec".pkl")
+    torch.save(D.state_dict(), "Dmodel_"+name_spec".pkl")
+    torch.save(ZD.state_dict(), "ZDmodel_"+name_spec".pkl"):
 
 if __name__ == '__main__':
     main(0, [0], 10)

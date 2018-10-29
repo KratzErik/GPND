@@ -112,10 +112,10 @@ def GetF1(true_positive, false_positive, false_negative):
     return 2.0 * precision * recall / (precision + recall)
 
 
-def main(folding_id, inliner_classes, total_classes, folds=5, bdd100k = False, cfg = None):
+def main(folding_id, inliner_classes, total_classes, folds=5, dataset = "bdd100k", cfg = None):
     batch_size = 16
-    mnist_train = []
-    mnist_valid = []
+    data_train = []
+    data_valid = []
     z_size = 32
     image_dest = '/data/GPND/bdd100k/'
 
@@ -132,7 +132,7 @@ def main(folding_id, inliner_classes, total_classes, folds=5, bdd100k = False, c
     def list_of_pairs_to_numpy(l):
             return np.asarray([x[1] for x in l], np.float32), np.asarray([x[0] for x in l], np.int)
 
-    if bdd100k:
+    if dataset == "bdd100k":
         inliner_classes = [0]
         outlier_classes = [1]
 
@@ -141,7 +141,7 @@ def main(folding_id, inliner_classes, total_classes, folds=5, bdd100k = False, c
             channels = cfg.channels
             image_height = cfg.image_height
             image_width = cfg.image_width
-            mnist_train_x, _, mnist_test_x , test_labels = loadbdd100k.load_bdd100k_data_filename_list(cfg.img_folder, cfg.norm_filenames, cfg.out_filenames, cfg.n_train, cfg.n_val, cfg.n_test, cfg.out_frac, image_height, image_width, channels, shuffle=cfg.shuffle)
+            data_train_x, _, data_test_x , test_labels = loadbdd100k.load_bdd100k_data_filename_list(cfg.img_folder, cfg.norm_filenames, cfg.out_filenames, cfg.n_train, cfg.n_val, cfg.n_test, cfg.out_frac, image_height, image_width, channels, shuffle=cfg.shuffle)
             architecture = cfg.architecture
             name_spec = cfg.name_spec
         else:
@@ -155,26 +155,27 @@ def main(folding_id, inliner_classes, total_classes, folds=5, bdd100k = False, c
             # TODO: ADD STANDARD CONFIG (HARD CODED)
 
         print("Transposing data to 'channels first'")
-        mnist_train_x = np.moveaxis(mnist_train_x,-1,1)
-        mnist_test_x = np.moveaxis(mnist_test_x,-1,1)
+        data_train_x = np.moveaxis(data_train_x,-1,1)
+        data_test_x = np.moveaxis(data_test_x,-1,1)
 
         print("Converting data from uint8 to float32")
-        mnist_train_x = np.float32(mnist_train_x)
-        mnist_test_x = np.float32(mnist_test_x)
+        data_train_x = np.float32(data_train_x)
+        data_test_x = np.float32(data_test_x)
 
         # Labels for training data
-        mnist_train_y = np.zeros((len(mnist_train_x),),dtype=np.int)
+        data_train_y = np.zeros((len(data_train_x),),dtype=np.int)
 
         # Test and validation data both have outliers: split in two parts
-        mnist_valid = [(lbl,img) for i, lbl, img in zip(range(len(test_labels)),test_labels, mnist_test_x) if i % 2 is 0]
-        mnist_test = [(lbl,img) for i, lbl, img in zip(range(len(test_labels)),test_labels, mnist_test_x) if i % 2 is not 0]
+        data_valid = [(lbl,img) for i, lbl, img in zip(range(len(test_labels)),test_labels, data_test_x) if i % 2 is 0]
+        data_test = [(lbl,img) for i, lbl, img in zip(range(len(test_labels)),test_labels, data_test_x) if i % 2 is not 0]
 
-    else:
+    elif dataset == "mnist":
         outlier_classes = []
         architecture = None
         image_height = 32
         image_width = 32
         channels = 1
+        name_spec = "mnist"
 
         for i in range(total_classes):
             if i not in inliner_classes:
@@ -184,27 +185,27 @@ def main(folding_id, inliner_classes, total_classes, folds=5, bdd100k = False, c
             if i != folding_id:
                 with open('data_fold_%d.pkl' % i, 'rb') as pkl:
                     fold = pickle.load(pkl, encoding='latin1')
-                if len(mnist_valid) == 0:
-                    mnist_valid = fold
+                if len(data_valid) == 0:
+                    data_valid = fold
                 else:
-                    mnist_train += fold
+                    data_train += fold
 
         with open('data_fold_%d.pkl' % folding_id, 'rb') as pkl:
-            mnist_test = pickle.load(pkl, encoding='latin1')
+            data_test = pickle.load(pkl, encoding='latin1')
 
         #keep only train classes
-        mnist_train = [x for x in mnist_train if x[0] in inliner_classes]
+        data_train = [x for x in data_train if x[0] in inliner_classes]
 
         random.seed(0)
-        random.shuffle(mnist_train)
+        random.shuffle(data_train)
 
-        mnist_train_x, mnist_train_y = list_of_pairs_to_numpy(mnist_train)
+        data_train_x, data_train_y = list_of_pairs_to_numpy(data_train)
     
     
 
 
 
-    print("Train set size:", len(mnist_train_x))
+    print("Train set size:", len(data_train_x))
 
     G = Generator(z_size, channels = channels, architecture = architecture).to(device)
     E = Encoder(z_size, channels = channels, architecture = architecture).to(device)
@@ -213,12 +214,8 @@ def main(folding_id, inliner_classes, total_classes, folds=5, bdd100k = False, c
     G.eval()
     E.eval()
 
-    if bdd100k:
-        G.load_state_dict(torch.load("Gmodel_"+name_spec+".pkl"))
-        E.load_state_dict(torch.load("Emodel_"+name_spec+".pkl"))
-    else:
-        G.load_state_dict(torch.load("Gmodel.pkl"))
-        E.load_state_dict(torch.load("Emodel.pkl"))
+    G.load_state_dict(torch.load("Gmodel_"+name_spec+".pkl"))
+    E.load_state_dict(torch.load("Emodel_"+name_spec+".pkl"))
 
     sample_size = 64
     sample = torch.randn(sample_size, z_size).to(device)
@@ -229,8 +226,8 @@ def main(folding_id, inliner_classes, total_classes, folds=5, bdd100k = False, c
         zlist = []
         rlist = []
 
-        for it in range(len(mnist_train_x) // batch_size):
-            x = Variable(extract_batch(mnist_train_x, it, batch_size).view(-1, channels * image_height * image_width).data, requires_grad=True)
+        for it in range(len(data_train_x) // batch_size):
+            x = Variable(extract_batch(data_train_x, it, batch_size).view(-1, channels * image_height * image_width).data, requires_grad=True)
             z = E(x.view(-1, channels, image_height, image_width))
             recon_batch = G(z)
             z = z.squeeze()
@@ -269,9 +266,9 @@ def main(folding_id, inliner_classes, total_classes, folds=5, bdd100k = False, c
     plt.xticks(fontsize=ticks_size)
     plt.yticks(fontsize=ticks_size)
     plt.tight_layout(rect=(0.0, 0.0, 1, 0.95))
-    str_tmp = image_dest + 'mnist_d%d_randomsearch.pdf'
+    str_tmp = image_dest + 'data_d%d_randomsearch.pdf'
     plt.savefig(str_tmp % inliner_classes[0])
-    str_tmp = image_dest + 'mnist_d%d_randomsearch.eps'
+    str_tmp = image_dest + 'data_d%d_randomsearch.eps'
     plt.savefig(str_tmp % inliner_classes[0])
     plt.clf()
     plt.cla()
@@ -296,9 +293,9 @@ def main(folding_id, inliner_classes, total_classes, folds=5, bdd100k = False, c
     plt.xticks(fontsize=ticks_size)
     plt.yticks(fontsize=ticks_size)
     plt.tight_layout(rect=(0.0, 0.0, 1, 0.95))
-    str_tmp = image_dest + 'mnist_d%d_embeding.pdf'
+    str_tmp = image_dest + 'data_d%d_embeding.pdf'
     plt.savefig(str_tmp  % inliner_classes[0])
-    str_tmp = image_dest + 'mnist_d%d_embeding.eps'
+    str_tmp = image_dest + 'data_d%d_embeding.eps'
     plt.savefig(str_tmp  % inliner_classes[0])
     plt.clf()
     plt.cla()
@@ -311,33 +308,33 @@ def main(folding_id, inliner_classes, total_classes, folds=5, bdd100k = False, c
         gennorm_param[1, i] = loc
         gennorm_param[2, i] = scale
 
-    def compute_threshold(mnist_valid, percentage):
+    def compute_threshold(data_valid, percentage):
         #############################################################################################
         # Searching for threshold on validation set
-        random.shuffle(mnist_valid)
-        mnist_valid_outlier = [x for x in mnist_valid if x[0] in outlier_classes]
-        mnist_valid_inliner = [x for x in mnist_valid if x[0] in inliner_classes]
+        random.shuffle(data_valid)
+        data_valid_outlier = [x for x in data_valid if x[0] in outlier_classes]
+        data_valid_inliner = [x for x in data_valid if x[0] in inliner_classes]
 
-        inliner_count = len(mnist_valid_inliner)
+        inliner_count = len(data_valid_inliner)
         outlier_count = inliner_count * percentage // (100 - percentage)
 
-        if len(mnist_valid_outlier) > outlier_count:
-            mnist_valid_outlier = mnist_valid_outlier[:outlier_count]
+        if len(data_valid_outlier) > outlier_count:
+            data_valid_outlier = data_valid_outlier[:outlier_count]
         else:
-            outlier_count = len(mnist_valid_outlier)
+            outlier_count = len(data_valid_outlier)
             inliner_count = outlier_count * (100 - percentage) // percentage
-            mnist_valid_inliner = mnist_valid_inliner[:inliner_count]
+            data_valid_inliner = data_valid_inliner[:inliner_count]
 
-        _mnist_valid = mnist_valid_outlier + mnist_valid_inliner
-        random.shuffle(_mnist_valid)
+        _data_valid = data_valid_outlier + data_valid_inliner
+        random.shuffle(_data_valid)
 
-        mnist_valid_x, mnist_valid_y = list_of_pairs_to_numpy(_mnist_valid)
+        data_valid_x, data_valid_y = list_of_pairs_to_numpy(_data_valid)
         result = []
         novel = []
 
-        for it in range(len(mnist_valid_x) // batch_size):
-            x = Variable(extract_batch(mnist_valid_x, it, batch_size).view(-1, channels * image_height * image_width).data, requires_grad=True)
-            label = extract_batch_(mnist_valid_y, it, batch_size)
+        for it in range(len(data_valid_x) // batch_size):
+            x = Variable(extract_batch(data_valid_x, it, batch_size).view(-1, channels * image_height * image_width).data, requires_grad=True)
+            label = extract_batch_(data_valid_y, it, batch_size)
 
             z = E(x.view(-1, channels, image_height, image_width))
             recon_batch = G(z)
@@ -418,38 +415,38 @@ def main(folding_id, inliner_classes, total_classes, folds=5, bdd100k = False, c
         print("Best e: ", best_e)
         return best_e
 
-    def test(mnist_test, percentage, e):
+    def test(data_test, percentage, e):
         true_positive = 0
         true_negative = 0
         false_positive = 0
         false_negative = 0
 
-        random.shuffle(mnist_test)
-        mnist_test_outlier = [x for x in mnist_test if x[0] in outlier_classes]
-        mnist_test_inliner = [x for x in mnist_test if x[0] in inliner_classes]
+        random.shuffle(data_test)
+        data_test_outlier = [x for x in data_test if x[0] in outlier_classes]
+        data_test_inliner = [x for x in data_test if x[0] in inliner_classes]
 
-        inliner_count = len(mnist_test_inliner)
+        inliner_count = len(data_test_inliner)
         outlier_count = inliner_count * percentage // (100 - percentage)
 
-        if len(mnist_test_outlier) > outlier_count:
-            mnist_test_outlier = mnist_test_outlier[:outlier_count]
+        if len(data_test_outlier) > outlier_count:
+            data_test_outlier = data_test_outlier[:outlier_count]
         else:
-            outlier_count = len(mnist_test_outlier)
+            outlier_count = len(data_test_outlier)
             inliner_count = outlier_count * (100 - percentage) // percentage
-            mnist_test_inliner = mnist_test_inliner[:inliner_count]
+            data_test_inliner = data_test_inliner[:inliner_count]
 
-        mnist_test = mnist_test_outlier + mnist_test_inliner
-        random.shuffle(mnist_test)
+        data_test = data_test_outlier + data_test_inliner
+        random.shuffle(data_test)
 
-        mnist_test_x, mnist_test_y = list_of_pairs_to_numpy(mnist_test)
+        data_test_x, data_test_y = list_of_pairs_to_numpy(data_test)
 
         count = 0
 
         result = []
 
-        for it in range(len(mnist_test_x) // batch_size):
-            x = Variable(extract_batch(mnist_test_x, it, batch_size).view(-1, channels * image_height * image_width).data, requires_grad=True)
-            label = extract_batch_(mnist_test_y, it, batch_size)
+        for it in range(len(data_test_x) // batch_size):
+            x = Variable(extract_batch(data_test_x, it, batch_size).view(-1, channels * image_height * image_width).data, requires_grad=True)
+            label = extract_batch_(data_test_y, it, batch_size)
 
             z = E(x.view(-1, channels, image_height, image_width))
             recon_batch = G(z)
@@ -484,7 +481,7 @@ def main(folding_id, inliner_classes, total_classes, folds=5, bdd100k = False, c
 
                 logPe = np.log(r_pdf(distance, bin_edges, counts))
                 logPe -= np.log(distance) * (channels * image_height * image_width - z_size)
-
+                
                 count += 1
 
                 P = logD + logPz + logPe
@@ -512,8 +509,14 @@ def main(folding_id, inliner_classes, total_classes, folds=5, bdd100k = False, c
         except:
             auc = 0
 
-        with open('result_d%d_p%d.pkl' % (inliner_classes[0], percentage), 'wb') as output:
-            pickle.dump(result, output)
+
+        if dataset == "bdd100k":
+            with open('result_%s_p%d.pkl' % (name_spec, percentage), 'wb') as output:
+                pickle.dump(result, output)
+
+        elif dataset == "mnist":
+            with open('result_d%d_p%d.pkl' % (inliner_classes[0], percentage), 'wb') as output:
+                pickle.dump(result, output)
 
         print("Percentage ", percentage)
         print("Error ", error)
@@ -530,13 +533,20 @@ def main(folding_id, inliner_classes, total_classes, folds=5, bdd100k = False, c
         minP = min([x[1] for x in result]) - 1
         maxP = max([x[1] for x in result]) + 1
 
+
+        # For looping over values of e:
+        max_vals = 100000
+        if (maxP-minP)//0.2 > max_vals:
+            p_range = np.linspace(minP,maxP,num=max_vals)
+        else:
+            p_range = np.arange(minP, maxP, 0.2)
         ##################################################################
         # FPR at TPR 95
         ##################################################################
         fpr95 = 0.0
         clothest_tpr = 1.0
         dist_tpr = 1.0
-        for e in np.arange(minP, maxP, 0.2):
+        for e in p_range:
             tpr = np.sum(np.greater_equal(X1, e)) / np.float(len(X1))
             fpr = np.sum(np.greater_equal(Y1, e)) / np.float(len(Y1))
             if abs(tpr - 0.95) < dist_tpr:
@@ -551,7 +561,7 @@ def main(folding_id, inliner_classes, total_classes, folds=5, bdd100k = False, c
         # Detection error
         ##################################################################
         error = 1.0
-        for e in np.arange(minP, maxP, 0.2):
+        for e in p_range:
             tpr = np.sum(np.less(X1, e)) / np.float(len(X1))
             fpr = np.sum(np.greater_equal(Y1, e)) / np.float(len(Y1))
             error = np.minimum(error, (tpr + fpr) / 2.0)
@@ -563,7 +573,7 @@ def main(folding_id, inliner_classes, total_classes, folds=5, bdd100k = False, c
         ##################################################################
         auprin = 0.0
         recallTemp = 1.0
-        for e in np.arange(minP, maxP, 0.2):
+        for e in p_range:
             tp = np.sum(np.greater_equal(X1, e))
             fp = np.sum(np.greater_equal(Y1, e))
             if tp + fp == 0:
@@ -581,11 +591,17 @@ def main(folding_id, inliner_classes, total_classes, folds=5, bdd100k = False, c
         # AUPR OUT
         ##################################################################
         minp, maxP = -maxP, -minP
+
+        if (maxP-minP)//0.2 > max_vals:
+            p_range = np.linspace(minP,maxP,num=max_vals)
+        else:
+            p_range = np.arange(minP, maxP, 0.2)
+
         X1 = [-x for x in X1]
         Y1 = [-x for x in Y1]
         auprout = 0.0
         recallTemp = 1.0
-        for e in np.arange(minP, maxP, 0.2):
+        for e in p_range:
             tp = np.sum(np.greater_equal(Y1, e))
             fp = np.sum(np.greater_equal(X1, e))
             if tp + fp == 0:
@@ -598,12 +614,21 @@ def main(folding_id, inliner_classes, total_classes, folds=5, bdd100k = False, c
 
         print("auprout: ", auprout)
 
-        with open(os.path.join("results.txt"), "a") as file:
-            file.write(
-                "Class: %d\n Percentage: %d\n"
-                "Error: %f\n F1: %f\n AUC: %f\nfpr95: %f"
-                "\nDetection: %f\nauprin: %f\nauprout: %f\n\n" %
-                (inliner_classes[0], percentage, error, f1, auc, fpr95, error, auprin, auprout))
+        if dataset == "bdd100k":
+            with open(os.path.join("results_%s.txt" % (name_spec)), "a") as file:
+                file.write(
+                    "Class: %d\n Percentage: %d\n"
+                    "Error: %f\n F1: %f\n AUC: %f\nfpr95: %f"
+                    "\nDetection: %f\nauprin: %f\nauprout: %f\n\n" %
+                    (inliner_classes[0], percentage, error, f1, auc, fpr95, error, auprin, auprout))
+
+        elif dataset == "mnist":
+            with open(os.path.join("results.txt"), "a") as file:
+                file.write(
+                    "Class: %d\n Percemnistntage: %d\n"
+                    "Error: %f\n F1: %f\n AUC: %f\nfpr95: %f"
+                    "\nDetection: %f\nauprin: %f\nauprout: %f\n\n" %
+                    (inliner_classes[0], percentage, error, f1, auc, fpr95, error, auprin, auprout))
 
         return auc, f1, fpr95, error, auprin, auprout
 
@@ -612,8 +637,8 @@ def main(folding_id, inliner_classes, total_classes, folds=5, bdd100k = False, c
     results = {}
 
     for p in percentages:
-        e = compute_threshold(mnist_valid, p)
-        results[p] = test(mnist_test, p, e)
+        e = compute_threshold(data_valid, p)
+        results[p] = test(data_test, p, e)
 
     return results
 
