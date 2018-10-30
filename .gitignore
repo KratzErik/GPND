@@ -12,3 +12,6 @@ MNIST_cGAN_results/
 *.eps
 *.txt
 results*/
+net.py.save
+train_AAE.py.save
+train_AAE.py.save.1
