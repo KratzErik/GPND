@@ -181,7 +181,7 @@ class Generator(nn.Module):
         if self.architecture not in [None,"b1","b2"]:
             # Parse configuration string
             tmp = self.architecture.split("_")
-            dim_red_type = tmp[0]
+            use_pool = tmp[0]
             n_deconv = int(tmp[1])
             n_dense = int(tmp[2]) # B: should be 0 or 1 
             db = int(tmp[3])
