@@ -3,6 +3,11 @@ from pathlib import Path
 
 class Configuration(object):
 
+
+    dreyeve_train_folder = "../data/dreyeve/highway_morning_sunny_vs_rainy/train/"
+    dreyeve_val_folder = "../data/dreyeve/highway_morning_sunny_vs_rainy/val/"
+    dreyeve_test_folder = "../data/dreyeve/highway_morning_sunny_vs_rainy/test/"
+
 # put config variable definitions here
     img_folder = Path("/data/bdd100k/images/train_and_val_192by320")
     norm_file = "/data/bdd100k/namelists/clear_or_partly_cloudy_or_overcast_and_highway_and_daytime.txt"
@@ -22,6 +27,6 @@ class Configuration(object):
     labels_file = None
     get_norm_and_out_sets = False
     shuffle=False
-    architecture = "b1"
-    name_spec = "bdd100k_first_full"
+    architecture = '1_2_1_8_256_5_1_0'
+    name_spec = "dreyeve_autobuild"
     use_batchnorm = True

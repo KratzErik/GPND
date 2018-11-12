@@ -132,6 +132,46 @@ def main(folding_id, inliner_classes, total_classes, folds=5, dataset = "bdd100k
     def list_of_pairs_to_numpy(l):
             return np.asarray([x[1] for x in l], np.float32), np.asarray([x[0] for x in l], np.int)
 
+    if dataset == "dreyeve":
+        self._X_test = self._y_test = 
+        inliner_classes = [0]
+        outlier_classes = [1]
+
+        if cfg is not None:
+            print("Data path: " + str(cfg.img_folder))
+            channels = cfg.channels
+            image_height = cfg.image_height
+            image_width = cfg.image_width
+            data_train_x = [img_to_array(load_img(Cfg.dreyeve_train_folder + filename)) for filename in os.listdir(Cfg.dreyeve_train_folder)]
+            data_test_x = [img_to_array(load_img(Cfg.dreyeve_test_folder + filename)) for filename in os.listdir(Cfg.dreyeve_test_folder)]
+            test_labels = np.concatenate([np.zeros((Cfg.dreyeve_n_test_in,),dtype=np.int32),np.ones((Cfg.dreyeve_n_test-Cfg.dreyeve_n_test_in,),dtype=np.int32)])
+            architecture = cfg.architecture
+            name_spec = cfg.name_spec
+        else:
+            print("No configuration provided for BDD100K, using standard configuration")
+            channels = 3
+            image_height = 256
+            image_width = 256
+            architecture = "b1"
+            now = datetime.datetime.now()
+            name_spec = "bdd100k_"+now.year+"_"+now.month+"_"+now.day
+            # TODO: ADD STANDARD CONFIG (HARD CODED)
+
+        print("Transposing data to 'channels first'")
+        data_train_x = np.moveaxis(data_train_x,-1,1)
+        data_test_x = np.moveaxis(data_test_x,-1,1)
+
+        print("Converting data from uint8 to float32")
+        data_train_x = np.float32(data_train_x)
+        data_test_x = np.float32(data_test_x)
+
+        # Labels for training data
+        data_train_y = np.zeros((len(data_train_x),),dtype=np.int)
+
+        # Test and validation data both have outliers: split in two parts
+        data_valid = [(lbl,img) for i, lbl, img in zip(range(len(test_labels)),test_labels, data_test_x) if i % 2 is 0]
+        data_test = [(lbl,img) for i, lbl, img in zip(range(len(test_labels)),test_labels, data_test_x) if i % 2 is not 0]
+
     if dataset == "bdd100k":
         inliner_classes = [0]
         outlier_classes = [1]

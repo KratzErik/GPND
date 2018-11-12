@@ -30,6 +30,7 @@ import random
 import os
 from utils import loadbdd100k
 import datetime
+from keras.preprocessing.image import load_img, img_to_array
 
 use_cuda = torch.cuda.is_available()
 
@@ -113,6 +114,44 @@ def main(folding_id, inliner_classes, total_classes, folds=5, dataset="mnist", c
 
     elif dataset == "prosivic":
         # Load prosivic data
+    
+    elif dataset == "dreyeve":
+        zsize = 256
+        inliner_classes = [0]
+        outlier_classes = [1]
+        image_dest = "./log/dreyeve/"
+
+        if cfg is not None:
+            print("Data path: " + str(cfg.dreyeve_img_folder))
+            channels = cfg.channels
+            image_height = cfg.image_height
+            image_width = cfg.image_width
+            data_train_x = [img_to_array(load_img(Cfg.dreyeve_train_folder + filename)) for filename in os.listdir(Cfg.dreyeve_train_folder)]
+            valid_imgs = [img_to_array(load_img(Cfg.dreyeve_val_folder + filename)) for filename in os.listdir(Cfg.dreyeve_val_folder)]
+            
+        else:
+            print("No configuration provided for dreyeve, using standard configuration")
+            channels = 3
+            image_height = 192
+            image_width = 320
+            architecture = "b1"
+            now = datetime.datetime.now()
+            name_spec = "dreyeve"+now.year+"_"+now.month+"_"+now.day
+            # TODO: ADD STANDARD CONFIG (HARD CODED)
+
+        print("Transposing data to 'channels first'")
+        data_train_x = np.moveaxis(data_train_x,-1,1)
+        valid_imgs = np.moveaxis(valid_imgs,-1,1)
+
+        print("Converting data from uint8 to float32")
+        data_train_x = np.float32(data_train_x)
+        valid_imgs = np.float32(valid_imgs)
+
+        # Labels for training data
+        data_train_y = np.zeros((len(data_train_x),),dtype=np.int)
+
+        for img in valid_imgs:
+            data_valid.append((0,img))
         
     elif dataset == "mnist":
         zsize = 32
