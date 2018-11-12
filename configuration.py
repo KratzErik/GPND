@@ -24,3 +24,4 @@ class Configuration(object):
     shuffle=False
     architecture = "b1"
     name_spec = "bdd100k_first_full"
+    use_batchnorm = True
