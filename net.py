@@ -2,7 +2,7 @@
 import torch
 from torch import nn
 from torch.nn import functional as F
-
+import configuration as cfg
 
 class VAE(nn.Module):
     def __init__(self, zsize, channels = 1, architecture = None):
@@ -59,6 +59,125 @@ class VAE(nn.Module):
 
         self.architecture = architecture
 
+        if self.architecture not in [None,"b1","b2"]:
+            # architecture spec A_B_C_D_E_F_G_H
+            tmp = cfg.architecture.split("_")
+            use_pool = int(tmp[0]) == 1 # 1 or 0
+            n_conv = int(tmp[1])
+            n_dense = int(tmp[2])
+            c_1 = int(tmp[3])
+            zsize = int(tmp[4])
+            ksize= int(tmp[5])
+            stride = int(tmp[6])
+            pad = int(tmp[7])
+            num_filters = c_1
+
+            if use_pool:
+                pad = 0
+            
+            self.conv_layers = []
+            self.encoding_bn_layers = []
+            self.pool_layers = []
+
+            self.input_layer = nn.Conv2d(channels, num_filters, ksize, stride, pad)
+            self.input_bn = nn.BatchNorm2D(num_filters)
+            self.input_pool = nn.Maxpool2d((2,2))
+            print("Added conv_layer %d" % len(self.conv_layers)+1)
+
+            for i in range(n_conv-2):
+                num_filters *= 2
+                self.conv_layers.append(nn.Conv2d(num_filters//2, num_filters, ksize, stride, pad))
+                self.encoding_bn_layers.append(nn.BatchNorm2D(num_filters))
+                self.pool_layers.append(nn.Maxpool2d((2,2)))
+
+                print("Added conv_layer %d" % len(self.conv_layers)+1)
+
+            # Final conv layer without batch norm
+            num_filters *= 2
+            if n_dense > 0:
+                # Add final conv_layer
+                self.conv_layers.append(nn.Conv2d(num_filters//2, num_filters, ksize, stride, pad))
+                self.encoding_bn_layers.append(nn.BatchNorm2D(num_filters))
+                self.pool_layers.append(nn.Maxpool2d((2,2)))
+
+                # Add dense layer
+                num_dense_in =  c_1 * (2**(n_conv-1))
+                self.encoding_dense_layer_1 = nn.Linear(num_filters,zsize)
+                self.encoding_dense_layer_2 = nn.Linear(num_filters,zsize)
+            else:
+                # Add final conv_layer:
+                h = self.image_height // (2**(n_conv-1))
+                self.encoding_convlayer_1 = nn.Conv2d(num_filters//2, zsize, h, 1, 0)
+                self.encoding_convlayer_2 = nn.Conv2d(num_filters//2, zsize, h, 1, 0)
+
+            # Decoding layers
+            tmp = cfg.architecture.split("_")
+            use_pool = int(tmp[0]) == 1 # 1 or 0
+            n_conv = int(tmp[1])
+            n_dense = int(tmp[2])
+            c_out = int(tmp[3])
+            zsize = int(tmp[4])
+            ksize= int(tmp[5])
+            stride = int(tmp[6])
+            pad = int(tmp[7])
+            num_filters = c_out
+
+            if use_pool:
+                pad = 0
+            
+            self.deconv_layers = []
+            self.decoding_bn_layers = []
+            if n_dense > 0:
+                
+                h1 = self.image_height // (2**n_conv) # height = width of image going into first conv layer
+                num_filters =  c_out * (2**(n_conv-1))
+                num_out_dense_units = h1**2 * num_filters
+                self.decoding_dense_layer = nn.Linear(zsize,num_out_dense_units)
+                self.decoding_dense_bn = nn.BatchNorm1d(num_out_dense_units)
+
+                num_filters = num_filters // 2
+
+                if use_pool:
+                    self.unpool_layers = []
+                    self.unpool_layers.append(nn.MaxUnpool2d((2,2)))
+                
+                self.deconv_layers.append(nn.ConvTranspose2d(num_filters*2, num_filters, ksize, stride, pad))
+                self.decoding_bn_layers.append(nn.BatchNorm2d(num_filters))
+
+                print("Added deconv_layer %d" % len(self.deconv_layers))
+
+                num_filters //=2
+
+            else:
+                if use_pool:
+                    self.unpool_layers = []
+                    self.unpool_layers.append(nn.MaxUnpool2d((2,2)))
+
+                h2 = self.image_height // (2**(n_conv-1)) # height of image going in to second conv layer
+                num_filters = c_out * (2**(n_conv-2))
+                self.deconv_layers.append(nn.ConvTranspose2d(num_filters*2, num_filters, h2, 1, 0))
+                self.decoding_bn_layers.append(nn.BatchNorm2d(num_filters))
+                print("Added deconv_layer %d" % len(self.deconv_layers))
+
+            # Add remaining deconv layers
+            for i in range(n_conv-2):
+                if use_pool:
+                    self.unpool_layers = []
+                    self.unpool_layers.append(nn.MaxUnpool2d((2,2)))
+
+                self.deconv_layers.append(nn.ConvTranspose2d(num_filters*2, num_filters, ksize, stride, pad))
+                self.decoding_bn_layers.append(nn.BatchNorm2d(num_filters))
+                
+                print("Added deconv_layer %d" % len(self.deconv_layers))
+                num_filters //=2
+
+            # add reconstruction layer
+            if use_pool:
+                self.final_unpool = nn.MaxUnpool2d((2,2))
+                    
+            self.output_layer = nn.ConvTranspose2d(num_filters*2, self.channels, ksize, stride, pad)
+            print("Added reconstruction layer")
+
     def encode(self, x):
         if self.architecture is None:
             x = F.relu(self.conv1(x), 0.2)
@@ -87,6 +206,42 @@ class VAE(nn.Module):
             x = F.relu(self.b_conv6_bn(self.conv6(x)), 0.2)
             h1 = self.b_conv7_1(x)
             h2 = self.b_conv7_2(x)
+            return h1, h2
+        
+        else:
+            tmp = cfg.architecture.split("_")
+            use_pool = int(tmp[0]) == 1 # 1 or 0
+            n_conv = int(tmp[1])
+            n_dense = int(tmp[2])
+            c_1 = int(tmp[3])
+            zsize = int(tmp[4])
+            ksize= int(tmp[5])
+            stride = int(tmp[6])
+            pad = int(tmp[7])
+            num_filters = c_1
+
+            x = self.input_layer(input)
+
+            if cfg.use_batchnorm:
+                x = self.input_bn(x)
+
+            x = F.leaky_relu(x)
+            
+            for conv, bn, pool in zip(self.conv_layers, self.encoding_bn_layers, self.pool_layers):
+                x = conv(x)
+                if cfg.use_batchnorm:
+                    x = bn(x)
+                if use_pool:
+                    x = pool(x)
+
+            if n_dense > 0:
+                x = x.view(x.numel())
+                h1 = self.encoding_dense_layer_1(x)
+                h2 = self.encoding_dense_layer_2(x)
+            else:
+                h1 = self.encoding_convlayer_1(x)
+                h2 = self.encoding_convlayer_2(x)
+                
             return h1, h2
 
     def reparameterize(self, mu, logvar):
@@ -125,7 +280,43 @@ class VAE(nn.Module):
             x = F.relu(self.b_deconv5_bn(self.b_deconv5(x)))
             x = F.relu(self.b_deconv6_2_bn(self.b_deconv6_2(x)))
             x = F.tanh(self.b_deconv7(x)) * 0.5 + 0.5  
-            return x      
+            return x  
+
+        else: # build architecture from spec: A_B_C_D_E_F_G_H
+            tmp = cfg.architecture.split("_")
+            use_pool = int(tmp[0]) == 1 # 1 or 0
+            n_conv = int(tmp[1])
+            n_dense = int(tmp[2])
+            c_out = int(tmp[3])
+            zsize = int(tmp[4])
+            ksize= int(tmp[5])
+            stride = int(tmp[6])
+            pad = int(tmp[7])
+            num_filters = c_out
+
+            # height of image at start of deconvolutions
+
+            if n_dense > 0:
+                h1 = self.image_height // (2**n_conv) # height = width of image going into first conv layer
+                num_filters =  c_out * (2**(n_conv-1))
+                x = F.relu(self.decoding_dense_bn(self.decoding_dense_layer(input)))
+                x = x.view(-1,num_filters,h1,h1)
+            else: 
+                x = input
+            
+            if use_pool:
+                for bn, deconv, unpool in zip(self.decoding_bn_layers,self.deconv_layers,self.unpool_layers):
+                    x = F.relu(bn(deconv(unpool(x))))
+            else:
+                for bn, deconv in zip(self.decoding_bn_layers,self.deconv_layers):
+                    x = F.relu(bn(deconv(x)))
+
+            if use_pool:
+                x = F.tanh(self.output_layer(self.final_unpool(x)))*0.5 + 0.5
+            else:
+                x = F.tanh(self.output_layer(x))*0.5 + 0.5
+            
+            return x    
 
     def forward(self, x):
         mu, logvar = self.encode(x)
@@ -180,7 +371,7 @@ class Generator(nn.Module):
 
         if self.architecture not in [None,"b1","b2"]:
             # architecture spec A_B_C_D_E_F_G_H
-            tmp = Cfg.dreyeve_architecture.split("_")
+            tmp = cfg.architecture.split("_")
             use_pool = int(tmp[0]) == 1 # 1 or 0
             n_conv = int(tmp[1])
             n_dense = int(tmp[2])
@@ -283,7 +474,7 @@ class Generator(nn.Module):
             return x
 
         else: # build architecture from spec: A_B_C_D_E_F_G_H
-            tmp = Cfg.dreyeve_architecture.split("_")
+            tmp = cfg.architecture.split("_")
             use_pool = int(tmp[0]) == 1 # 1 or 0
             n_conv = int(tmp[1])
             n_dense = int(tmp[2])
@@ -349,7 +540,7 @@ class Discriminator(nn.Module):
 
         if self.architecture not in [None,"b1","b2"]:
             # architecture spec A_B_C_D_E_F_G_H
-            tmp = Cfg.dreyeve_architecture.split("_")
+            tmp = cfg.architecture.split("_")
             use_pool = int(tmp[0]) == 1 # 1 or 0
             n_conv = int(tmp[1])
             n_dense = int(tmp[2])
@@ -432,7 +623,7 @@ class Discriminator(nn.Module):
             return x
 
         else:
-            tmp = Cfg.dreyeve_architecture.split("_")
+            tmp = cfg.architecture.split("_")
             use_pool = int(tmp[0]) == 1 # 1 or 0
             n_conv = int(tmp[1])
             n_dense = int(tmp[2])
@@ -445,14 +636,14 @@ class Discriminator(nn.Module):
 
             x = self.input_layer(input)
 
-            if Cfg.use_batchnorm:
+            if cfg.use_batchnorm:
                 x = self.input_bn(x)
 
             x = F.leaky_relu(x)
             
             for conv, bn, pool in zip(self.conv_layers, self.bn_layers, self.pool_layers):
                 x = conv(x)
-                if Cfg.use_batchnorm:
+                if cfg.use_batchnorm:
                     x = bn(x)
                 if use_pool:
                     x = pool(x)
@@ -496,7 +687,7 @@ class Encoder(nn.Module):
 
         if self.architecture not in [None,"b1","b2"]:
             # architecture spec A_B_C_D_E_F_G_H
-            tmp = Cfg.dreyeve_architecture.split("_")
+            tmp = cfg.architecture.split("_")
             use_pool = int(tmp[0]) == 1 # 1 or 0
             n_conv = int(tmp[1])
             n_dense = int(tmp[2])
@@ -577,7 +768,7 @@ class Encoder(nn.Module):
             return x
 
         else:
-            tmp = Cfg.dreyeve_architecture.split("_")
+            tmp = cfg.architecture.split("_")
             use_pool = int(tmp[0]) == 1 # 1 or 0
             n_conv = int(tmp[1])
             n_dense = int(tmp[2])
@@ -590,14 +781,14 @@ class Encoder(nn.Module):
 
             x = self.input_layer(input)
 
-            if Cfg.use_batchnorm:
+            if cfg.use_batchnorm:
                 x = self.input_bn(x)
 
             x = F.leaky_relu(x)
             
             for conv, bn, pool in zip(self.conv_layers, self.bn_layers, self.pool_layers):
                 x = conv(x)
-                if Cfg.use_batchnorm:
+                if cfg.use_batchnorm:
                     x = bn(x)
                 if use_pool:
                     x = pool(x)
