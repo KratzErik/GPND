@@ -117,19 +117,21 @@ def main(folding_id, inliner_classes, total_classes, folds=5, dataset="mnist", c
         return
 
     elif dataset == "dreyeve":
-        zsize = 256
+        tmp = cfg.architecture.split("_")
+        zsize = int(tmp[4])
         inliner_classes = [0]
         outlier_classes = [1]
         image_dest = "./log/dreyeve/"
 
         if cfg is not None:
             print("Data path: " + str(cfg.dreyeve_img_folder))
+            architecture = cfg.architecture
             channels = cfg.channels
             image_height = cfg.image_height
             image_width = cfg.image_width
             data_train_x = [img_to_array(load_img(cfg.dreyeve_train_folder + filename)) for filename in os.listdir(cfg.dreyeve_train_folder)]
             valid_imgs = [img_to_array(load_img(cfg.dreyeve_val_folder + filename)) for filename in os.listdir(cfg.dreyeve_val_folder)]
-            
+        else:
             print("No configuration provided for dreyeve, using standard configuration")
             channels = 3
             image_height = 256
@@ -186,6 +188,8 @@ def main(folding_id, inliner_classes, total_classes, folds=5, dataset="mnist", c
     print("Train set size:", len(data_train_x))
     print("Data type:", data_train_x.dtype)
     print("Max pixel value:", np.amax(data_train_x))
+
+    print("Configuring networks with architecture:" + architecture)
     G = Generator(zsize, channels = channels, architecture = architecture)
     setup(G)
     G.weight_init(mean=0, std=0.02)
