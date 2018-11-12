@@ -133,7 +133,6 @@ def main(folding_id, inliner_classes, total_classes, folds=5, dataset = "bdd100k
             return np.asarray([x[1] for x in l], np.float32), np.asarray([x[0] for x in l], np.int)
 
     if dataset == "dreyeve":
-        self._X_test = self._y_test = 
         inliner_classes = [0]
         outlier_classes = [1]
 
@@ -142,9 +141,9 @@ def main(folding_id, inliner_classes, total_classes, folds=5, dataset = "bdd100k
             channels = cfg.channels
             image_height = cfg.image_height
             image_width = cfg.image_width
-            data_train_x = [img_to_array(load_img(Cfg.dreyeve_train_folder + filename)) for filename in os.listdir(Cfg.dreyeve_train_folder)]
-            data_test_x = [img_to_array(load_img(Cfg.dreyeve_test_folder + filename)) for filename in os.listdir(Cfg.dreyeve_test_folder)]
-            test_labels = np.concatenate([np.zeros((Cfg.dreyeve_n_test_in,),dtype=np.int32),np.ones((Cfg.dreyeve_n_test-Cfg.dreyeve_n_test_in,),dtype=np.int32)])
+            data_train_x = [img_to_array(load_img(cfg.dreyeve_train_folder + filename)) for filename in os.listdir(cfg.dreyeve_train_folder)]
+            data_test_x = [img_to_array(load_img(cfg.dreyeve_test_folder + filename)) for filename in os.listdir(cfg.dreyeve_test_folder)]
+            test_labels = np.concatenate([np.zeros((cfg.dreyeve_n_test_in,),dtype=np.int32),np.ones((cfg.dreyeve_n_test-cfg.dreyeve_n_test_in,),dtype=np.int32)])
             architecture = cfg.architecture
             name_spec = cfg.name_spec
         else:

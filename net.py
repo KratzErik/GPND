@@ -141,7 +141,7 @@ class VAE(nn.Module):
 
 class Generator(nn.Module):
     # initializers
-    def __init__(self, zsize, d=128, db=8, channels=1, architecture = None, h_out):
+    def __init__(self, zsize, d=128, db=8, channels=1, architecture = None):
         super(Generator, self).__init__()
         self.deconv1_1 = nn.ConvTranspose2d(zsize, d*2, 4, 1, 0)
         self.deconv1_1_bn = nn.BatchNorm2d(d*2)
@@ -219,7 +219,7 @@ class Generator(nn.Module):
 
             else:
                 if use_pool:
-                self.unpool_layers = []
+                    self.unpool_layers = []
                     self.unpool_layers.append(nn.MaxUnpool2d((2,2)))
 
                 h2 = self.image_height // (2**(n_conv-1)) # height of image going in to second conv layer
@@ -313,14 +313,14 @@ class Generator(nn.Module):
 
             if use_pool:
                 x = F.tanh(self.output_layer(self.final_unpool(x)))*0.5 + 0.5
-            else
+            else:
                 x = F.tanh(self.output_layer(x))*0.5 + 0.5
             
             return x
 
 class Discriminator(nn.Module):
     # initializers
-    def __init__(self, d=128, db=8, channels=1, architecture = None, h_in):
+    def __init__(self, d=128, db=8, channels=1, architecture = None):
         super(Discriminator, self).__init__()
         self.conv1_1 = nn.Conv2d(channels, d//2, 4, 2, 1)
         self.conv2 = nn.Conv2d(d // 2, d*2, 4, 2, 1)
@@ -393,7 +393,7 @@ class Discriminator(nn.Module):
                 self.dense_layer = nn.Linear(num_filters,1)
             else:
                 # Add final conv_layer:
-                h = self.image_height // (2**(n_conv-1)
+                h = self.image_height // (2**(n_conv-1))
                 self.output_convlayer = nn.Conv2d(num_filters//2, 1, h, 1, 0)
 
 
@@ -540,7 +540,7 @@ class Encoder(nn.Module):
                 self.dense_layer = nn.Linear(num_filters,zsize)
             else:
                 # Add final conv_layer:
-                h = self.image_height // (2**(n_conv-1)
+                h = self.image_height // (2**(n_conv-1))
                 self.output_convlayer = nn.Conv2d(num_filters//2, zsize, h, 1, 0)
  
     # weight_init

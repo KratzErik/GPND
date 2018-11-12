@@ -91,8 +91,8 @@ def main(folding_id, inliner_classes, total_classes, folds=5, dataset="mnist", c
         else:
             print("No configuration provided for BDD100K, using standard configuration")
             channels = 3
-            image_height = 192
-            image_width = 320
+            image_height = 256
+            image_width = 256
             architecture = "b1"
             now = datetime.datetime.now()
             name_spec = "bdd100k_"+now.year+"_"+now.month+"_"+now.day
@@ -114,7 +114,8 @@ def main(folding_id, inliner_classes, total_classes, folds=5, dataset="mnist", c
 
     elif dataset == "prosivic":
         # Load prosivic data
-    
+        return
+
     elif dataset == "dreyeve":
         zsize = 256
         inliner_classes = [0]
@@ -126,17 +127,16 @@ def main(folding_id, inliner_classes, total_classes, folds=5, dataset="mnist", c
             channels = cfg.channels
             image_height = cfg.image_height
             image_width = cfg.image_width
-            data_train_x = [img_to_array(load_img(Cfg.dreyeve_train_folder + filename)) for filename in os.listdir(Cfg.dreyeve_train_folder)]
-            valid_imgs = [img_to_array(load_img(Cfg.dreyeve_val_folder + filename)) for filename in os.listdir(Cfg.dreyeve_val_folder)]
+            data_train_x = [img_to_array(load_img(cfg.dreyeve_train_folder + filename)) for filename in os.listdir(cfg.dreyeve_train_folder)]
+            valid_imgs = [img_to_array(load_img(cfg.dreyeve_val_folder + filename)) for filename in os.listdir(cfg.dreyeve_val_folder)]
             
-        else:
             print("No configuration provided for dreyeve, using standard configuration")
             channels = 3
-            image_height = 192
-            image_width = 320
+            image_height = 256
+            image_width = 256
             architecture = "b1"
             now = datetime.datetime.now()
-            name_spec = "dreyeve"+now.year+"_"+now.month+"_"+now.day
+            name_spec = "dreyeve"+str(now.year)+"_"+str(now.month)+"_"+str(now.day)
             # TODO: ADD STANDARD CONFIG (HARD CODED)
 
         print("Transposing data to 'channels first'")
@@ -368,10 +368,10 @@ def main(folding_id, inliner_classes, total_classes, folds=5, dataset="mnist", c
 
 
     print("Training finish!... save training results")
-    torch.save(G.state_dict(), "Gmodel_"+name_spec".pkl")
-    torch.save(E.state_dict(), "Emodel_"+name_spec".pkl")
-    torch.save(D.state_dict(), "Dmodel_"+name_spec".pkl")
-    torch.save(ZD.state_dict(), "ZDmodel_"+name_spec".pkl"):
+    torch.save(G.state_dict(), "Gmodel_"+name_spec+".pkl")
+    torch.save(E.state_dict(), "Emodel_"+name_spec+".pkl")
+    torch.save(D.state_dict(), "Dmodel_"+name_spec+".pkl")
+    torch.save(ZD.state_dict(), "ZDmodel_"+name_spec+".pkl")
 
 if __name__ == '__main__':
     main(0, [0], 10)
