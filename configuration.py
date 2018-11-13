@@ -31,5 +31,5 @@ class Configuration(object):
 #    get_norm_and_out_sets = False
 #    shuffle=False
     architecture = '1_5_1_8_256_5_1_0'
-    name_spec = "dreyeve_autobuild"
+    name_spec = "dreyeve_autobuild"+architecture
     use_batchnorm = True

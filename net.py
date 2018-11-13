@@ -499,34 +499,26 @@ class Generator(nn.Module):
             num_filters = c_out
 
             # height of image at start of deconvolutions
-            print("Input: ", input.shape)
             if n_dense > 0:
                 input = input.permute(0,2,3,1)
-                print("Input: ", input.shape)
                 h1 = cfg.image_height // (2**n_conv) # height = width of image going into first conv layer
                 num_filters =  c_out * (2**(n_conv-1))
                 x = self.dense_layer(input)
                 x = x.permute(0,3,1,2)
                 x = x.view(-1,h1**2 * num_filters)
-                print("x3: ", x.shape)
                 x = self.dense_bn(x)
                 x = F.relu(x)
                 x = x.view(-1,num_filters,h1,h1)
             else:
                 x = input
-            print("x4: ", x.shape)
 
             for bn, deconv in zip(self.bn_layers,self.deconv_layers):
                 if use_pool:
                     x = F.interpolate(x, scale_factor = 2, mode = 'nearest')
-                print("x: ",x.shape)
                 x = F.relu(bn(deconv(x)))
-                print("x: ",x.shape)
 
             if use_pool:
                 x = F.interpolate(x, scale_factor = 2, mode = 'nearest')
-
-            print(x.shape)
 
             x = F.tanh(self.output_layer(x))*0.5 + 0.5
 

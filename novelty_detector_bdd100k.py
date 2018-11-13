@@ -34,6 +34,7 @@ import os
 from sklearn.metrics import roc_auc_score
 from utils import loadbdd100k
 import datetime
+from keras.preprocessing.image import load_img, img_to_array
 
 title_size = 16
 axis_title_size = 14
@@ -137,7 +138,7 @@ def main(folding_id, inliner_classes, total_classes, folds=5, dataset = "bdd100k
         outlier_classes = [1]
 
         if cfg is not None:
-            print("Data path: " + str(cfg.img_folder))
+            print("Data path: " + str(cfg.dreyeve_img_folder))
             channels = cfg.channels
             image_height = cfg.image_height
             image_width = cfg.image_width
