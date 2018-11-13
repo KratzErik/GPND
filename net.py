@@ -512,13 +512,16 @@ class Generator(nn.Module):
                     x = deconv(x)
                     x = bn(x)
                     x = F.relu(x)
+                    print("x: ",x.shape)
             else:
                 for bn, deconv in zip(self.bn_layers,self.deconv_layers):
                     x = F.relu(bn(deconv(x)))
-            print(x.shape)
+                    print("x: ",x.shape)
 
             if use_pool:
                 x = self.final_upsample(x)
+
+            print(x.shape)
 
             x = F.tanh(self.output_layer(x))*0.5 + 0.5
 
