@@ -498,13 +498,14 @@ class Generator(nn.Module):
                 x = self.dense_layer(input)
                 x = x.permute(0,3,1,2)
                 x = x.view(-1,h1**2 * num_filters)
-                print("x: ", x.shape)
+                print("x3: ", x.shape)
                 x = self.dense_bn(x)
                 x = F.relu(x)
                 x = x.view(-1,num_filters,h1,h1)
             else:
                 x = input
-            
+            print("x4: ", x.shape)
+
             if use_pool:
                 for bn, deconv, upsample in zip(self.bn_layers,self.deconv_layers,self.upsample_layers):
                     x = upsample(x)
@@ -514,12 +515,13 @@ class Generator(nn.Module):
             else:
                 for bn, deconv in zip(self.bn_layers,self.deconv_layers):
                     x = F.relu(bn(deconv(x)))
+            print(x.shape)
 
             if use_pool:
-                x = F.tanh(self.output_layer(self.final_upsample(x)))*0.5 + 0.5
-            else:
-                x = F.tanh(self.output_layer(x))*0.5 + 0.5
-            
+                x = self.final_upsample(x)
+
+            x = F.tanh(self.output_layer(x))*0.5 + 0.5
+
             return x
 
 class Discriminator(nn.Module):
