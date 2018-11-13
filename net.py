@@ -139,7 +139,7 @@ class VAE(nn.Module):
 
                 if use_pool:
                     self.upsample_layers = []
-                    self.upsample_layers.append(nn.Upsample(scale_factor = 2, mode = 'nearest'))
+                    self.upsample_layers.append(F.interpolate(scale_factor = 2, mode = 'nearest'))
                 
                 self.deconv_layers.append(nn.ConvTranspose2d(num_filters*2, num_filters, ksize, stride, pad))
                 self.decoding_bn_layers.append(nn.BatchNorm2d(num_filters))
@@ -151,7 +151,7 @@ class VAE(nn.Module):
             else:
                 if use_pool:
                     self.upsample_layers = []
-                    self.upsample_layers.append(nn.Upsample(scale_factor = 2, mode = 'nearest'))
+                    self.upsample_layers.append(F.interpolate(scale_factor = 2, mode = 'nearest'))
 
                 h2 = self.image_height // (2**(n_conv-1)) # height of image going in to second conv layer
                 num_filters = c_out * (2**(n_conv-2))
@@ -163,7 +163,7 @@ class VAE(nn.Module):
             for i in range(n_conv-2):
                 if use_pool:
                     self.upsample_layers = []
-                    self.upsample_layers.append(nn.Upsample(scale_factor = 2, mode = 'nearest'))
+                    self.upsample_layers.append(F.interpolate(scale_factor = 2, mode = 'nearest'))
 
                 self.deconv_layers.append(nn.ConvTranspose2d(num_filters*2, num_filters, ksize, stride, pad))
                 self.decoding_bn_layers.append(nn.BatchNorm2d(num_filters))
@@ -173,7 +173,7 @@ class VAE(nn.Module):
 
             # add reconstruction layer
             if use_pool:
-                self.final_upsample = nn.Upsample(scale_factor = 2, mode = 'nearest')
+                self.final_upsample = F.interpolate(scale_factor = 2, mode = 'nearest')
                     
             self.output_layer = nn.ConvTranspose2d(num_filters*2, self.channels, ksize, stride, pad)
             print("Added reconstruction layer")
@@ -402,7 +402,7 @@ class Generator(nn.Module):
 
                 if use_pool:
                     self.upsample_layers = []
-                    self.upsample_layers.append(nn.Upsample(scale_factor = 2, mode = 'nearest'))
+                    self.upsample_layers.append(F.interpolate(scale_factor = 2, mode = 'nearest'))
                 
                 self.deconv_layers.append(nn.ConvTranspose2d(num_filters*2, num_filters, ksize, stride, pad))
                 self.bn_layers.append(nn.BatchNorm2d(num_filters))
@@ -414,7 +414,7 @@ class Generator(nn.Module):
             else:
                 if use_pool:
                     self.upsample_layers = []
-                    self.upsample_layers.append(nn.Upsample(scale_factor = 2, mode = 'nearest'))
+                    self.upsample_layers.append(F.interpolate(scale_factor = 2, mode = 'nearest'))
 
                 h2 = self.image_height // (2**(n_conv-1)) # height of image going in to second conv layer
                 num_filters = c_out * (2**(n_conv-2))
@@ -426,7 +426,7 @@ class Generator(nn.Module):
             for i in range(n_conv-2):
                 if use_pool:
                     self.upsample_layers = []
-                    self.upsample_layers.append(nn.Upsample(scale_factor = 2, mode = 'nearest'))
+                    self.upsample_layers.append(F.interpolate(scale_factor = 2, mode = 'nearest'))
 
                 self.deconv_layers.append(nn.ConvTranspose2d(num_filters*2, num_filters, ksize, stride, pad))
                 self.bn_layers.append(nn.BatchNorm2d(num_filters))
@@ -436,7 +436,7 @@ class Generator(nn.Module):
 
             # add reconstruction layer
             if use_pool:
-                self.final_upsample = nn.Upsample(scale_factor = 2, mode = 'nearest')
+                self.final_upsample = F.interpolate(scale_factor = 2, mode = 'nearest')
                     
             self.output_layer = nn.ConvTranspose2d(num_filters*2, cfg.channels, ksize, stride, pad)
             print("Added reconstruction layer")
