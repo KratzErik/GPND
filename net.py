@@ -138,8 +138,8 @@ class VAE(nn.Module):
                 num_filters = num_filters // 2
 
                 if use_pool:
-                    self.unpool_layers = []
-                    self.unpool_layers.append(nn.MaxUnpool2d((2,2)))
+                    self.upsample_layers = []
+                    self.upsample_layers.append(nn.Upsample(scale_factor = 2))
                 
                 self.deconv_layers.append(nn.ConvTranspose2d(num_filters*2, num_filters, ksize, stride, pad))
                 self.decoding_bn_layers.append(nn.BatchNorm2d(num_filters))
@@ -150,8 +150,8 @@ class VAE(nn.Module):
 
             else:
                 if use_pool:
-                    self.unpool_layers = []
-                    self.unpool_layers.append(nn.MaxUnpool2d((2,2)))
+                    self.upsample_layers = []
+                    self.upsample_layers.append(nn.Upsample(scale_factor = 2))
 
                 h2 = self.image_height // (2**(n_conv-1)) # height of image going in to second conv layer
                 num_filters = c_out * (2**(n_conv-2))
@@ -162,8 +162,8 @@ class VAE(nn.Module):
             # Add remaining deconv layers
             for i in range(n_conv-2):
                 if use_pool:
-                    self.unpool_layers = []
-                    self.unpool_layers.append(nn.MaxUnpool2d((2,2)))
+                    self.upsample_layers = []
+                    self.upsample_layers.append(nn.Upsample(scale_factor = 2))
 
                 self.deconv_layers.append(nn.ConvTranspose2d(num_filters*2, num_filters, ksize, stride, pad))
                 self.decoding_bn_layers.append(nn.BatchNorm2d(num_filters))
@@ -173,7 +173,7 @@ class VAE(nn.Module):
 
             # add reconstruction layer
             if use_pool:
-                self.final_unpool = nn.MaxUnpool2d((2,2))
+                self.final_upsample = nn.Upsample(scale_factor = 2)
                     
             self.output_layer = nn.ConvTranspose2d(num_filters*2, self.channels, ksize, stride, pad)
             print("Added reconstruction layer")
@@ -305,14 +305,14 @@ class VAE(nn.Module):
                 x = input
             
             if use_pool:
-                for bn, deconv, unpool in zip(self.decoding_bn_layers,self.deconv_layers,self.unpool_layers):
-                    x = F.relu(bn(deconv(unpool(x))))
+                for bn, deconv, upsample in zip(self.decoding_bn_layers,self.deconv_layers,self.upsample_layers):
+                    x = F.relu(bn(deconv(upsample(x))))
             else:
                 for bn, deconv in zip(self.decoding_bn_layers,self.deconv_layers):
                     x = F.relu(bn(deconv(x)))
 
             if use_pool:
-                x = F.tanh(self.output_layer(self.final_unpool(x)))*0.5 + 0.5
+                x = F.tanh(self.output_layer(self.final_upsample(x)))*0.5 + 0.5
             else:
                 x = F.tanh(self.output_layer(x))*0.5 + 0.5
             
@@ -401,8 +401,8 @@ class Generator(nn.Module):
                 num_filters = num_filters // 2
 
                 if use_pool:
-                    self.unpool_layers = []
-                    self.unpool_layers.append(nn.MaxUnpool2d((2,2)))
+                    self.upsample_layers = []
+                    self.upsample_layers.append(nn.Upsample(scale_factor = 2))
                 
                 self.deconv_layers.append(nn.ConvTranspose2d(num_filters*2, num_filters, ksize, stride, pad))
                 self.bn_layers.append(nn.BatchNorm2d(num_filters))
@@ -413,8 +413,8 @@ class Generator(nn.Module):
 
             else:
                 if use_pool:
-                    self.unpool_layers = []
-                    self.unpool_layers.append(nn.MaxUnpool2d((2,2)))
+                    self.upsample_layers = []
+                    self.upsample_layers.append(nn.Upsample(scale_factor = 2))
 
                 h2 = self.image_height // (2**(n_conv-1)) # height of image going in to second conv layer
                 num_filters = c_out * (2**(n_conv-2))
@@ -425,8 +425,8 @@ class Generator(nn.Module):
             # Add remaining deconv layers
             for i in range(n_conv-2):
                 if use_pool:
-                    self.unpool_layers = []
-                    self.unpool_layers.append(nn.MaxUnpool2d((2,2)))
+                    self.upsample_layers = []
+                    self.upsample_layers.append(nn.Upsample(scale_factor = 2))
 
                 self.deconv_layers.append(nn.ConvTranspose2d(num_filters*2, num_filters, ksize, stride, pad))
                 self.bn_layers.append(nn.BatchNorm2d(num_filters))
@@ -436,7 +436,7 @@ class Generator(nn.Module):
 
             # add reconstruction layer
             if use_pool:
-                self.final_unpool = nn.MaxUnpool2d((2,2))
+                self.final_upsample = nn.Upsample(scale_factor = 2)
                     
             self.output_layer = nn.ConvTranspose2d(num_filters*2, cfg.channels, ksize, stride, pad)
             print("Added reconstruction layer")
@@ -506,8 +506,8 @@ class Generator(nn.Module):
                 x = input
             
             if use_pool:
-                for bn, deconv, unpool in zip(self.bn_layers,self.deconv_layers,self.unpool_layers):
-                    x = unpool(x)
+                for bn, deconv, upsample in zip(self.bn_layers,self.deconv_layers,self.upsample_layers):
+                    x = upsample(x)
                     x = deconv(x)
                     x = bn(x)
                     x = F.relu(x)
@@ -516,7 +516,7 @@ class Generator(nn.Module):
                     x = F.relu(bn(deconv(x)))
 
             if use_pool:
-                x = F.tanh(self.output_layer(self.final_unpool(x)))*0.5 + 0.5
+                x = F.tanh(self.output_layer(self.final_upsample(x)))*0.5 + 0.5
             else:
                 x = F.tanh(self.output_layer(x))*0.5 + 0.5
             
