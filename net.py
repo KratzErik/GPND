@@ -121,6 +121,7 @@ class VAE(nn.Module):
             stride = int(tmp[6])
             pad = int(tmp[7])
             num_filters = c_out
+            outpad = 0
 
             if use_pool:
                 # Compute output padding and padding so that output size is same as input for deconv-layers
@@ -128,8 +129,14 @@ class VAE(nn.Module):
                     print("Warning: stride not 1 while using pooling. Algorithm is not built to support this")
                 else:
                     outpad = (ksize-stride)%2
-                pad = (ksize-stride+outpad)//2
-            
+                    pad = (ksize-stride+outpad)//2
+            else: # using stride to increase image size: set pad and outpad so that h_out = stride * h_in
+                if stride == 1:
+                    print("No pool and stride = 1. Image size will not increase")
+                else:
+                   outpad = (ksize-stride)%2
+                   pad = (ksize-stride+outpad)//2
+
             self.deconv_layers = []
             self.decoding_bn_layers = []
             if n_dense > 0:
@@ -394,7 +401,13 @@ class Generator(nn.Module):
                 else:
                     outpad = (ksize-stride)%2
                 pad = (ksize-stride+outpad)//2
-            
+            else: # using stride to increase image size: set pad and outpad so that h_out = stride * h_in
+                if stride == 1:
+                    print("No pool and stride = 1. Image size will not increase")
+                else:
+                   outpad = (ksize-stride)%2
+                   pad = (ksize-stride+outpad)//2
+
             self.deconv_layers = []
             self.bn_layers = []
             if n_dense > 0:
@@ -500,6 +513,7 @@ class Generator(nn.Module):
 
             # height of image at start of deconvolutions
             if n_dense > 0:
+                print("input: ", input.shape)
                 input = input.permute(0,2,3,1)
                 h1 = cfg.image_height // (2**n_conv) # height = width of image going into first conv layer
                 num_filters =  c_out * (2**(n_conv-1))
@@ -714,9 +728,16 @@ class Encoder(nn.Module):
             num_filters = c_1
 
             if use_pool:
-                pad = 0
+                if stride != 1:
+                    print("Warning: stride not 1 while using pooling. Algorithm is not built to support this")
+                else: # stride is 1
+                    pad = (ksize-1)//2
+            else:
+                if stride == 1:
+                    print("Warning: no pooling and stride = 1. Image size will not change.")
+                else: # assuming dilation = 1, ksize uneven, image height = width divisible by ksize
+                    pad = (ksize-stride)//2
 
-            
             self.conv_layers = []
             self.bn_layers = []
             self.pool_layers = []
@@ -743,8 +764,8 @@ class Encoder(nn.Module):
                 self.pool_layers.append(nn.MaxPool2d((2,2)))
 
                 # Add dense layer
-                num_dense_in =  c_1 * (2**(n_conv-1))
-                self.dense_layer = nn.Linear(num_filters,zsize)
+                self.num_dense_in =  c_1 * cfg.image_height**2 // (2**(n_conv+1))
+                self.dense_layer = nn.Linear(self.num_dense_in,zsize)
             else:
                 # Add final conv_layer:
                 h = self.image_height // (2**(n_conv-1))
@@ -797,24 +818,35 @@ class Encoder(nn.Module):
 
             x = self.input_layer(input)
 
+#            print("input: ",input.shape)
+#            print("x: ",x.shape)
+
             if cfg.use_batchnorm:
                 x = self.input_bn(x)
 
+            if use_pool:
+                x = self.input_pool(x)
+
             x = F.leaky_relu(x)
-            
+#            print("x: ",x.shape)
+
             for conv, bn, pool in zip(self.conv_layers, self.bn_layers, self.pool_layers):
                 x = conv(x)
+#                print("x: ",x.shape)
                 if cfg.use_batchnorm:
                     x = bn(x)
                 if use_pool:
                     x = pool(x)
+#                print("x: ",x.shape)
 
             if n_dense > 0:
-                x = x.view(x.numel())
-                x = self.dense_layer(x)
+                x = x.view(-1, 1,1,self.num_dense_in)
+
+#                print("into dense: ", x.shape)
+                x = self.dense_layer(x).permute(0,3,1,2)
             else:
                 x = self.output_convlayer(x)
-                
+#            print("Output: ", x.shape)
             return x
 
 class ZDiscriminator(nn.Module):

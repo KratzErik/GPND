@@ -114,11 +114,10 @@ def GetF1(true_positive, false_positive, false_negative):
 
 
 def main(folding_id, inliner_classes, total_classes, folds=5, dataset = "bdd100k", cfg = None):
+    z_size = 32
     batch_size = 16
     data_train = []
     data_valid = []
-    z_size = 32
-    image_dest = '/data/GPND/bdd100k/'
 
     def shuffle_in_unison(a, b):
         assert len(a) == len(b)
@@ -136,7 +135,6 @@ def main(folding_id, inliner_classes, total_classes, folds=5, dataset = "bdd100k
     if dataset == "dreyeve":
         inliner_classes = [0]
         outlier_classes = [1]
-
         if cfg is not None:
             print("Data path: " + str(cfg.dreyeve_img_folder))
             channels = cfg.channels
@@ -146,16 +144,18 @@ def main(folding_id, inliner_classes, total_classes, folds=5, dataset = "bdd100k
             data_test_x = [img_to_array(load_img(cfg.dreyeve_test_folder + filename)) for filename in os.listdir(cfg.dreyeve_test_folder)]
             test_labels = np.concatenate([np.zeros((cfg.dreyeve_n_test_in,),dtype=np.int32),np.ones((cfg.dreyeve_n_test-cfg.dreyeve_n_test_in,),dtype=np.int32)])
             architecture = cfg.architecture
-            name_spec = cfg.name_spec
+            name_spec = "dreyeve_"+cfg.name_spec
+            tmp = cfg.architecture.split("_")
+            z_size = int(tmp[4])
         else:
-            print("No configuration provided for BDD100K, using standard configuration")
+            print("No configuration provided for dr(eye)ve experiment, using standard configuration")
             channels = 3
             image_height = 256
             image_width = 256
-            architecture = "b1"
+            architecture = "0_4_1_8_256_5_2_1"
             now = datetime.datetime.now()
-            name_spec = "bdd100k_"+now.year+"_"+now.month+"_"+now.day
-            # TODO: ADD STANDARD CONFIG (HARD CODED)
+            name_spec = "dreyeve_"+now.year+"_"+now.month+"_"+now.day
+            z_size = 256
 
         print("Transposing data to 'channels first'")
         data_train_x = np.moveaxis(data_train_x,-1,1)
@@ -192,7 +192,6 @@ def main(folding_id, inliner_classes, total_classes, folds=5, dataset = "bdd100k
             architecture = "b1"
             now = datetime.datetime.now()
             name_spec = "bdd100k_"+now.year+"_"+now.month+"_"+now.day
-            # TODO: ADD STANDARD CONFIG (HARD CODED)
 
         print("Transposing data to 'channels first'")
         data_train_x = np.moveaxis(data_train_x,-1,1)
@@ -240,10 +239,12 @@ def main(folding_id, inliner_classes, total_classes, folds=5, dataset = "bdd100k
         random.shuffle(data_train)
 
         data_train_x, data_train_y = list_of_pairs_to_numpy(data_train)
-    
-    
 
+    image_dest = "log/"+dataset + "/" + name_spec + "/test/"
 
+    if not os.path.exists(image_dest):
+        print("Creating directory ", image_dest)
+        os.makedirs(image_dest)
 
     print("Train set size:", len(data_train_x))
 
@@ -428,7 +429,7 @@ def main(folding_id, inliner_classes, total_classes, folds=5, dataset = "bdd100k
 
         not_novel = np.logical_not(novel)
 
-        max_vals = 100000000
+        max_vals = 10000
         print("maxP,minP:",maxP, minP)
         if (maxP-minP)//0.1 > max_vals:
             p_range = np.linspace(minP,maxP,num=max_vals)
@@ -575,7 +576,7 @@ def main(folding_id, inliner_classes, total_classes, folds=5, dataset = "bdd100k
 
 
         # For looping over values of e:
-        max_vals = 100000
+        max_vals = 10000
         if (maxP-minP)//0.2 > max_vals:
             p_range = np.linspace(minP,maxP,num=max_vals)
         else:
