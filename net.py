@@ -123,7 +123,12 @@ class VAE(nn.Module):
             num_filters = c_out
 
             if use_pool:
-                pad = 0
+                # Compute output padding and padding so that output size is same as input for deconv-layers
+                if stride != 1:
+                    print("Warning: stride not 1 while using pooling. Algorithm is not built to support this")
+                else:
+                    outpad = (ksize-stride)%2
+                pad = (ksize-stride+outpad)//2
             
             self.deconv_layers = []
             self.decoding_bn_layers = []
@@ -141,7 +146,7 @@ class VAE(nn.Module):
                 #    self.upsample_layers = []
                 #    self.upsample_layers.append(F.interpolate(scale_factor = 2, mode = 'nearest'))
                 
-                self.deconv_layers.append(nn.ConvTranspose2d(num_filters*2, num_filters, ksize, stride, pad))
+                self.deconv_layers.append(nn.ConvTranspose2d(num_filters*2, num_filters, ksize, stride, pad, output_padding = outpad ))
                 self.decoding_bn_layers.append(nn.BatchNorm2d(num_filters))
 
                 print("Added deconv_layer %d" % (len(self.deconv_layers)))
@@ -165,7 +170,7 @@ class VAE(nn.Module):
                 #    self.upsample_layers = []
                 #    self.upsample_layers.append(F.interpolate(scale_factor = 2, mode = 'nearest'))
 
-                self.deconv_layers.append(nn.ConvTranspose2d(num_filters*2, num_filters, ksize, stride, pad))
+                self.deconv_layers.append(nn.ConvTranspose2d(num_filters*2, num_filters, ksize, stride, pad, output_padding = outpad ))
                 self.decoding_bn_layers.append(nn.BatchNorm2d(num_filters))
                 
                 print("Added deconv_layer %d" % (len(self.deconv_layers)))
@@ -380,9 +385,15 @@ class Generator(nn.Module):
             stride = int(tmp[6])
             pad = int(tmp[7])
             num_filters = c_out
+            outpad = 0
 
             if use_pool:
-                pad = 0
+                # Compute output padding and padding so that output size is same as input for deconv-layers
+                if stride != 1:
+                    print("Warning: stride not 1 while using pooling. Algorithm is not built to support this")
+                else:
+                    outpad = (ksize-stride)%2
+                pad = (ksize-stride+outpad)//2
             
             self.deconv_layers = []
             self.bn_layers = []
@@ -403,7 +414,7 @@ class Generator(nn.Module):
                 #    self.upsample_layers = []
                 #    self.upsample_layers.append(F.interpolate(scale_factor = 2, mode = 'nearest'))
                 
-                self.deconv_layers.append(nn.ConvTranspose2d(num_filters*2, num_filters, ksize, stride, pad))
+                self.deconv_layers.append(nn.ConvTranspose2d(num_filters*2, num_filters, ksize, stride, pad, output_padding = outpad ))
                 self.bn_layers.append(nn.BatchNorm2d(num_filters))
 
                 print("Added deconv_layer %d" % (len(self.deconv_layers)))
@@ -427,7 +438,7 @@ class Generator(nn.Module):
                 #    self.upsample_layers = []
                 #    self.upsample_layers.append(F.interpolate(scale_factor = 2, mode = 'nearest'))
 
-                self.deconv_layers.append(nn.ConvTranspose2d(num_filters*2, num_filters, ksize, stride, pad))
+                self.deconv_layers.append(nn.ConvTranspose2d(num_filters*2, num_filters, ksize, stride, pad, output_padding = outpad ))
                 self.bn_layers.append(nn.BatchNorm2d(num_filters))
                 
                 print("Added deconv_layer %d" % (len(self.deconv_layers)))
@@ -712,6 +723,7 @@ class Encoder(nn.Module):
 
             if use_pool:
                 pad = 0
+
             
             self.conv_layers = []
             self.bn_layers = []
