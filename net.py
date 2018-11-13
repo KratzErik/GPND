@@ -508,7 +508,7 @@ class Generator(nn.Module):
             for bn, deconv in zip(self.bn_layers,self.deconv_layers):
                 if use_pool:
                     x = F.interpolate(x, scale_factor = 2, mode = 'nearest')
-
+                print("x: ",x.shape)
                 x = F.relu(bn(deconv(x)))
                 print("x: ",x.shape)
 
