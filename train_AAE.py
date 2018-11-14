@@ -375,12 +375,15 @@ def main(folding_id, inliner_classes, total_classes, folds=5, dataset="mnist", c
             resultsample = G(sample).cpu()
             save_image(resultsample.view(sample_size, channels, image_height, image_width), image_dest + 'sample_' + str(epoch) + '.png')
 
+    model_dir = log_dir + "models/"
+    if not os.path.exists(model_dir):
+        os.makedirs(model_dir)
 
     print("Training finish!... save training results")
-    torch.save(G.state_dict(),  log_dir + "models/Gmodel.pkl")
-    torch.save(E.state_dict(),  log_dir + "models/Emodel.pkl")
-    torch.save(D.state_dict(),  log_dir + "models/Dmodel.pkl")
-    torch.save(ZD.state_dict(), log_dir + "models/ZDmodel.pkl")
+    torch.save(G.state_dict(),  model_dir + "Gmodel.pkl")
+    torch.save(E.state_dict(),  model_dir + "Emodel.pkl")
+    torch.save(D.state_dict(),  model_dir + "Dmodel.pkl")
+    torch.save(ZD.state_dict(), model_dir + "ZDmodel.pkl")
 
 if __name__ == '__main__':
     main(0, [0], 10)
