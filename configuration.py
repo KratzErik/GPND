@@ -7,6 +7,11 @@ class Configuration(object):
 #    architecture = '1_5_1_8_256_5_1_0' # with dense layer, maxpool
 #    architecture = '1_5_0_8_256_5_1_0' # no dense layer, maxpool
 
+    betas = (0.5,0.999)
+    learning_rate = 0.002
+    n_train_epochs = 10
+    batch_size = 10
+
     dreyeve_img_folder =   "./dreyeve/highway_morning_sunny_vs_rainy/"
     dreyeve_train_folder = "./dreyeve/highway_morning_sunny_vs_rainy/train/"
     dreyeve_val_folder =   "./dreyeve/highway_morning_sunny_vs_rainy/val/"

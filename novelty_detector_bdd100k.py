@@ -115,7 +115,7 @@ def GetF1(true_positive, false_positive, false_negative):
 
 def main(folding_id, inliner_classes, total_classes, folds=5, dataset = "bdd100k", cfg = None):
     z_size = 32
-    batch_size = 16
+    batch_size = cfg.batch_size
     data_train = []
     data_valid = []
 

@@ -69,7 +69,7 @@ def extract_batch(data, it, batch_size):
 None
 
 def main(folding_id, inliner_classes, total_classes, folds=5, dataset="mnist", cfg = None):
-    batch_size = 128
+    batch_size = cfg.batch_size
     data_train = []
     data_valid = []
     architecture = None
@@ -211,15 +211,17 @@ def main(folding_id, inliner_classes, total_classes, folds=5, dataset="mnist", c
     setup(ZD)
     ZD.weight_init(mean=0, std=0.02)
 
-    lr = 0.002
+    lr = cfg.learning_rate
+    betas = cfg.betas
 
-    G_optimizer = optim.Adam(G.parameters(), lr=lr, betas=(0.5, 0.999))
-    D_optimizer = optim.Adam(D.parameters(), lr=lr, betas=(0.5, 0.999))
-    E_optimizer = optim.Adam(E.parameters(), lr=lr, betas=(0.5, 0.999))
-    GE_optimizer = optim.Adam(list(E.parameters()) + list(G.parameters()), lr=lr, betas=(0.5, 0.999))
-    ZD_optimizer = optim.Adam(ZD.parameters(), lr=lr, betas=(0.5, 0.999))
+    G_optimizer = optim.Adam(G.parameters(), lr=lr, betas = betas)
+    D_optimizer = optim.Adam(D.parameters(), lr=lr, betas = betas)
+    E_optimizer = optim.Adam(E.parameters(), lr=lr, betas = betas)
+    GE_optimizer = optim.Adam(list(E.parameters()) + list(G.parameters()), lr=lr, betas = betas)
+    ZD_optimizer = optim.Adam(ZD.parameters(), lr=lr, betas = betas)
 
-    train_epoch = 20
+    train_epoch = cfg.n_train_epochs
+    lr_change_each_ep = cfg.n_epochs_between_lr_change
 
     BCE_loss = nn.BCELoss()
     y_real_ = torch.ones(batch_size)
@@ -250,7 +252,7 @@ def main(folding_id, inliner_classes, total_classes, folds=5, dataset="mnist", c
 
         shuffle(data_train_x)
 
-        if (epoch + 1) % 30 == 0:
+        if (epoch + 1) % cfg.n_epochs_between_lr_change == 0:
             G_optimizer.param_groups[0]['lr'] /= 4
             D_optimizer.param_groups[0]['lr'] /= 4
             GE_optimizer.param_groups[0]['lr'] /= 4
