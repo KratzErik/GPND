@@ -117,8 +117,11 @@ def main(folding_id, inliner_classes, total_classes, folds=5, dataset="mnist", c
         return
 
     elif dataset == "dreyeve":
-        tmp = cfg.architecture.split("_")
-        zsize = int(tmp[4])
+        if cfg.architecture not in (None, "b1", "b2"):
+            tmp = cfg.architecture.split("_")
+            zsize = int(tmp[4])
+        else:
+            zsize = 256
         inliner_classes = [0]
         outlier_classes = [1]
         image_dest = "./log/dreyeve/"
@@ -137,7 +140,7 @@ def main(folding_id, inliner_classes, total_classes, folds=5, dataset="mnist", c
             channels = 3
             image_height = 256
             image_width = 256
-            architecture = "b1"
+            architecture = "b2"
             now = datetime.datetime.now()
             name_spec = "dreyeve"+str(now.year)+"_"+str(now.month)+"_"+str(now.day)
             # TODO: ADD STANDARD CONFIG (HARD CODED)

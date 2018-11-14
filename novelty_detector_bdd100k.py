@@ -145,8 +145,9 @@ def main(folding_id, inliner_classes, total_classes, folds=5, dataset = "bdd100k
             test_labels = np.concatenate([np.zeros((cfg.dreyeve_n_test_in,),dtype=np.int32),np.ones((cfg.dreyeve_n_test-cfg.dreyeve_n_test_in,),dtype=np.int32)])
             architecture = cfg.architecture
             name_spec = "dreyeve_"+cfg.name_spec
-            tmp = cfg.architecture.split("_")
-            z_size = int(tmp[4])
+            if cfg not in ("b1", "b2"):
+                tmp = cfg.architecture.split("_")
+                z_size = int(tmp[4])
         else:
             print("No configuration provided for dr(eye)ve experiment, using standard configuration")
             channels = 3

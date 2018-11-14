@@ -3,13 +3,16 @@ from pathlib import Path
 
 class Configuration(object):
 #    architecture = '0_5_1_8_256_5_2_0' # with dense layer, stride instead of pool
-    architecture = '0_5_0_8_256_5_2_0' # no dense layer, stride instead of pool
+#    architecture = '0_5_0_8_256_5_2_0' # no dense layer, stride instead of pool
 #    architecture = '1_5_1_8_256_5_1_0' # with dense layer, maxpool
 #    architecture = '1_5_0_8_256_5_1_0' # no dense layer, maxpool
-
+#    architecture = "0_4_0_8_256_4_2_1"
+    architecture = "0_5_0_8_256_5_2_2"
+#    architecture = "b2"
     betas = (0.5,0.999)
     learning_rate = 0.002
-    n_train_epochs = 10
+    n_train_epochs = 100
+    n_epochs_between_lr_change = 30
     batch_size = 10
 
     dreyeve_img_folder =   "./dreyeve/highway_morning_sunny_vs_rainy/"
