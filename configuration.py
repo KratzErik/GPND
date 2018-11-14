@@ -2,6 +2,10 @@ from utils import loadbdd100k
 from pathlib import Path
 
 class Configuration(object):
+#    architecture = '0_5_1_8_256_5_2_0' # with dense layer, stride instead of pool
+    architecture = '0_5_0_8_256_5_2_0' # no dense layer, stride instead of pool
+#    architecture = '1_5_1_8_256_5_1_0' # with dense layer, maxpool
+#    architecture = '1_5_0_8_256_5_1_0' # no dense layer, maxpool
 
     dreyeve_img_folder =   "./dreyeve/highway_morning_sunny_vs_rainy/"
     dreyeve_train_folder = "./dreyeve/highway_morning_sunny_vs_rainy/train/"
@@ -30,6 +34,5 @@ class Configuration(object):
 #    labels_file = None
 #    get_norm_and_out_sets = False
 #    shuffle=False
-    architecture = '1_5_1_8_256_5_1_0'
     name_spec = "dreyeve_autobuild"+architecture
     use_batchnorm = True

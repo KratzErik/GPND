@@ -1,4 +1,3 @@
-
 import torch
 from torch import nn
 from torch.nn import functional as F
@@ -439,11 +438,12 @@ class Generator(nn.Module):
                 #    self.upsample_layers = []
                 #    self.upsample_layers.append(F.interpolate(scale_factor = 2, mode = 'nearest'))
 
-                h2 = self.image_height // (2**(n_conv-1)) # height of image going in to second conv layer
+                h2 = cfg.image_height // (2**(n_conv-1)) # height of image going in to second conv layer
                 num_filters = c_out * (2**(n_conv-2))
-                self.deconv_layers.append(nn.ConvTranspose2d(num_filters*2, num_filters, h2, 1, 0))
+                self.deconv_layers.append(nn.ConvTranspose2d(zsize, num_filters, h2, 1, 0))
                 self.bn_layers.append(nn.BatchNorm2d(num_filters))
                 print("Added deconv_layer %d" % (len(self.deconv_layers)))
+                num_filters //=2
 
             # Add remaining deconv layers
             for i in range(n_conv-2):
@@ -461,7 +461,7 @@ class Generator(nn.Module):
             #if use_pool:
             #    self.final_upsample = F.interpolate(scale_factor = 2, mode = 'nearest')
                     
-            self.output_layer = nn.ConvTranspose2d(num_filters*2, cfg.channels, ksize, stride, pad)
+            self.output_layer = nn.ConvTranspose2d(num_filters*2, cfg.channels, ksize, stride, pad, output_padding = outpad)
             print("Added reconstruction layer")
 
     # weight_init
@@ -525,17 +525,17 @@ class Generator(nn.Module):
                 x = x.view(-1,num_filters,h1,h1)
             else:
                 x = input
-
+            print("x: ", x.shape)
             for bn, deconv in zip(self.bn_layers,self.deconv_layers):
                 if use_pool:
                     x = F.interpolate(x, scale_factor = 2, mode = 'nearest')
                 x = F.relu(bn(deconv(x)))
-
+                print("x: ", x.shape)
             if use_pool:
                 x = F.interpolate(x, scale_factor = 2, mode = 'nearest')
 
             x = F.tanh(self.output_layer(x))*0.5 + 0.5
-
+            print("Output: ", x.shape)
             return x
 
 class Discriminator(nn.Module):
@@ -613,7 +613,7 @@ class Discriminator(nn.Module):
                 self.dense_layer = nn.Linear(num_filters,1)
             else:
                 # Add final conv_layer:
-                h = self.image_height // (2**(n_conv-1))
+                h = cfg.image_height // (2**(n_conv-1))
                 self.output_convlayer = nn.Conv2d(num_filters//2, 1, h, 1, 0)
 
 
@@ -736,7 +736,7 @@ class Encoder(nn.Module):
                 if stride == 1:
                     print("Warning: no pooling and stride = 1. Image size will not change.")
                 else: # assuming dilation = 1, ksize uneven, image height = width divisible by ksize
-                    pad = (ksize-stride)//2
+                    pad = (ksize-stride)//2+(ksize-stride)%2
 
             self.conv_layers = []
             self.bn_layers = []
@@ -768,7 +768,7 @@ class Encoder(nn.Module):
                 self.dense_layer = nn.Linear(self.num_dense_in,zsize)
             else:
                 # Add final conv_layer:
-                h = self.image_height // (2**(n_conv-1))
+                h = cfg.image_height // (2**(n_conv-1))
                 self.output_convlayer = nn.Conv2d(num_filters//2, zsize, h, 1, 0)
  
     # weight_init
@@ -828,7 +828,7 @@ class Encoder(nn.Module):
                 x = self.input_pool(x)
 
             x = F.leaky_relu(x)
-#            print("x: ",x.shape)
+            print("x: ",x.shape)
 
             for conv, bn, pool in zip(self.conv_layers, self.bn_layers, self.pool_layers):
                 x = conv(x)
@@ -837,7 +837,7 @@ class Encoder(nn.Module):
                     x = bn(x)
                 if use_pool:
                     x = pool(x)
-#                print("x: ",x.shape)
+                print("x: ",x.shape)
 
             if n_dense > 0:
                 x = x.view(-1, 1,1,self.num_dense_in)
