@@ -15,7 +15,7 @@ class Configuration(object):
 
     betas = (0.5,0.999)
     learning_rate = 0.002
-    n_train_epochs = 100
+    n_train_epochs = 5
     n_epochs_between_lr_change = 30
     batch_size = 10
 

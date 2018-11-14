@@ -1,3 +1,5 @@
+import sys
+sys.path.append('..') 
 import train_AAE
 import novelty_detector_bdd100k as nd
 from configuration import Configuration as cfg
