@@ -256,8 +256,8 @@ def main(folding_id, inliner_classes, total_classes, folds=5, dataset = "bdd100k
     G.eval()
     E.eval()
 
-    G.load_state_dict(torch.load(cfg.log_dir + "Gmodel.pkl"))
-    E.load_state_dict(torch.load(cfg.log_dir + "Emodel.pkl"))
+    G.load_state_dict(torch.load(cfg.log_dir + "models/Gmodel.pkl"))
+    E.load_state_dict(torch.load(cfg.log_dir + "models/Emodel.pkl"))
 
     sample_size = 64
     sample = torch.randn(sample_size, z_size).to(device)

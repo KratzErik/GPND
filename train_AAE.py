@@ -377,10 +377,10 @@ def main(folding_id, inliner_classes, total_classes, folds=5, dataset="mnist", c
 
 
     print("Training finish!... save training results")
-    torch.save(G.state_dict(), "Gmodel_" + experiment_name + ".pkl")
-    torch.save(E.state_dict(), "Emodel_" + experiment_name + ".pkl")
-    torch.save(D.state_dict(), "Dmodel_" + experiment_name + ".pkl")
-    torch.save(ZD.state_dict(), "ZDmodel_" + experiment_name + ".pkl")
+    torch.save(G.state_dict(),  log_dir + "models/Gmodel.pkl")
+    torch.save(E.state_dict(),  log_dir + "models/Emodel.pkl")
+    torch.save(D.state_dict(),  log_dir + "models/Dmodel.pkl")
+    torch.save(ZD.state_dict(), log_dir + "models/ZDmodel.pkl")
 
 if __name__ == '__main__':
     main(0, [0], 10)
