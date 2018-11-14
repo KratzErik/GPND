@@ -262,7 +262,7 @@ def main(folding_id, inliner_classes, total_classes, folds=5, dataset = "bdd100k
     sample_size = 64
     sample = torch.randn(sample_size, z_size).to(device)
     sample = G(sample.view(-1, z_size, 1, 1)).cpu()
-    save_image(sample.view(sample_size, channels, image_height, image_width), image_dest +  'sample.png')
+    save_image(sample.view(sample_size, channels, image_height, image_width), image_dest +  'Generator_sample.png')
 
     if True:
         zlist = []

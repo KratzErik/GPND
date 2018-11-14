@@ -42,5 +42,5 @@ class Configuration(object):
 #    labels_file = None
 #    get_norm_and_out_sets = False
 #    shuffle=False
-    name_spec = "dreyeve_autobuild"+architecture
+    name_spec = "autobuild"+architecture
     use_batchnorm = True

@@ -124,7 +124,7 @@ def main(folding_id, inliner_classes, total_classes, folds=5, dataset="mnist", c
             zsize = 256
         inliner_classes = [0]
         outlier_classes = [1]
-        image_dest = "./log/dreyeve/"
+        image_dest = "./log/dreyeve/train/"
 
         if cfg is not None:
             print("Data path: " + str(cfg.dreyeve_img_folder))
@@ -134,7 +134,7 @@ def main(folding_id, inliner_classes, total_classes, folds=5, dataset="mnist", c
             image_width = cfg.image_width
             data_train_x = [img_to_array(load_img(cfg.dreyeve_train_folder + filename)) for filename in os.listdir(cfg.dreyeve_train_folder)]
             valid_imgs = [img_to_array(load_img(cfg.dreyeve_val_folder + filename)) for filename in os.listdir(cfg.dreyeve_val_folder)]
-            name_spec = "dreyeve_"+cfg.name_spec
+            name_spec = cfg.name_spec
         else:
             print("No configuration provided for dreyeve, using standard configuration")
             channels = 3
@@ -142,7 +142,7 @@ def main(folding_id, inliner_classes, total_classes, folds=5, dataset="mnist", c
             image_width = 256
             architecture = "b2"
             now = datetime.datetime.now()
-            name_spec = "dreyeve"+str(now.year)+"_"+str(now.month)+"_"+str(now.day)
+            name_spec = str(now.year)+"_"+str(now.month)+"_"+str(now.day)
             # TODO: ADD STANDARD CONFIG (HARD CODED)
 
         print("Transposing data to 'channels first'")
@@ -352,12 +352,12 @@ def main(folding_id, inliner_classes, total_classes, folds=5, dataset="mnist", c
             Etrain_loss += E_loss.item()
 
             if it == 0:
-                directory = image_dest+'results'+str(inliner_classes[0])
+                directory = image_dest+name_spec
                 if not os.path.exists(directory):
                     os.makedirs(directory)
                 comparison = torch.cat([x[:64], x_d[:64]])
                 save_image(comparison.cpu(),image_dest+
-                           'results'+str(inliner_classes[0])+'/reconstruction_' + str(epoch) + '.png', nrow=64)
+                           name_spec+'/reconstruction_' + str(epoch) + '.png', nrow=64)
 
         Gtrain_loss /= (len(data_train_x))
         Dtrain_loss /= (len(data_train_x))
@@ -372,9 +372,9 @@ def main(folding_id, inliner_classes, total_classes, folds=5, dataset="mnist", c
 
         with torch.no_grad():
             resultsample = G(sample).cpu()
-            directory = image_dest + 'results'+str(inliner_classes[0])
+            directory = image_dest + name_spec
             os.makedirs(directory, exist_ok = True)
-            save_image(resultsample.view(sample_size, channels, image_height, image_width), image_dest + 'results'+str(inliner_classes[0])+'/sample_' + str(epoch) + '.png')
+            save_image(resultsample.view(sample_size, channels, image_height, image_width), image_dest +name_spec+'/sample_' + str(epoch) + '.png')
 
 
     print("Training finish!... save training results")
