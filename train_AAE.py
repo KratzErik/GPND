@@ -78,7 +78,6 @@ def main(folding_id, inliner_classes, total_classes, folds=5, dataset="mnist", c
         zsize = 32
         inliner_classes = [0]
         outlier_classes = [1]
-        image_dest = "/data/GPND/bdd100k/"
 
         if cfg is not None:
             print("Data path: " + str(cfg.img_folder))
@@ -87,7 +86,7 @@ def main(folding_id, inliner_classes, total_classes, folds=5, dataset="mnist", c
             image_width = cfg.image_width
             data_train_x, valid_imgs, _ , _ = loadbdd100k.load_bdd100k_data_filename_list(cfg.img_folder, cfg.norm_filenames, cfg.out_filenames, cfg.n_train, cfg.n_val, cfg.n_test, cfg.out_frac, image_height, image_width, channels, shuffle=cfg.shuffle)
             architecture = cfg.architecture
-            name_spec = "bdd100k_"+cgf.name_spec
+            experiment_name = cfg.experiment_name
         else:
             print("No configuration provided for BDD100K, using standard configuration")
             channels = 3
@@ -95,7 +94,7 @@ def main(folding_id, inliner_classes, total_classes, folds=5, dataset="mnist", c
             image_width = 256
             architecture = "b1"
             now = datetime.datetime.now()
-            name_spec = "bdd100k_"+now.year+"_"+now.month+"_"+now.day
+            experiment_name = now.year + "_" + now.month + "_" + now.day
             # TODO: ADD STANDARD CONFIG (HARD CODED)
 
         print("Transposing data to 'channels first'")
@@ -124,7 +123,6 @@ def main(folding_id, inliner_classes, total_classes, folds=5, dataset="mnist", c
             zsize = 256
         inliner_classes = [0]
         outlier_classes = [1]
-        image_dest = "./log/dreyeve/train/"
 
         if cfg is not None:
             print("Data path: " + str(cfg.dreyeve_img_folder))
@@ -134,7 +132,7 @@ def main(folding_id, inliner_classes, total_classes, folds=5, dataset="mnist", c
             image_width = cfg.image_width
             data_train_x = [img_to_array(load_img(cfg.dreyeve_train_folder + filename)) for filename in os.listdir(cfg.dreyeve_train_folder)]
             valid_imgs = [img_to_array(load_img(cfg.dreyeve_val_folder + filename)) for filename in os.listdir(cfg.dreyeve_val_folder)]
-            name_spec = cfg.name_spec
+            experiment_name = cfg.experiment_name
         else:
             print("No configuration provided for dreyeve, using standard configuration")
             channels = 3
@@ -142,7 +140,7 @@ def main(folding_id, inliner_classes, total_classes, folds=5, dataset="mnist", c
             image_width = 256
             architecture = "b2"
             now = datetime.datetime.now()
-            name_spec = str(now.year)+"_"+str(now.month)+"_"+str(now.day)
+            experiment_name = str(now.year) + "_" + str(now.month) + "_" + str(now.day)
             # TODO: ADD STANDARD CONFIG (HARD CODED)
 
         print("Transposing data to 'channels first'")
@@ -164,7 +162,7 @@ def main(folding_id, inliner_classes, total_classes, folds=5, dataset="mnist", c
         channels = 1
         image_height = 32
         image_width = 32
-        name_spec = "mnist"
+        
         for i in range(folds):
             if i != folding_id:
                 with open('data_fold_%d.pkl' % i, 'rb') as pkl:
@@ -172,13 +170,13 @@ def main(folding_id, inliner_classes, total_classes, folds=5, dataset="mnist", c
                 if len(data_valid) == 0:
                     data_valid = fold
                 else:
-                    data_train += fold
+                    data_train  += fold
 
         outlier_classes = []
         for i in range(total_classes):
             if i not in inliner_classes:
                 outlier_classes.append(i)
-
+        experiment_name = "-".join(str(inliner_classes))
         #keep only train classes
         data_train = [x for x in data_train if x[0] in inliner_classes]
 
@@ -188,6 +186,13 @@ def main(folding_id, inliner_classes, total_classes, folds=5, dataset="mnist", c
             return np.asarray([x[1] for x in l], np.float32), np.asarray([x[0] for x in l], np.int)
 
         data_train_x, data_train_y = list_of_pairs_to_numpy(data_train)
+   
+        ## End of individual dataset setups
+
+    log_dir = cfg.log_dir
+    image_dest = cfg.log_dir + 'train/'
+    if not os.path.exists(image_dest):
+        os.makedirs(image_dest)
 
     print("Train set size:", len(data_train_x))
     print("Data type:", data_train_x.dtype)
@@ -289,7 +294,7 @@ def main(folding_id, inliner_classes, total_classes, folds=5, dataset="mnist", c
 
             D_optimizer.step()
 
-            Dtrain_loss += D_train_loss.item()
+            Dtrain_loss  += D_train_loss.item()
 
             #############################################
 
@@ -306,7 +311,7 @@ def main(folding_id, inliner_classes, total_classes, folds=5, dataset="mnist", c
             G_train_loss.backward()
             G_optimizer.step()
 
-            Gtrain_loss += G_train_loss.item()
+            Gtrain_loss  += G_train_loss.item()
 
             #############################################
 
@@ -328,7 +333,7 @@ def main(folding_id, inliner_classes, total_classes, folds=5, dataset="mnist", c
 
             ZD_optimizer.step()
 
-            ZDtrain_loss += ZD_train_loss.item()
+            ZDtrain_loss  += ZD_train_loss.item()
 
             #############################################
 
@@ -348,16 +353,12 @@ def main(folding_id, inliner_classes, total_classes, folds=5, dataset="mnist", c
 
             GE_optimizer.step()
 
-            GEtrain_loss += Recon_loss.item()
-            Etrain_loss += E_loss.item()
+            GEtrain_loss  += Recon_loss.item()
+            Etrain_loss  += E_loss.item()
 
             if it == 0:
-                directory = image_dest+name_spec
-                if not os.path.exists(directory):
-                    os.makedirs(directory)
                 comparison = torch.cat([x[:64], x_d[:64]])
-                save_image(comparison.cpu(),image_dest+
-                           name_spec+'/reconstruction_' + str(epoch) + '.png', nrow=64)
+                save_image(comparison.cpu(), image_dest + 'reconstruction_' + str(epoch) + '.png', nrow=64)
 
         Gtrain_loss /= (len(data_train_x))
         Dtrain_loss /= (len(data_train_x))
@@ -372,16 +373,14 @@ def main(folding_id, inliner_classes, total_classes, folds=5, dataset="mnist", c
 
         with torch.no_grad():
             resultsample = G(sample).cpu()
-            directory = image_dest + name_spec
-            os.makedirs(directory, exist_ok = True)
-            save_image(resultsample.view(sample_size, channels, image_height, image_width), image_dest +name_spec+'/sample_' + str(epoch) + '.png')
+            save_image(resultsample.view(sample_size, channels, image_height, image_width), image_dest + 'sample_' + str(epoch) + '.png')
 
 
     print("Training finish!... save training results")
-    torch.save(G.state_dict(), "Gmodel_"+name_spec+".pkl")
-    torch.save(E.state_dict(), "Emodel_"+name_spec+".pkl")
-    torch.save(D.state_dict(), "Dmodel_"+name_spec+".pkl")
-    torch.save(ZD.state_dict(), "ZDmodel_"+name_spec+".pkl")
+    torch.save(G.state_dict(), "Gmodel_" + experiment_name + ".pkl")
+    torch.save(E.state_dict(), "Emodel_" + experiment_name + ".pkl")
+    torch.save(D.state_dict(), "Dmodel_" + experiment_name + ".pkl")
+    torch.save(ZD.state_dict(), "ZDmodel_" + experiment_name + ".pkl")
 
 if __name__ == '__main__':
     main(0, [0], 10)

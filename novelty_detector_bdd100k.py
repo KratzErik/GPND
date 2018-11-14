@@ -144,7 +144,7 @@ def main(folding_id, inliner_classes, total_classes, folds=5, dataset = "bdd100k
             data_test_x = [img_to_array(load_img(cfg.dreyeve_test_folder + filename)) for filename in os.listdir(cfg.dreyeve_test_folder)]
             test_labels = np.concatenate([np.zeros((cfg.dreyeve_n_test_in,),dtype=np.int32),np.ones((cfg.dreyeve_n_test-cfg.dreyeve_n_test_in,),dtype=np.int32)])
             architecture = cfg.architecture
-            name_spec = "dreyeve_"+cfg.name_spec
+            experiment_name = cfg.experiment_name
             if cfg not in ("b1", "b2"):
                 tmp = cfg.architecture.split("_")
                 z_size = int(tmp[4])
@@ -155,7 +155,7 @@ def main(folding_id, inliner_classes, total_classes, folds=5, dataset = "bdd100k
             image_width = 256
             architecture = "0_4_1_8_256_5_2_1"
             now = datetime.datetime.now()
-            name_spec = "dreyeve_"+now.year+"_"+now.month+"_"+now.day
+            experiment_name = now.year+"_"+now.month+"_"+now.day
             z_size = 256
 
         print("Transposing data to 'channels first'")
@@ -184,7 +184,7 @@ def main(folding_id, inliner_classes, total_classes, folds=5, dataset = "bdd100k
             image_width = cfg.image_width
             data_train_x, _, data_test_x , test_labels = loadbdd100k.load_bdd100k_data_filename_list(cfg.img_folder, cfg.norm_filenames, cfg.out_filenames, cfg.n_train, cfg.n_val, cfg.n_test, cfg.out_frac, image_height, image_width, channels, shuffle=cfg.shuffle)
             architecture = cfg.architecture
-            name_spec = cfg.name_spec
+            experiment_name = cfg.experiment_name
         else:
             print("No configuration provided for BDD100K, using standard configuration")
             channels = 3
@@ -192,7 +192,7 @@ def main(folding_id, inliner_classes, total_classes, folds=5, dataset = "bdd100k
             image_width = 320
             architecture = "b1"
             now = datetime.datetime.now()
-            name_spec = "bdd100k_"+now.year+"_"+now.month+"_"+now.day
+            experiment_name = now.year+"_"+now.month+"_"+now.day
 
         print("Transposing data to 'channels first'")
         data_train_x = np.moveaxis(data_train_x,-1,1)
@@ -215,7 +215,7 @@ def main(folding_id, inliner_classes, total_classes, folds=5, dataset = "bdd100k
         image_height = 32
         image_width = 32
         channels = 1
-        name_spec = "mnist"
+        experiment_name = "-".join(str(inliner_classes))
 
         for i in range(total_classes):
             if i not in inliner_classes:
@@ -241,7 +241,7 @@ def main(folding_id, inliner_classes, total_classes, folds=5, dataset = "bdd100k
 
         data_train_x, data_train_y = list_of_pairs_to_numpy(data_train)
 
-    image_dest = "log/"+dataset + "/" + name_spec + "/test/"
+    image_dest = cfg.log_dir + "test/"
 
     if not os.path.exists(image_dest):
         print("Creating directory ", image_dest)
@@ -256,8 +256,8 @@ def main(folding_id, inliner_classes, total_classes, folds=5, dataset = "bdd100k
     G.eval()
     E.eval()
 
-    G.load_state_dict(torch.load("Gmodel_"+name_spec+".pkl"))
-    E.load_state_dict(torch.load("Emodel_"+name_spec+".pkl"))
+    G.load_state_dict(torch.load(cfg.log_dir + "Gmodel.pkl"))
+    E.load_state_dict(torch.load(cfg.log_dir + "Emodel.pkl"))
 
     sample_size = 64
     sample = torch.randn(sample_size, z_size).to(device)
@@ -552,13 +552,9 @@ def main(folding_id, inliner_classes, total_classes, folds=5, dataset = "bdd100k
             auc = 0
 
 
-        if dataset == "bdd100k":
-            with open('result_%s_p%d.pkl' % (name_spec, percentage), 'wb') as output:
-                pickle.dump(result, output)
 
-        elif dataset == "mnist":
-            with open('result_d%d_p%d.pkl' % (inliner_classes[0], percentage), 'wb') as output:
-                pickle.dump(result, output)
+        with open(cfg.log_dir + 'result_p%d.pkl', 'wb') as output:
+            pickle.dump(result, output)
 
         print("Percentage ", percentage)
         print("Error ", error)
@@ -656,21 +652,12 @@ def main(folding_id, inliner_classes, total_classes, folds=5, dataset = "bdd100k
 
         print("auprout: ", auprout)
 
-        if dataset == "bdd100k":
-            with open(os.path.join("results_%s.txt" % (name_spec)), "a") as file:
-                file.write(
-                    "Class: %d\n Percentage: %d\n"
-                    "Error: %f\n F1: %f\n AUC: %f\nfpr95: %f"
-                    "\nDetection: %f\nauprin: %f\nauprout: %f\n\n" %
-                    (inliner_classes[0], percentage, error, f1, auc, fpr95, error, auprin, auprout))
-
-        elif dataset == "mnist":
-            with open(os.path.join("results.txt"), "a") as file:
-                file.write(
-                    "Class: %d\n Percemnistntage: %d\n"
-                    "Error: %f\n F1: %f\n AUC: %f\nfpr95: %f"
-                    "\nDetection: %f\nauprin: %f\nauprout: %f\n\n" %
-                    (inliner_classes[0], percentage, error, f1, auc, fpr95, error, auprin, auprout))
+        with open(cfg.log_dir + "results_%s.txt", "a") as file:
+            file.write(
+                "Class: %d\n Percentage: %d\n"
+                "Error: %f\n F1: %f\n AUC: %f\nfpr95: %f"
+                "\nDetection: %f\nauprin: %f\nauprout: %f\n\n" %
+                (inliner_classes[0], percentage, error, f1, auc, fpr95, error, auprin, auprout))
 
         return auc, f1, fpr95, error, auprin, auprout
 
