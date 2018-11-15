@@ -10,14 +10,14 @@ class Configuration(object):
     #architecture = '1_5_1_8_256_5_1_0' # with dense layer, maxpool
     #architecture = '1_5_0_8_256_5_1_0' # no dense layer, maxpool
     #architecture = "0_4_0_8_256_4_2_1"
-    architecture = "0_5_0_8_1024_5_2_2"
+    architecture = "0_5_0_16_1024_5_2_2"
     #architecture = "b2"
 
     # Hyperparameters
     betas = (0.5,0.999) # adam solver standard
-    learning_rate = 0.002
-    n_train_epochs = 300
-    n_epochs_between_lr_change = 100
+    learning_rate = 0.001
+    n_train_epochs = 500
+    n_epochs_between_lr_change = n_train_epochs+1
     num_sample_epochs = 5
     batch_size = 10
 
