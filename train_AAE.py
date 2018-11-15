@@ -356,7 +356,7 @@ def main(folding_id, inliner_classes, total_classes, folds=5, dataset="mnist", c
             GEtrain_loss  += Recon_loss.item()
             Etrain_loss  += E_loss.item()
 
-            if it == 0:
+            if it == 0 and epoch % (train_epoch//10) == 0:
                 comparison = torch.cat([x[:64], x_d[:64]])
                 save_image(comparison.cpu(), image_dest + 'reconstruction_' + str(epoch) + '.png', nrow=64)
 
@@ -371,15 +371,16 @@ def main(folding_id, inliner_classes, total_classes, folds=5, dataset="mnist", c
 
         print('[%d/%d] - ptime: %.2f, Gloss: %.3f, Dloss: %.3f, ZDloss: %.3f, GEloss: %.3f, Eloss: %.3f' % ((epoch + 1), train_epoch, per_epoch_ptime, Gtrain_loss, Dtrain_loss, ZDtrain_loss, GEtrain_loss, Etrain_loss))
 
-        with torch.no_grad():
-            resultsample = G(sample).cpu()
-            save_image(resultsample.view(sample_size, channels, image_height, image_width), image_dest + 'sample_' + str(epoch) + '.png')
+        if epoch % (train_epoch//10) == 0:
+            with torch.no_grad():
+                resultsample = G(sample).cpu()
+                save_image(resultsample.view(sample_size, channels, image_height, image_width), image_dest + 'sample_' + str(epoch) + '.png')
 
     model_dir = log_dir + "models/"
     if not os.path.exists(model_dir):
         os.makedirs(model_dir)
 
-    print("Training finish!... save training results")
+    print("Training finish! Saving training results in ", log_dir)
     torch.save(G.state_dict(),  model_dir + "Gmodel.pkl")
     torch.save(E.state_dict(),  model_dir + "Emodel.pkl")
     torch.save(D.state_dict(),  model_dir + "Dmodel.pkl")

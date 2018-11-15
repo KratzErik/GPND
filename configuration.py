@@ -9,20 +9,21 @@ class Configuration(object):
 #    architecture = '1_5_1_8_256_5_1_0' # with dense layer, maxpool
 #    architecture = '1_5_0_8_256_5_1_0' # no dense layer, maxpool
 #    architecture = "0_4_0_8_256_4_2_1"
-    architecture = "0_5_0_8_256_5_2_2"
+    architecture = "0_5_0_8_512_5_2_2"
 #    architecture = "b2"
 
 
     betas = (0.5,0.999)
-    learning_rate = 0.002
-    n_train_epochs = 5
-    n_epochs_between_lr_change = 30
+    learning_rate = 0.00
+    n_train_epochs = 300
+    n_epochs_between_lr_change = 1000
     batch_size = 10
 
-    dreyeve_img_folder =   "./dreyeve/highway_morning_sunny_vs_rainy/"
-    dreyeve_train_folder = "./dreyeve/highway_morning_sunny_vs_rainy/train/"
-    dreyeve_val_folder =   "./dreyeve/highway_morning_sunny_vs_rainy/val/"
-    dreyeve_test_folder =  "./dreyeve/highway_morning_sunny_vs_rainy/test/"
+    dreyeve_img_folder =   "../weather_detection_data/dreyeve/highway_morning_sunny_vs_rainy/"
+    dreyeve_train_folder = "../weather_detection_data/dreyeve/highway_morning_sunny_vs_rainy/train/"
+    dreyeve_val_folder =   "../weather_detection_data/dreyeve/highway_morning_sunny_vs_rainy/val/"
+    dreyeve_test_in_folder =  "../weather_detection_data/dreyeve/highway_morning_sunny_vs_rainy/test/out/"
+    dreyeve_test_out_folder =  "../weather_detection_data/dreyeve/highway_morning_sunny_vs_rainy/test/out/"
     dreyeve_n_train = 100
     dreyeve_n_val = 50
     dreyeve_n_test = 100
