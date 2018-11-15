@@ -111,37 +111,28 @@ def main(folding_id, inliner_classes, total_classes, folds=5, dataset="mnist", c
         for img in valid_imgs:
             data_valid.append((0,img))
 
-    elif dataset == "prosivic":
-        # Load prosivic data
-        return
-
-    elif dataset == "dreyeve":
+    elif dataset in ("dreyeve", "prosivic"):
         if cfg.architecture not in (None, "b1", "b2"):
             tmp = cfg.architecture.split("_")
             zsize = int(tmp[4])
         else:
-            zsize = 256
+            zsize = 512
+
         inliner_classes = [0]
         outlier_classes = [1]
 
         if cfg is not None:
-            print("Data path: " + str(cfg.dreyeve_img_folder))
+            print("Data path: " + str(cfg.img_folder))
             architecture = cfg.architecture
             channels = cfg.channels
             image_height = cfg.image_height
             image_width = cfg.image_width
-            data_train_x = [img_to_array(load_img(cfg.dreyeve_train_folder + filename)) for filename in os.listdir(cfg.dreyeve_train_folder)]
-            valid_imgs = [img_to_array(load_img(cfg.dreyeve_val_folder + filename)) for filename in os.listdir(cfg.dreyeve_val_folder)]
+            data_train_x = [img_to_array(load_img(cfg.train_folder + filename)) for filename in os.listdir(cfg.train_folder)]
+            valid_imgs = [img_to_array(load_img(cfg.val_folder + filename)) for filename in os.listdir(cfg.val_folder)]
             experiment_name = cfg.experiment_name
         else:
-            print("No configuration provided for dreyeve, using standard configuration")
-            channels = 3
-            image_height = 256
-            image_width = 256
-            architecture = "b2"
-            now = datetime.datetime.now()
-            experiment_name = str(now.year) + "_" + str(now.month) + "_" + str(now.day)
-            # TODO: ADD STANDARD CONFIG (HARD CODED)
+            print("No configuration provided, aborting)
+            exit()
 
         print("Transposing data to 'channels first'")
         data_train_x = np.moveaxis(data_train_x,-1,1)

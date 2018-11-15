@@ -114,7 +114,7 @@ def GetF1(true_positive, false_positive, false_negative):
 
 
 def main(folding_id, inliner_classes, total_classes, folds=5, dataset = "bdd100k", cfg = None):
-    z_size = 32
+    zsize = 32
     batch_size = cfg.batch_size
     data_train = []
     data_valid = []
@@ -132,7 +132,7 @@ def main(folding_id, inliner_classes, total_classes, folds=5, dataset = "bdd100k
     def list_of_pairs_to_numpy(l):
             return np.asarray([x[1] for x in l], np.float32), np.asarray([x[0] for x in l], np.int)
 
-    if dataset == "dreyeve":
+    if dataset in ("dreyeve", "prosivic"):
         inliner_classes = [0]
         outlier_classes = [1]
         if cfg is not None:
@@ -140,6 +140,7 @@ def main(folding_id, inliner_classes, total_classes, folds=5, dataset = "bdd100k
             channels = cfg.channels
             image_height = cfg.image_height
             image_width = cfg.image_width
+            # Load data and labels
             data_train_x = [img_to_array(load_img(cfg.dreyeve_train_folder + filename)) for filename in os.listdir(cfg.dreyeve_train_folder)]
             data_test_x_in = [img_to_array(load_img(cfg.dreyeve_test_in_folder + filename)) for filename in os.listdir(cfg.dreyeve_test_in_folder)]
             data_test_x_out = [img_to_array(load_img(cfg.dreyeve_test_out_folder + filename)) for filename in os.listdir(cfg.dreyeve_test_out_folder)]
@@ -147,20 +148,15 @@ def main(folding_id, inliner_classes, total_classes, folds=5, dataset = "bdd100k
             test_in_labels = np.zeros((cfg.dreyeve_n_test_in,),dtype=np.int32)
             test_out_labels = np.ones((cfg.dreyeve_n_test-cfg.dreyeve_n_test_in,),dtype=np.int32)
             test_labels = np.concatenate([test_in_labels, test_out_labels])
+            
             architecture = cfg.architecture
             experiment_name = cfg.experiment_name
             if cfg not in ("b1", "b2"):
                 tmp = cfg.architecture.split("_")
-                z_size = int(tmp[4])
+                zsize = int(tmp[4])
         else:
-            print("No configuration provided for dr(eye)ve experiment, using standard configuration")
-            channels = 3
-            image_height = 256
-            image_width = 256
-            architecture = "0_4_1_8_256_5_2_1"
-            now = datetime.datetime.now()
-            experiment_name = now.year+"_"+now.month+"_"+now.day
-            z_size = 256
+            print("No configuration provided, aborting")
+            exit()
 
         print("Transposing data to 'channels first'")
         data_train_x = np.moveaxis(data_train_x,-1,1)
@@ -190,13 +186,8 @@ def main(folding_id, inliner_classes, total_classes, folds=5, dataset = "bdd100k
             architecture = cfg.architecture
             experiment_name = cfg.experiment_name
         else:
-            print("No configuration provided for BDD100K, using standard configuration")
-            channels = 3
-            image_height = 192
-            image_width = 320
-            architecture = "b1"
-            now = datetime.datetime.now()
-            experiment_name = now.year+"_"+now.month+"_"+now.day
+            print("No configuration provided, aborting")
+            exit()
 
         print("Transposing data to 'channels first'")
         data_train_x = np.moveaxis(data_train_x,-1,1)
@@ -253,8 +244,8 @@ def main(folding_id, inliner_classes, total_classes, folds=5, dataset = "bdd100k
 
     print("Train set size:", len(data_train_x))
 
-    G = Generator(z_size, channels = channels, architecture = architecture).to(device)
-    E = Encoder(z_size, channels = channels, architecture = architecture).to(device)
+    G = Generator(zsize, channels = channels, architecture = architecture).to(device)
+    E = Encoder(zsize, channels = channels, architecture = architecture).to(device)
     setup(E)
     setup(G)
     G.eval()
@@ -264,8 +255,8 @@ def main(folding_id, inliner_classes, total_classes, folds=5, dataset = "bdd100k
     E.load_state_dict(torch.load(cfg.log_dir + "models/Emodel.pkl"))
 
     sample_size = 64
-    sample = torch.randn(sample_size, z_size).to(device)
-    sample = G(sample.view(-1, z_size, 1, 1)).cpu()
+    sample = torch.randn(sample_size, zsize).to(device)
+    sample = G(sample.view(-1, zsize, 1, 1)).cpu()
     save_image(sample.view(sample_size, channels, image_height, image_width), image_dest +  'Generator_sample.png')
 
     if True:
@@ -329,7 +320,7 @@ def main(folding_id, inliner_classes, total_classes, folds=5, dataset = "bdd100k
         return max(count[id], 1e-308)
 
     zlist = np.concatenate(zlist)
-#    for i in range(z_size):
+#    for i in range(zsize):
 #        plt.hist(zlist[:, i], bins='auto', histtype='step')
 
     plt.xlabel(r"$z$", fontsize=axis_title_size)
@@ -347,8 +338,8 @@ def main(folding_id, inliner_classes, total_classes, folds=5, dataset = "bdd100k
     plt.cla()
     plt.close()
 
-    gennorm_param = np.zeros([3, z_size])
-    for i in range(z_size):
+    gennorm_param = np.zeros([3, zsize])
+    for i in range(zsize):
         betta, loc, scale = scipy.stats.gennorm.fit(zlist[:, i])
         gennorm_param[0, i] = betta
         gennorm_param[1, i] = loc
@@ -413,7 +404,7 @@ def main(folding_id, inliner_classes, total_classes, folds=5, dataset = "bdd100k
                 distance = np.sum(np.power(x[i].flatten() - recon_batch[i].flatten(), power))
 
                 logPe = np.log(r_pdf(distance, bin_edges, counts)) # p_{\|W^{\perp}\|} (\|w^{\perp}\|)
-                logPe -= np.log(distance) * (channels*image_height * image_width - z_size) # \| w^{\perp} \|}^{m-n}
+                logPe -= np.log(distance) * (channels*image_height * image_width - zsize) # \| w^{\perp} \|}^{m-n}
 
                 P = logD + logPz + logPe
 
@@ -526,7 +517,7 @@ def main(folding_id, inliner_classes, total_classes, folds=5, dataset = "bdd100k
                 distance = np.sum(np.power(x[i].flatten() - recon_batch[i].flatten(), power))
 
                 logPe = np.log(r_pdf(distance, bin_edges, counts))
-                logPe -= np.log(distance) * (channels * image_height * image_width - z_size)
+                logPe -= np.log(distance) * (channels * image_height * image_width - zsize)
                 
                 count += 1
 
