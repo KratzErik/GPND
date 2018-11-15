@@ -147,9 +147,9 @@ def main(folding_id, inliner_classes, total_classes, folds=5, cfg = None):
         image_width = cfg.image_width
 
         # Load data and labels
-        data_train_x = [img_to_array(load_img(cfg.dreyeve_train_folder + filename)) for filename in os.listdir(cfg.dreyeve_train_folder)]
-        data_test_x_in = [img_to_array(load_img(cfg.dreyeve_test_in_folder + filename)) for filename in os.listdir(cfg.dreyeve_test_in_folder)]
-        data_test_x_out = [img_to_array(load_img(cfg.dreyeve_test_out_folder + filename)) for filename in os.listdir(cfg.dreyeve_test_out_folder)]
+        data_train_x = [img_to_array(load_img(cfg.dreyeve_train_folder + filename)) for filename in os.listdir(cfg.dreyeve_train_folder)][:cfg.n_train]
+        data_test_x_in = [img_to_array(load_img(cfg.dreyeve_test_in_folder + filename)) for filename in os.listdir(cfg.dreyeve_test_in_folder)][:cfg.n_test_in]
+        data_test_x_out = [img_to_array(load_img(cfg.dreyeve_test_out_folder + filename)) for filename in os.listdir(cfg.dreyeve_test_out_folder)][:cfg.n_test-cfg.n_test_in]
         data_test_x = np.concatenate([data_test_x_in, data_test_x_out])
         test_in_labels = np.zeros((cfg.dreyeve_n_test_in,),dtype=np.int32)
         test_out_labels = np.ones((cfg.dreyeve_n_test-cfg.dreyeve_n_test_in,),dtype=np.int32)

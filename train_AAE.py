@@ -122,8 +122,8 @@ def main(folding_id, inliner_classes, total_classes, folds=5, cfg = None):
         channels = cfg.channels
         image_height = cfg.image_height
         image_width = cfg.image_width
-        data_train_x = [img_to_array(load_img(cfg.train_folder + filename)) for filename in os.listdir(cfg.train_folder)]
-        valid_imgs = [img_to_array(load_img(cfg.val_folder + filename)) for filename in os.listdir(cfg.val_folder)]
+        data_train_x = [img_to_array(load_img(cfg.train_folder + filename)) for filename in os.listdir(cfg.train_folder)][:cfg.n_train]
+        valid_imgs = [img_to_array(load_img(cfg.val_folder + filename)) for filename in os.listdir(cfg.val_folder)][:cfg.n_val]
         experiment_name = cfg.experiment_name
 
         print("Transposing data to 'channels first'")
