@@ -16,7 +16,7 @@ class Configuration(object):
     # Hyperparameters
     betas = (0.5,0.999)
     learning_rate = 0.00
-    n_train_epochs = 300
+    n_train_epochs = 100
     n_epochs_between_lr_change = 1000
     batch_size = 10
 
@@ -26,7 +26,7 @@ class Configuration(object):
     n_test = 100 # for GPND algorithm, the test set is split into val and test set during testing, since the valset contains outliers in order to compute an optimal threshold. This is used to compute some of the output values, but not AUPRIN or AUROC, which are threshold independent.
     n_test_in = 50
 
-    dataset = "dreyeve"
+    dataset = "prosivic"
 
     image_height = 256
     image_width = 256
@@ -54,7 +54,7 @@ class Configuration(object):
         test_out_folder =  "../weather_detection_data/prosivic/test/out/"
 
 
-    if dataset == "bdd100k"
+    if dataset == "bdd100k":
         img_folder = Path("/data/bdd100k/images/train_and_val_256by256")
         norm_file = "/data/bdd100k/namelists/clear_or_partly_cloudy_or_overcast_and_highway_and_daytime.txt"
         norm_filenames = loadbdd100k.get_namelist_from_file(norm_file)
