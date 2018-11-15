@@ -15,9 +15,9 @@ class Configuration(object):
 
     # Hyperparameters
     betas = (0.5,0.999)
-    learning_rate = 0.00
-    n_train_epochs = 100
-    n_epochs_between_lr_change = 1000
+    learning_rate = 0.002
+    n_train_epochs = 500
+    n_epochs_between_lr_change = 200
     batch_size = 10
 
     # Dataset options
