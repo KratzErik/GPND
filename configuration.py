@@ -19,13 +19,13 @@ class Configuration(object):
     n_train_epochs = 500
     n_epochs_between_lr_change = n_train_epochs+1
     num_sample_epochs = 5
-    batch_size = 10
+    batch_size = 64
 
     # Dataset options
-    n_train = 100
-    n_val = 50
-    n_test = 100 # for GPND algorithm, the test set is split into val and test set during testing, since the valset contains outliers in order to compute an optimal threshold. This is used to compute some of the output values, but not AUPRIN or AUROC, which are threshold independent.
-    n_test_in = 50
+    n_train = 7000
+    n_val = 1413
+    n_test = 787 # for GPND algorithm, the test set is split into val and test set during testing, since the valset contains outliers in order to compute an optimal threshold. This is used to compute some of the output values, but not AUPRIN or AUROC, which are threshold independent.
+    n_test_in = 787
 
     dataset = "prosivic"
 
