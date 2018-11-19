@@ -10,7 +10,7 @@ class Configuration(object):
     #architecture = '1_5_1_8_256_5_1_0' # with dense layer, maxpool
     #architecture = '1_5_0_8_256_5_1_0' # no dense layer, maxpool
     #architecture = "0_4_0_8_256_4_2_1"
-    architecture = "0_5_0_16_1024_5_2_2"
+    architecture = "1_4_1_16_1024_5_2_2"
     #architecture = "b2"
 
     # Hyperparameters
@@ -28,15 +28,23 @@ class Configuration(object):
     n_test_in = 787
 
     dataset = "prosivic"
+    inliers_name = "sunny_highway"
+    outliers_name = "rainy_highway"
 
     image_height = 256
     image_width = 256
     channels = 3
-    experiment_name = "autobuild"+architecture
+    model_name = "_".join([inliers_name, architecture])
+    experiment_name = "_vs_".join([inliers_name,outliers_name])
     use_batchnorm = True
-    log_dir = './log/' + dataset + '/' + experiment_name + '/'
+    log_dir = './log/' + dataset + '/' + model_name + '/'
 
-
+    # Testing options
+    percentages = [0.5] # percentage of outliers to use during testing
+    auroc = True
+    auprc = True
+    plot_roc = True
+    plot_prc = True
 
     # dataset specific options below
 
@@ -47,7 +55,7 @@ class Configuration(object):
         test_in_folder =  "../weather_detection_data/dreyeve/highway_morning_sunny_vs_rainy/test/out/"
         test_out_folder =  "../weather_detection_data/dreyeve/highway_morning_sunny_vs_rainy/test/out/"
     
-    if dataset == "prosivic":
+    elif dataset == "prosivic":
         img_folder =   "../weather_detection_data/prosivic/"
         train_folder = "../weather_detection_data/prosivic/train/"
         val_folder =   "../weather_detection_data/prosivic/val/"
@@ -55,7 +63,7 @@ class Configuration(object):
         test_out_folder =  "../weather_detection_data/prosivic/test/out/"
 
 
-    if dataset == "bdd100k":
+    elif dataset == "bdd100k":
         img_folder = Path("/data/bdd100k/images/train_and_val_256by256")
         norm_file = "/data/bdd100k/namelists/clear_or_partly_cloudy_or_overcast_and_highway_and_daytime.txt"
         norm_filenames = loadbdd100k.get_namelist_from_file(norm_file)

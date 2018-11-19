@@ -1,6 +1,6 @@
 from configuration import Configuration as cfg
 import train_AAE
-import novelty_detector as nd
+import novelty_detector_old as nd
 
 fold = 0
 inlier_classes = [0]

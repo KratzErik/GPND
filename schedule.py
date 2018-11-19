@@ -1,5 +1,5 @@
 import train_AAE
-import novelty_detector
+import novelty_detector_old
 import csv
 
 
@@ -89,7 +89,7 @@ for percentage in percentages:
 for fold in range(5 if full_run else 1):
     for i in range(10):
         train_AAE.main(fold, [i], 10)
-        res = novelty_detector.main(fold, [i], 10)
+        res = novelty_detector_old.main(fold, [i], 10)
 
         for k, v in res.items():
             results[k].append(v)
