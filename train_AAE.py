@@ -62,11 +62,13 @@ def numpy2torch(x):
     return setup(torch.from_numpy(x))
 
 
-def extract_batch(data, it, batch_size):
-    x = numpy2torch(data[it * batch_size:(it + 1) * batch_size, :, :]) / 255.0
+def extract_batch(data, it, batch_size, scale = False):
+    if scale:
+        x = numpy2torch(data[it * batch_size:(it + 1) * batch_size]) / 255.0
+    else:
+        x = numpy2torch(data[it * batch_size:(it + 1) * batch_size])
     #x.sub_(0.5).div_(0.5)
     return Variable(x)
-None
 
 def main(folding_id, inliner_classes, total_classes, folds=5, cfg = None):
 
@@ -174,6 +176,10 @@ def main(folding_id, inliner_classes, total_classes, folds=5, cfg = None):
    
         ## End of individual dataset setups
 
+    # Rescale data to [0,1]
+    data_train_x /= 255.0
+
+    # Setup export directory
     log_dir = cfg.log_dir
     train_dir = cfg.log_dir + 'train/'
     if not os.path.exists(train_dir):

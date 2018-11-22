@@ -67,15 +67,14 @@ def numpy2torch(x):
     return setup(torch.from_numpy(x))
 
 
-def extract_batch(data, it, batch_size):
-    x = numpy2torch(data[it * batch_size:(it + 1) * batch_size]) / 255.0
+def extract_batch(data, it, batch_size, scale = False):
+    if scale:
+        x = numpy2torch(data[it * batch_size:(it + 1) * batch_size]) / 255.0
+    else:
+        x = numpy2torch(data[it * batch_size:(it + 1) * batch_size])
     #x.sub_(0.5).div_(0.5)
     return Variable(x)
 
-
-def extract_batch_(data, it, batch_size):
-    x = data[it * batch_size:(it + 1) * batch_size]
-    return x
 
 
 def compute_jacobian(inputs, output):
@@ -279,7 +278,7 @@ def main(folding_id, inliner_classes, total_classes, folds=5):
 
         for it in range(len(mnist_valid_x) // batch_size):
             x = Variable(extract_batch(mnist_valid_x, it, batch_size).view(-1, 32 * 32).data, requires_grad=True)
-            label = extract_batch_(mnist_valid_y, it, batch_size)
+            label = extract_batch(mnist_valid_y, it, batch_size)
 
             z = E(x.view(-1, 1, 32, 32))
             recon_batch = G(z)
@@ -380,7 +379,7 @@ def main(folding_id, inliner_classes, total_classes, folds=5):
 
         for it in range(len(mnist_test_x) // batch_size):
             x = Variable(extract_batch(mnist_test_x, it, batch_size).view(-1, 32 * 32).data, requires_grad=True)
-            label = extract_batch_(mnist_test_y, it, batch_size)
+            label = extract_batch(mnist_test_y, it, batch_size)
 
             z = E(x.view(-1, 1, 32, 32))
             recon_batch = G(z)
