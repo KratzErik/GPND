@@ -31,7 +31,7 @@ matplotlib.use('agg')
 import matplotlib.pyplot as plt
 import scipy.stats
 import os
-from sklearn.metrics import roc_auc_score
+from sklearn.metrics import roc_auc_score, auc, precision_recall_curve
 from utils import loadbdd100k, reuse_results
 import datetime
 from keras.preprocessing.image import load_img, img_to_array
@@ -548,9 +548,10 @@ def main(folding_id, inliner_classes, total_classes, folds=5, cfg = None):
         except:
             auc = 0
 
+        # Pickle results, they are then extracted by other function to produce metrics
         with open(results_dir + experiment_name + '_result_p%d.pkl'%(str(percentage)), 'wb') as output:
             pickle.dump(result, output)
-
+        
         if cfg.nd_original_output:
 
             print("Percentage ", percentage)
