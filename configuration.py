@@ -39,6 +39,10 @@ class Configuration(object):
     use_batchnorm = True
     log_dir = './log/' + dataset + '/' + model_name + '/'
 
+
+    # Diagnostics
+    sample_size = 16
+    sample_rows = 4 # nrow to save_image grid
     # Testing options
     percentages = [0.5] # percentage of outliers to use during testing
     auroc = True
