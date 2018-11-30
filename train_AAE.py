@@ -229,8 +229,8 @@ def main(folding_id, inliner_classes, total_classes, folds=5, cfg = None):
     y_real_z = torch.ones(1 if zd_merge else batch_size)
     y_fake_z = torch.zeros(1 if zd_merge else batch_size)
 
-    sample_size = 64
-    sample = torch.randn(sample_size, zsize).view(-1, zsize, 1, 1)
+    cfg.sample_size = 64
+    sample = torch.randn(cfg.sample_size, zsize).view(-1, zsize, 1, 1)
 
     for epoch in range(train_epoch):
         G.train()
@@ -348,8 +348,9 @@ def main(folding_id, inliner_classes, total_classes, folds=5, cfg = None):
             Etrain_loss  += E_loss.item()
 
             if it == 0 and (epoch+1) % (train_epoch//cfg.num_sample_epochs) == 0:
-                comparison = torch.cat([x[:64], x_d[:64]])
-                save_image(comparison.cpu(), train_dir + 'reconstruction_' + str(epoch) + '.png', nrow=64)
+                #comparison = torch.cat([x[:cfg.sample_size//2], x_d[:cfg.sample_size//2]])
+                comparison = torch.cat([[x[i],x_d[i]] for i in range(cfg.sample_size//2)])
+                save_image(comparison.cpu(), train_dir + 'reconstruction_' + str(epoch) + '.png', nrow=cfg.sample_rows)
 
         Gtrain_loss /= (len(data_train_x))
         Dtrain_loss /= (len(data_train_x))
@@ -365,7 +366,7 @@ def main(folding_id, inliner_classes, total_classes, folds=5, cfg = None):
         if (epoch+1) % (train_epoch//cfg.num_sample_epochs) == 0:
             with torch.no_grad():
                 resultsample = G(sample).cpu()
-                save_image(resultsample.view(sample_size, channels, image_height, image_width), train_dir + 'sample_' + str(epoch) + '.png')
+                save_image(resultsample.view(cfg.sample_size, channels, image_height, image_width), train_dir + 'sample_' + str(epoch) + '.png', nrow = cfg.sample_rows)
 
     model_dir = log_dir + "models/"
     if not os.path.exists(model_dir):
