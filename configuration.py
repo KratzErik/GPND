@@ -3,6 +3,7 @@ from pathlib import Path
 
 class Configuration(object):
 
+    dataset = "prosivic"
 
     # Neural network architecture options 
     #architecture = '0_5_1_8_256_5_2_0' # with dense layer, stride instead of pool
@@ -26,8 +27,6 @@ class Configuration(object):
     n_val = 1413
     n_test = 787 # for GPND algorithm, the test set is split into val and test set during testing, since the valset contains outliers in order to compute an optimal threshold. This is used to compute some of the output values, but not AUPRIN or AUROC, which are threshold independent.
     n_test_in = 787
-
-    dataset = "prosivic"
 
     image_height = 256
     image_width = 256
