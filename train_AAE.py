@@ -62,11 +62,13 @@ def numpy2torch(x):
     return setup(torch.from_numpy(x))
 
 
-def extract_batch(data, it, batch_size):
-    x = numpy2torch(data[it * batch_size:(it + 1) * batch_size, :, :]) / 255.0
+def extract_batch(data, it, batch_size, scale = False):
+    if scale:
+        x = numpy2torch(data[it * batch_size:(it + 1) * batch_size]) / 255.0
+    else:
+        x = numpy2torch(data[it * batch_size:(it + 1) * batch_size])
     #x.sub_(0.5).div_(0.5)
     return Variable(x)
-None
 
 def main(folding_id, inliner_classes, total_classes, folds=5, cfg = None):
 
@@ -91,7 +93,8 @@ def main(folding_id, inliner_classes, total_classes, folds=5, cfg = None):
         image_width = cfg.image_width
         data_train_x, valid_imgs, _ , _ = loadbdd100k.load_bdd100k_data_filename_list(cfg.img_folder, cfg.norm_filenames, cfg.out_filenames, cfg.n_train, cfg.n_val, cfg.n_test, cfg.out_frac, image_height, image_width, channels, shuffle=cfg.shuffle)
         architecture = cfg.architecture
-        experiment_name = cfg.experiment_name
+        model_name = cfg.model_name
+        #experiment_name = cfg.experiment_name
 
         print("Transposing data to 'channels first'")
         data_train_x = np.moveaxis(data_train_x,-1,1)
@@ -117,14 +120,15 @@ def main(folding_id, inliner_classes, total_classes, folds=5, cfg = None):
         inliner_classes = [0]
         outlier_classes = [1]
 
-        print("Data path: " + str(cfg.img_folder))
         architecture = cfg.architecture
         channels = cfg.channels
         image_height = cfg.image_height
         image_width = cfg.image_width
         data_train_x = [img_to_array(load_img(cfg.train_folder + filename)) for filename in os.listdir(cfg.train_folder)][:cfg.n_train]
         valid_imgs = [img_to_array(load_img(cfg.val_folder + filename)) for filename in os.listdir(cfg.val_folder)][:cfg.n_val]
-        experiment_name = cfg.experiment_name
+        
+        # experiment_name = cfg.experiment_name
+        model_name = cfg.model_name
 
         print("Transposing data to 'channels first'")
         data_train_x = np.moveaxis(data_train_x,-1,1)
@@ -159,7 +163,7 @@ def main(folding_id, inliner_classes, total_classes, folds=5, cfg = None):
         for i in range(total_classes):
             if i not in inliner_classes:
                 outlier_classes.append(i)
-        experiment_name = "-".join(str(inliner_classes))
+        # experiment_name = "-".join(str(inliner_classes))
         #keep only train classes
         data_train = [x for x in data_train if x[0] in inliner_classes]
 
@@ -172,10 +176,14 @@ def main(folding_id, inliner_classes, total_classes, folds=5, cfg = None):
    
         ## End of individual dataset setups
 
+    # Rescale data to [0,1]
+    data_train_x /= 255.0
+
+    # Setup export directory
     log_dir = cfg.log_dir
-    image_dest = cfg.log_dir + 'train/'
-    if not os.path.exists(image_dest):
-        os.makedirs(image_dest)
+    train_dir = cfg.log_dir + 'train/'
+    if not os.path.exists(train_dir):
+        os.makedirs(train_dir)
 
     print("Train set size:", len(data_train_x))
     print("Data type:", data_train_x.dtype)
@@ -341,7 +349,7 @@ def main(folding_id, inliner_classes, total_classes, folds=5, cfg = None):
 
             if it == 0 and (epoch+1) % (train_epoch//cfg.num_sample_epochs) == 0:
                 comparison = torch.cat([x[:64], x_d[:64]])
-                save_image(comparison.cpu(), image_dest + 'reconstruction_' + str(epoch) + '.png', nrow=64)
+                save_image(comparison.cpu(), train_dir + 'reconstruction_' + str(epoch) + '.png', nrow=64)
 
         Gtrain_loss /= (len(data_train_x))
         Dtrain_loss /= (len(data_train_x))
@@ -357,7 +365,7 @@ def main(folding_id, inliner_classes, total_classes, folds=5, cfg = None):
         if (epoch+1) % (train_epoch//cfg.num_sample_epochs) == 0:
             with torch.no_grad():
                 resultsample = G(sample).cpu()
-                save_image(resultsample.view(sample_size, channels, image_height, image_width), image_dest + 'sample_' + str(epoch) + '.png')
+                save_image(resultsample.view(sample_size, channels, image_height, image_width), train_dir + 'sample_' + str(epoch) + '.png')
 
     model_dir = log_dir + "models/"
     if not os.path.exists(model_dir):
@@ -368,6 +376,14 @@ def main(folding_id, inliner_classes, total_classes, folds=5, cfg = None):
     torch.save(E.state_dict(),  model_dir + "Emodel.pkl")
     torch.save(D.state_dict(),  model_dir + "Dmodel.pkl")
     torch.save(ZD.state_dict(), model_dir + "ZDmodel.pkl")
+
+    print("Logging training configuration")
+    with open(train_dir + "configuration.txt",'w') as f_out:
+        with open("./configuration.py", "r") as f_in:
+            for line in f_in:
+                    f_out.write(line)
+            # write additional logs
+    
 
 if __name__ == '__main__':
     main(0, [0], 10)

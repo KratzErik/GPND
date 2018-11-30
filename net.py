@@ -309,8 +309,6 @@ class VAE(nn.Module):
             pad = int(tmp[7])
             num_filters = c_out
 
-            # height of image at start of deconvolutions
-
             if n_dense > 0:
                 h1 = self.image_height // (2**n_conv) # height = width of image going into first conv layer
                 num_filters =  c_out * (2**(n_conv-1))
