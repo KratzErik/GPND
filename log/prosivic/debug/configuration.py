@@ -42,6 +42,9 @@ class Configuration(object):
         inliers_name = "sunny_highway"
         outliers_name = "rainy_highway"
         n_dense_units = [256]
+        zd_n_layers = 3
+        zd_out_units = [256,256,1]
+
         image_height = 256
         image_width = 256
         channels = 3
@@ -50,17 +53,18 @@ class Configuration(object):
         use_batchnorm = True
 
         # Hyperparameters
-        betas = (0.5,0.999) # adam solver standard
+        betas = (0.9,0.999) # adam solver standard is (0.5, 0.999), GPND standard is (0.9,0.999)
         learning_rate = 0.0001
         n_train_epochs = 500
         n_epochs_between_lr_change = n_train_epochs+1
         num_sample_epochs = 5
         batch_size = 16
-        lr_g = 0.0005
-        lr_e = 0.0005
-        lr_d = 0.0005
+        lr_g = 0.002
+        lr_e = 0.002
+        lr_d = 0.002
         lr_ge = 0.002
-        lr_zd = 0.0005
+        lr_zd = 0.002
+        rec_loss_weight = 10
 
         # Dataset options
         data_div = 12
@@ -78,21 +82,24 @@ class Configuration(object):
     
     elif dataset == "prosivic":
         # Hyperparameters
-        betas = (0.5,0.999) # adam solver standard
+        betas = (0.9,0.999) # adam solver standard is (0.5, 0.999), GPND standard is (0.9,0.999)
 #        learning_rate = 0.001
         n_train_epochs = 100
         n_epochs_between_lr_change = n_train_epochs+1
         num_sample_epochs = 5
-        lr_g = 0.0005
-        lr_e = 0.0005
-        lr_d = 0.0005
+        lr_g  = 0.002
+        lr_e  = 0.002
+        lr_d  = 0.002
         lr_ge = 0.002
-        lr_zd = 0.0005
+        lr_zd = 0.002
+        rec_loss_weight = 1000
 
         architecture = "0_4_0_16_256_4_2_1"
         n_dense_units = None
         inliers_name = "sunny_highway"
         outliers_name = "rainy_highway"
+        zd_n_layers = 3
+        zd_out_units = [256,256,1]
 
         # Dataset options
         image_height = 256
@@ -119,7 +126,6 @@ class Configuration(object):
         batch_size = 128
         architecture = None
         betas = (0.9,0.999) # GPND standard
-        learning_rate = 0.0001
         n_train_epochs = 100
         n_epochs_between_lr_change = 40
         num_sample_epochs = 5
@@ -128,6 +134,7 @@ class Configuration(object):
         lr_d = 0.002
         lr_ge = 0.002
         lr_zd = 0.002
+        rec_loss_weight = 1
 
     elif dataset == "bdd100k":
         img_folder = Path("/data/bdd100k/images/train_and_val_256by256")
@@ -137,5 +144,6 @@ class Configuration(object):
         out_filenames = loadbdd100k.get_namelist_from_file(out_file)
         norm_spec = [["weather", ["clear","partly cloudy", "overcast"]],["scene", "highway"],["timeofday", "daytime"]]
         out_spec = [["weather", ["rainy", "snowy", "foggy"]],["scene", "highway"],["timeofday",["daytime","dawn/dusk","night"]]]
-
-    
+# Training logged at Mon, 03 Dec 2018 18:31:31 UTC
+# Total training time:	0h22m31.8s
+# Average time/epoch:	0m13.52s

@@ -218,7 +218,7 @@ def main(folding_id, inliner_classes, total_classes, folds=5, cfg = None):
     G_optimizer = optim.Adam(G.parameters(), lr=cfg.lr_g, betas = betas)
     D_optimizer = optim.Adam(D.parameters(), lr=cfg.lr_d, betas = betas)
     E_optimizer = optim.Adam(E.parameters(), lr=cfg.lr_e, betas = betas)
-    GE_optimizer = optim.Adam(list(E.parameters()) + list(G.parameters()), lr=cfg.lr_ge, betas = betas)
+    GE_optimizer = optim.Adam(list(E.parameters()) + list(G.parameters()), lr=cfg.lr_ge)
     ZD_optimizer = optim.Adam(ZD.parameters(), lr=cfg.lr_zd, betas = betas)
 
     train_epoch = cfg.n_train_epochs
@@ -267,7 +267,8 @@ def main(folding_id, inliner_classes, total_classes, folds=5, cfg = None):
             ZD_optimizer.param_groups[0]['lr'] /= 4
             print("learning rate change!")
 
-        for it in range(len(data_train_x) // batch_size):
+        n_batches = len(data_train_x) // batch_size
+        for it in range(n_batches):
             x = extract_batch(data_train_x, it, batch_size).view(-1, channels, image_height, image_width)
            # print("Batch type:")
            # print(type(x))
@@ -346,7 +347,7 @@ def main(folding_id, inliner_classes, total_classes, folds=5, cfg = None):
 
             E_loss = BCE_loss(ZD_result, y_real_z) * 2.0
 
-            Recon_loss = F.binary_cross_entropy(x_d, x)
+            Recon_loss = cfg.rec_loss_weight*F.binary_cross_entropy(x_d, x)
 
             (Recon_loss + E_loss).backward()
 
@@ -355,6 +356,7 @@ def main(folding_id, inliner_classes, total_classes, folds=5, cfg = None):
             GEtrain_loss  += Recon_loss.item()
             Etrain_loss  += E_loss.item()
 
+            print("[%d/%d]: (%d/%d): Recon_loss: %.6f"%(epoch+1,train_epoch,it+1,n_batches,Recon_loss/batch_size))
             if it == 0 and (epoch+1) % max(train_epoch//cfg.num_sample_epochs,1) == 0:
                 comparison = torch.cat([x[:cfg.sample_size//2], x_d[:cfg.sample_size//2]])
                 #comparison = [comparison[i] if i%2 == 0 else comparison[cfg.sample_size//2+i] for i in range(cfg.sample_size//2)]
@@ -379,7 +381,7 @@ def main(folding_id, inliner_classes, total_classes, folds=5, cfg = None):
         complete_epochs = epoch+1
         remaining_time = (train_epoch-complete_epochs) * total_time/complete_epochs
 
-        print('[%d/%d] - ptime: %.2f, Gloss: %.3f, Dloss: %.3f, ZDloss: %.3f, GEloss: %.3f, Eloss: %.3f, ETA: %dh%dm%.1fs' % ((epoch + 1), train_epoch, per_epoch_ptime, Gtrain_loss, Dtrain_loss, ZDtrain_loss, GEtrain_loss, Etrain_loss, remaining_time//3600, (remaining_time%3600)//60, remaining_time%60))
+        print('[%d/%d] - ptime: %.2f, Gloss: %.3f, Dloss: %.3f, ZDloss: %.3f, Reconloss: %.3f, Eloss: %.3f, ETA: %dh%dm%.1fs' % ((epoch + 1), train_epoch, per_epoch_ptime, Gtrain_loss, Dtrain_loss, ZDtrain_loss, GEtrain_loss, Etrain_loss, remaining_time//3600, (remaining_time%3600)//60, remaining_time%60))
 
         if (epoch+1) % max(train_epoch//cfg.num_sample_epochs,1) == 0:
             with torch.no_grad():

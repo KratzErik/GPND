@@ -59,11 +59,12 @@ class Configuration(object):
         n_epochs_between_lr_change = n_train_epochs+1
         num_sample_epochs = 5
         batch_size = 16
-        lr_g = 0.0005
-        lr_e = 0.0005
-        lr_d = 0.0005
+        lr_g = 0.002
+        lr_e = 0.002
+        lr_d = 0.002
         lr_ge = 0.002
-        lr_zd = 0.0005
+        lr_zd = 0.002
+        rec_loss_weight = 10
 
         # Dataset options
         data_div = 12
@@ -76,7 +77,7 @@ class Configuration(object):
         train_folder = "../weather_detection_data/dreyeve/sunny_highway_countryside_morning_evening_vs_rainy_highway_countryside_morning_evening/train/"
         val_folder =   "../weather_detection_data/dreyeve/sunny_highway_countryside_morning_evening_vs_rainy_highway_countryside_morning_evening/val/"
         test_in_folder =  "../weather_detection_data/dreyeve/sunny_highway_countryside_morning_evening_vs_rainy_highway_countryside_morning_evening/test/in/"
-        test_out_folder = "../weather_detection_data/dreyeve/sunny_highway_countryside_morning_evening_vs_rainy_highway_countryside_morning_evening/test/out/"
+        test_out_folder = "../weather_detection_data/dreyeve/sunny_highway_countryside_morning_evening_vs_rainy_highway_countryside_morning_evening/test/out/foggy"
 
     
     elif dataset == "prosivic":
@@ -86,11 +87,12 @@ class Configuration(object):
         n_train_epochs = 100
         n_epochs_between_lr_change = n_train_epochs+1
         num_sample_epochs = 5
-        lr_g = 0.0005
-        lr_e = 0.0005
-        lr_d = 0.0005
+        lr_g  = 0.002
+        lr_e  = 0.002
+        lr_d  = 0.002
         lr_ge = 0.002
-        lr_zd = 0.0005
+        lr_zd = 0.002
+        rec_loss_weight = 1000
 
         architecture = "0_4_0_16_256_4_2_1"
         n_dense_units = None
@@ -124,7 +126,6 @@ class Configuration(object):
         batch_size = 128
         architecture = None
         betas = (0.9,0.999) # GPND standard
-        learning_rate = 0.0001
         n_train_epochs = 100
         n_epochs_between_lr_change = 40
         num_sample_epochs = 5
@@ -133,6 +134,7 @@ class Configuration(object):
         lr_d = 0.002
         lr_ge = 0.002
         lr_zd = 0.002
+        rec_loss_weight = 1
 
     elif dataset == "bdd100k":
         img_folder = Path("/data/bdd100k/images/train_and_val_256by256")
@@ -142,5 +144,3 @@ class Configuration(object):
         out_filenames = loadbdd100k.get_namelist_from_file(out_file)
         norm_spec = [["weather", ["clear","partly cloudy", "overcast"]],["scene", "highway"],["timeofday", "daytime"]]
         out_spec = [["weather", ["rainy", "snowy", "foggy"]],["scene", "highway"],["timeofday",["daytime","dawn/dusk","night"]]]
-
-    

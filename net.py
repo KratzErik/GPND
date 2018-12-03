@@ -870,7 +870,7 @@ class ZDiscriminator(nn.Module):
     def __init__(self, zsize, batchSize, d=128):
         super(ZDiscriminator, self).__init__()
         print("Constructing ZDiscriminator")
-        if cfg.dataset == "mnist":
+        if cfg.dataset in ("mnist","prosivic","dreyeve"):
             self.linear1 = nn.Linear(zsize, d)
             self.linear2 = nn.Linear(d, d)
             self.linear3 = nn.Linear(d, 1)
@@ -894,7 +894,7 @@ class ZDiscriminator(nn.Module):
 
     # forward method
     def forward(self, x):
-        if cfg.dataset == "mnist":
+        if cfg.dataset in ("mnist", "dreyeve","prosivic"):
             x = F.leaky_relu((self.linear1(x)), 0.2)
             x = F.leaky_relu((self.linear2(x)), 0.2)
             x = sigmoid(self.linear3(x))
