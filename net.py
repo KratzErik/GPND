@@ -576,6 +576,7 @@ class Discriminator(nn.Module):
             stride = int(tmp[6])
             pad = int(tmp[7])
             num_filters = c_1
+            n_dense_units = cfg.n_dense_units
 
             if use_pool:
                 pad = 0
@@ -609,10 +610,8 @@ class Discriminator(nn.Module):
                 self.dense_layers = []
                 for dense_i in range(n_dense):
                     num_dense_out = n_dense_units[dense_i] if dense_i < n_dense-1 else 1
-
                     # Add dense layer
-                    
-                    self.dense_layer.append(nn.Linear(num_dense_in,num_dense_out))
+                    self.dense_layers.append(nn.Linear(num_dense_in,num_dense_out))
                     print("\tAdded output dense layer %d"%dense_i+1)
             else:
                 # Add final conv_layer:
@@ -734,6 +733,7 @@ class Encoder(nn.Module):
             stride = int(tmp[6])
             pad = int(tmp[7])
             num_filters = c_1
+            n_dense_units = cfg.n_dense_units
 
             if use_pool:
                 if stride != 1:
@@ -772,10 +772,15 @@ class Encoder(nn.Module):
                 self.pool_layers.append(nn.MaxPool2d((2,2)))
                 print("\tAdded conv_layer %d" % (len(self.conv_layers)+1))
 
-                # Add dense layer
+                # Add dense layers
+                self.dense_layers = []
                 self.num_dense_in =  c_1 * cfg.image_height**2 // (2**(n_conv+1))
-                self.dense_layer = nn.Linear(self.num_dense_in,zsize)
-                print("\tAdded encoding dense layer")
+                n_in = self.num_dense_in
+                for i in range(n_dense):
+                    n_out = n_dense_units[i] if i < n_dense-1 else zsize
+                    self.dense_layer = nn.Linear(n_in,n_out)
+                    n_in = n_out
+                    print("\tAdded dense layer")
 
             else:
                 # Add final conv_layer:
