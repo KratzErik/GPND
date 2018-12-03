@@ -1,5 +1,5 @@
 import torch
-from torch import nn
+from torch import nn, sigmoid, tanh
 from torch.nn import functional as F
 from configuration import Configuration as cfg
 
@@ -273,7 +273,7 @@ class VAE(nn.Module):
             x = F.relu(self.deconv1_bn(self.deconv1(x)))
             x = F.relu(self.deconv2_bn(self.deconv2(x)))
             x = F.relu(self.deconv3_bn(self.deconv3(x)))
-            x = F.tanh(self.deconv4(x)) * 0.5 + 0.5
+            x = tanh(self.deconv4(x)) * 0.5 + 0.5
             return x
 
         elif self.architecture == 'b1':
@@ -283,7 +283,7 @@ class VAE(nn.Module):
             x = F.relu(self.b_deconv3_bn(self.b_deconv3(x)))
             x = F.relu(self.b_deconv4_bn(self.b_deconv4(x)))
             x = F.relu(self.b_deconv5_bn(self.b_deconv5(x)))
-            x = F.tanh(self.b_deconv6(x)) * 0.5 + 0.5
+            x = tanh(self.b_deconv6(x)) * 0.5 + 0.5
             return x
 
         elif self.architecture == 'b2':
@@ -294,7 +294,7 @@ class VAE(nn.Module):
             x = F.relu(self.b_deconv4_bn(self.b_deconv4(x)))
             x = F.relu(self.b_deconv5_bn(self.b_deconv5(x)))
             x = F.relu(self.b_deconv6_2_bn(self.b_deconv6_2(x)))
-            x = F.tanh(self.b_deconv7(x)) * 0.5 + 0.5
+            x = tanh(self.b_deconv7(x)) * 0.5 + 0.5
             return x
 
         else: # build architecture from spec: A_B_C_D_E_F_G_H
@@ -326,7 +326,7 @@ class VAE(nn.Module):
             if use_pool:
                 x = F.interpolate(x, scale_factor = 2, mode = 'nearest')
 
-            x = F.tanh(self.output_layer(x))*0.5 + 0.5
+            x = tanh(self.output_layer(x))*0.5 + 0.5
 
             return x
 
@@ -476,7 +476,7 @@ class Generator(nn.Module):
             x = F.relu(self.deconv1_1_bn(self.deconv1_1(input)))
             x = F.relu(self.deconv2_bn(self.deconv2(x)))
             x = F.relu(self.deconv3_bn(self.deconv3(x)))
-            x = F.tanh(self.deconv4(x)) * 0.5 + 0.5
+            x = tanh(self.deconv4(x)) * 0.5 + 0.5
             return x
 
         # hard coded architectures
@@ -486,7 +486,7 @@ class Generator(nn.Module):
             x = F.relu(self.b_deconv3_bn(self.b_deconv3(x)))
             x = F.relu(self.b_deconv4_bn(self.b_deconv4(x)))
             x = F.relu(self.b_deconv5_bn(self.b_deconv5(x)))
-            x = F.tanh(self.b_deconv6_1(x)) * 0.5 + 0.5
+            x = tanh(self.b_deconv6_1(x)) * 0.5 + 0.5
             return x
 
         elif self.architecture == "b2":
@@ -496,7 +496,7 @@ class Generator(nn.Module):
             x = F.relu(self.b_deconv4_bn(self.b_deconv4(x)))
             x = F.relu(self.b_deconv5_bn(self.b_deconv5(x)))
             x = F.relu(self.b_deconv6_2_bn(self.b_deconv6_2(x)))
-            x = F.tanh(self.b_deconv7(x)) * 0.5 + 0.5
+            x = tanh(self.b_deconv7(x)) * 0.5 + 0.5
             return x
 
         else: # build architecture from spec: A_B_C_D_E_F_G_H
@@ -531,7 +531,7 @@ class Generator(nn.Module):
             if use_pool:
                 x = F.interpolate(x, scale_factor = 2, mode = 'nearest')
 
-            x = F.tanh(self.output_layer(x))*0.5 + 0.5
+            x = tanh(self.output_layer(x))*0.5 + 0.5
             return x
 
 class Discriminator(nn.Module):
@@ -630,7 +630,7 @@ class Discriminator(nn.Module):
             x = F.leaky_relu(self.conv1_1(input), 0.2)
             x = F.leaky_relu(self.conv2_bn(self.conv2(x)), 0.2)
             x = F.leaky_relu(self.conv3_bn(self.conv3(x)), 0.2)
-            x = F.sigmoid(self.conv4(x))
+            x = sigmoid(self.conv4(x))
             return x
 
         elif self.architecture == 'b1':
@@ -639,7 +639,7 @@ class Discriminator(nn.Module):
             x = F.leaky_relu(self.b_conv3_bn(self.b_conv3(x)), 0.2)
             x = F.leaky_relu(self.b_conv4_bn(self.b_conv4(x)), 0.2)
             x = F.leaky_relu(self.b_conv5_bn(self.b_conv5(x)), 0.2)
-            x = F.sigmoid(self.b_conv6_1(x))
+            x = sigmoid(self.b_conv6_1(x))
             return x
 
         elif self.architecture == 'b2':
@@ -649,7 +649,7 @@ class Discriminator(nn.Module):
             x = F.leaky_relu(self.b_conv4_bn(self.b_conv4(x)), 0.2)
             x = F.leaky_relu(self.b_conv5_bn(self.b_conv5(x)), 0.2)
             x = F.leaky_relu(self.b_conv6_2_bn(self.b_conv6_2(x)), 0.2)
-            x = F.sigmoid(self.b_conv7(x))
+            x = sigmoid(self.b_conv7(x))
             return x
 
         else:
@@ -689,7 +689,7 @@ class Discriminator(nn.Module):
             else:
                 x = self.output_convlayer(x)
             #print("Output: ", x.shape)
-            return F.sigmoid(x)
+            return sigmoid(x)
 
 
 class Encoder(nn.Module):
@@ -882,7 +882,7 @@ class ZDiscriminator(nn.Module):
     def forward(self, x):
         x = F.leaky_relu((self.linear1(x)), 0.2)
         x = F.leaky_relu((self.linear2(x)), 0.2)
-        x = F.sigmoid(self.linear3(x))
+        x = sigmoid(self.linear3(x))
         return x
 
 
@@ -903,7 +903,7 @@ class ZDiscriminator_mergebatch(nn.Module):
     def forward(self, x):
         x = F.leaky_relu((self.linear1(x)), 0.2).view(1, -1) # after the second layer all samples are concatenated
         x = F.leaky_relu((self.linear2(x)), 0.2)
-        x = F.sigmoid(self.linear3(x))
+        x = sigmoid(self.linear3(x))
         return x
 
 
