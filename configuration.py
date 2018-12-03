@@ -10,11 +10,11 @@ class Configuration(object):
     # B: n_conv
     # C: n_dense
     # D: channels out of first conv. layer
-            zsize = int(tmp[4])
-            ksize= int(tmp[5])
-            stride = int(tmp[6])
-            pad = int(tmp[7])
-            num_filters = c_1
+    # E: zsize, dimension of latent vector
+    # F: filter size 
+    # G: stride 
+    # H: pad
+
     #architecture = '0_5_1_8_256_5_2_0' # with dense layer, stride instead of pool
     #architecture = '0_5_0_8_256_5_2_0' # no dense layer, stride instead of pool
     #architecture = '1_5_1_8_256_5_1_0' # with dense layer, maxpool
@@ -52,7 +52,7 @@ class Configuration(object):
 
     if dataset == "dreyeve":
 
-        architecture = "0_6_0_16_256_4_2_1"
+        architecture = "0_6_1_16_256_4_2_1"
         inliers_name = "sunny_highway"
         outliers_name = "rainy_highway"
 
