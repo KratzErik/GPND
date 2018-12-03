@@ -42,9 +42,6 @@ class Configuration(object):
         inliers_name = "sunny_highway"
         outliers_name = "rainy_highway"
         n_dense_units = [256]
-        zd_n_layers = 3
-        zd_out_units = [256,256,1]
-
         image_height = 256
         image_width = 256
         channels = 3
@@ -53,7 +50,7 @@ class Configuration(object):
         use_batchnorm = True
 
         # Hyperparameters
-        betas = (0.9,0.999) # adam solver standard is (0.5, 0.999), GPND standard is (0.9,0.999)
+        betas = (0.5,0.999) # adam solver standard
         learning_rate = 0.0001
         n_train_epochs = 500
         n_epochs_between_lr_change = n_train_epochs+1
@@ -81,7 +78,7 @@ class Configuration(object):
     
     elif dataset == "prosivic":
         # Hyperparameters
-        betas = (0.9,0.999) # adam solver standard is (0.5, 0.999), GPND standard is (0.9,0.999)
+        betas = (0.5,0.999) # adam solver standard
 #        learning_rate = 0.001
         n_train_epochs = 100
         n_epochs_between_lr_change = n_train_epochs+1
@@ -96,8 +93,6 @@ class Configuration(object):
         n_dense_units = None
         inliers_name = "sunny_highway"
         outliers_name = "rainy_highway"
-        zd_n_layers = 3
-        zd_out_units = [256,256,1]
 
         # Dataset options
         image_height = 256

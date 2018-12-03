@@ -869,9 +869,23 @@ class ZDiscriminator(nn.Module):
     # initializers
     def __init__(self, zsize, batchSize, d=128):
         super(ZDiscriminator, self).__init__()
-        self.linear1 = nn.Linear(zsize, d)
-        self.linear2 = nn.Linear(d, d)
-        self.linear3 = nn.Linear(d, 1)
+        print("Constructing ZDiscriminator")
+        if cfg.dataset == "mnist":
+            self.linear1 = nn.Linear(zsize, d)
+            self.linear2 = nn.Linear(d, d)
+            self.linear3 = nn.Linear(d, 1)
+        else:
+            cfg.zd_out_units[-1] = 1
+            self.layers = []
+            self.bn_layers = []
+            n_in = zsize
+            for i in range(cfg.zd_n_layers):
+                n_out = cfg.zd_out_units[i]
+                self.layers.append(nn.Linear(n_in,n_out))
+#                if i < cfg.zd_n_layers - 1:
+#                    self.bn_layers.append(nn.BatchNorm1d(n_out))
+                print("\tAdded linear layer %d: %d -> %d"%(i+1,n_in,n_out))
+                n_in = n_out
 
     # weight_init
     def weight_init(self, mean, std):
@@ -880,9 +894,16 @@ class ZDiscriminator(nn.Module):
 
     # forward method
     def forward(self, x):
-        x = F.leaky_relu((self.linear1(x)), 0.2)
-        x = F.leaky_relu((self.linear2(x)), 0.2)
-        x = sigmoid(self.linear3(x))
+        if cfg.dataset == "mnist":
+            x = F.leaky_relu((self.linear1(x)), 0.2)
+            x = F.leaky_relu((self.linear2(x)), 0.2)
+            x = sigmoid(self.linear3(x))
+        else:
+            for i, layer in enumerate(self.layers):
+                if i < cfg.zd_n_layers - 1:
+                    x = F.leaky_relu(layer(x), 0.2)
+                else:
+                    x = sigmoid(layer(x))
         return x
 
 

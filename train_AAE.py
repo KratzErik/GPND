@@ -212,14 +212,14 @@ def main(folding_id, inliner_classes, total_classes, folds=5, cfg = None):
     setup(ZD)
     ZD.weight_init(mean=0, std=0.02)
 
-    lr = cfg.learning_rate
+    #lr = cfg.learning_rate
     betas = cfg.betas
 
-    G_optimizer = optim.Adam(G.parameters(), lr=lr, betas = betas)
-    D_optimizer = optim.Adam(D.parameters(), lr=lr, betas = betas)
-    E_optimizer = optim.Adam(E.parameters(), lr=lr, betas = betas)
-    GE_optimizer = optim.Adam(list(E.parameters()) + list(G.parameters()), lr=lr, betas = betas)
-    ZD_optimizer = optim.Adam(ZD.parameters(), lr=lr, betas = betas)
+    G_optimizer = optim.Adam(G.parameters(), lr=cfg.lr_g, betas = betas)
+    D_optimizer = optim.Adam(D.parameters(), lr=cfg.lr_d, betas = betas)
+    E_optimizer = optim.Adam(E.parameters(), lr=cfg.lr_e, betas = betas)
+    GE_optimizer = optim.Adam(list(E.parameters()) + list(G.parameters()), lr=cfg.lr_ge, betas = betas)
+    ZD_optimizer = optim.Adam(ZD.parameters(), lr=cfg.lr_zd, betas = betas)
 
     train_epoch = cfg.n_train_epochs
     lr_change_each_ep = cfg.n_epochs_between_lr_change
@@ -444,7 +444,7 @@ def main(folding_id, inliner_classes, total_classes, folds=5, cfg = None):
             for line in f_in:
                     f_out.write(line)
             # write additional logs
-            f_out.write("# Training logged at %s\n", time.strftime("%a, %d %b %Y %H:%M:%S UTC", gmtime()))
+            f_out.write("# Training logged at %s\n"%time.strftime("%a, %d %b %Y %H:%M:%S UTC"))
             f_out.write("# Total training time:\t%dh%dm%.1fs\n"%(total_time//3600, (total_time%3600)//60, total_time%60))
             f_out.write("# Average time/epoch:\t%dm%.2fs"%((total_time/train_epoch)//60, (total_time/train_epoch)%60))
 if __name__ == '__main__':
