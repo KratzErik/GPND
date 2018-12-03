@@ -10,24 +10,25 @@ class Configuration(object):
     #architecture = '1_5_1_8_256_5_1_0' # with dense layer, maxpool
     #architecture = '1_5_0_8_256_5_1_0' # no dense layer, maxpool
     #architecture = "0_4_0_8_256_4_2_1"
-    architecture = "1_4_1_16_1024_5_2_2"
+    architecture = "0_6_0_16_256_4_2_1"
     #architecture = "b2"
 
     # Hyperparameters
     betas = (0.5,0.999) # adam solver standard
     learning_rate = 0.001
-    n_train_epochs = 500
+    n_train_epochs = 2
     n_epochs_between_lr_change = n_train_epochs+1
     num_sample_epochs = 5
     batch_size = 64
 
     # Dataset options
-    n_train = 7000
-    n_val = 1413
-    n_test = 787 # for GPND algorithm, the test set is split into val and test set during testing, since the valset contains outliers in order to compute an optimal threshold. This is used to compute some of the output values, but not AUPRIN or AUROC, which are threshold independent.
-    n_test_in = 787
+    data_div = 5
+    n_train = 7000 // data_div
+    n_val = 1413 // data_div
+    n_test = 787 // data_div # for GPND algorithm, the test set is split into val and test set during testing, since the valset contains outliers in order to compute an optimal threshold. This is used to compute some of the output values, but not AUPRIN or AUROC, which are threshold independent.
+    n_test_in = 787 // data_div
 
-    dataset = "prosivic"
+    dataset = "dreyeve"
     inliers_name = "sunny_highway"
     outliers_name = "rainy_highway"
 
@@ -44,7 +45,8 @@ class Configuration(object):
     sample_size = 16
     sample_rows = 4 # nrow to save_image grid
     # Testing options
-    percentages = [0.5] # percentage of outliers to use during testing
+    nd_original_GPND = False
+    percentages = [50] # percentage of outliers to use during testing
     auroc = True
     auprc = True
     plot_roc = True
@@ -53,11 +55,27 @@ class Configuration(object):
     # dataset specific options below
 
     if dataset == "dreyeve":
-        img_folder =   "../weather_detection_data/dreyeve/highway_morning_sunny_vs_rainy/"
-        train_folder = "../weather_detection_data/dreyeve/highway_morning_sunny_vs_rainy/train/"
-        val_folder =   "../weather_detection_data/dreyeve/highway_morning_sunny_vs_rainy/val/"
-        test_in_folder =  "../weather_detection_data/dreyeve/highway_morning_sunny_vs_rainy/test/out/"
-        test_out_folder =  "../weather_detection_data/dreyeve/highway_morning_sunny_vs_rainy/test/out/"
+        # Hyperparameters
+        betas = (0.5,0.999) # adam solver standard
+        learning_rate = 0.001
+        n_train_epochs = 500
+        n_epochs_between_lr_change = n_train_epochs+1
+        num_sample_epochs = 5
+        batch_size = 16
+
+        # Dataset options
+        data_div = 2
+        n_train = 6000 // data_div
+        n_val = 600 // data_div
+        n_test = 1200 // data_div # for GPND algorithm, the test set is split into val and test set during testing, since the valset contains outli$
+        n_test_in = 600 // data_div
+
+        img_folder =   "../weather_detection_data/dreyeve/sunny_highway_countryside_morning_evening_vs_rainy_highway_countryside_morning_evening/"
+        train_folder = "../weather_detection_data/dreyeve/sunny_highway_countryside_morning_evening_vs_rainy_highway_countryside_morning_evening/train/"
+        val_folder =   "../weather_detection_data/dreyeve/sunny_highway_countryside_morning_evening_vs_rainy_highway_countryside_morning_evening/val/"
+        test_in_folder =  "../weather_detection_data/dreyeve/sunny_highway_countryside_morning_evening_vs_rainy_highway_countryside_morning_evening/test/in/"
+        test_out_folder = "../weather_detection_data/dreyeve/sunny_highway_countryside_morning_evening_vs_rainy_highway_countryside_morning_evening/test/out/"
+
     
     elif dataset == "prosivic":
         img_folder =   "../weather_detection_data/prosivic/"

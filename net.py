@@ -608,7 +608,7 @@ class Discriminator(nn.Module):
 
                 # Add dense layer
                 num_dense_in =  c_1 * (2**(n_conv-1))
-                self.dense_layer = nn.Linear(num_filters,1)
+                self.dense_layer = nn.Linear(num_dense_in,1)
                 print("\tAdded output dense layer")
             else:
                 # Add final conv_layer:
@@ -674,7 +674,6 @@ class Discriminator(nn.Module):
                     x = bn(x)
                 if use_pool:
                     x = pool(x)
-
             if n_dense > 0:
                 x = x.view(x.numel())
                 x = self.dense_layer(x)

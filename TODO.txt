@@ -1,0 +1,14 @@
+TODO-list for GPND BDD100k novelty detection
+
+# Understand structure of code:
+
+train_AAE.py:
+
+	Data is loaded in folds = dataset divided into a couple of equally sized sets (for memory usage?)
+
+	train data is called mnist_train and is a list where each element mnist_train[i] is a tuple. 
+		mnist_train[i][0] is the label, an int,
+		mnist_train[i][1] is a numpy.ndarray with image pixel data, ranging [0,255]
+		image data is later divided by 255, so we want pixels to range [0,1] eventually
+		
+

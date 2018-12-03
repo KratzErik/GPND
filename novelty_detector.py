@@ -138,18 +138,22 @@ def main(folding_id, inliner_classes, total_classes, folds=5, cfg = None):
     if dataset in ("dreyeve", "prosivic"):
         inliner_classes = [0]
         outlier_classes = [1]
-        print("Data path: " + str(cfg.dreyeve_img_folder))
+        print("Data path: " + str(cfg.img_folder))
         channels = cfg.channels
         image_height = cfg.image_height
         image_width = cfg.image_width
 
         # Load data and labels
-        data_train_x = [img_to_array(load_img(cfg.dreyeve_train_folder + filename)) for filename in os.listdir(cfg.dreyeve_train_folder)][:cfg.n_train]
-        data_test_x_in = [img_to_array(load_img(cfg.dreyeve_test_in_folder + filename)) for filename in os.listdir(cfg.dreyeve_test_in_folder)][:cfg.n_test_in]
-        data_test_x_out = [img_to_array(load_img(cfg.dreyeve_test_out_folder + filename)) for filename in os.listdir(cfg.dreyeve_test_out_folder)][:cfg.n_test-cfg.n_test_in]
+        data_train_x = np.array([img_to_array(load_img(cfg.train_folder + filename)) for filename in os.listdir(cfg.train_folder)][:cfg.n_train])
+        n_test_out = cfg.n_test - cfg.n_test_in
+        data_test_x_in = np.array([img_to_array(load_img(cfg.test_in_folder + filename)) for filename in os.listdir(cfg.test_in_folder)][:cfg.n_test_in])
+        data_test_x_out = np.array([img_to_array(load_img(cfg.test_out_folder + filename)) for filename in os.listdir(cfg.test_out_folder)][:n_test_out])
+        print("Number of inliers: ", data_test_x_in.shape[0])
+        print("Number of outliers: ", data_test_x_out.shape[0])
         data_test_x = np.concatenate([data_test_x_in, data_test_x_out])
-        test_in_labels = np.zeros((cfg.dreyeve_n_test_in,),dtype=np.int32)
-        test_out_labels = np.ones((cfg.dreyeve_n_test-cfg.dreyeve_n_test_in,),dtype=np.int32)
+#        data_test_x = data_test_x_in.extend(data_test_x_out)
+        test_in_labels = np.zeros((cfg.n_test_in,),dtype=np.int32)
+        test_out_labels = np.ones((n_test_out,),dtype=np.int32)
         test_labels = np.concatenate([test_in_labels, test_out_labels])
 
         architecture = cfg.architecture
@@ -169,9 +173,12 @@ def main(folding_id, inliner_classes, total_classes, folds=5, cfg = None):
         # Labels for training data
         data_train_y = np.zeros((len(data_train_x),),dtype=np.int)
 
-        # Test and validation data both have outliers: split in two parts
-        data_valid = [(lbl,img) for i, lbl, img in zip(range(len(test_labels)),test_labels, data_test_x) if i % 2 is 0]
-        data_test = [(lbl,img) for i, lbl, img in zip(range(len(test_labels)),test_labels, data_test_x) if i % 2 is not 0]
+        if cfg.nd_original_GPND:
+            # Test and validation data both have outliers: split in two parts
+            data_valid = [(lbl,img) for i, lbl, img in zip(range(len(test_labels)),test_labels, data_test_x) if i % 2 is 0]
+            data_test = [(lbl,img) for i, lbl, img in zip(range(len(test_labels)),test_labels, data_test_x) if i % 2 is not 0]
+        else: # SMILE project: all test_data is for test, validation data not used
+            data_test = [(lbl,img) for lbl, img in zip(test_labels, data_test_x)]
 
     if dataset == "bdd100k":
         inliner_classes = [0]
@@ -464,13 +471,15 @@ def main(folding_id, inliner_classes, total_classes, folds=5, cfg = None):
         inliner_count = len(data_test_inliner)
         outlier_count = inliner_count * percentage // (100 - percentage)
 
-        if len(data_test_outlier) > outlier_count:
+        if len(data_test_outlier) >= outlier_count:
+            print("Found enough outliers for correct percentage, using specified inlier count")
             data_test_outlier = data_test_outlier[:outlier_count]
         else:
             outlier_count = len(data_test_outlier)
             inliner_count = outlier_count * (100 - percentage) // percentage
             data_test_inliner = data_test_inliner[:inliner_count]
-
+            print("Not enough outliers for correct percentage, adjusting:\ninliers: %d, outliers: %d%"(inliner_count, outlier_count))
+        print("Inliers: %d\nOutlier: %d"%(len(data_test_inliner), len(data_test_outlier)))
         data_test = data_test_outlier + data_test_inliner
         random.shuffle(data_test)
 
@@ -481,8 +490,9 @@ def main(folding_id, inliner_classes, total_classes, folds=5, cfg = None):
         count = 0
 
         result = []
-
-        for it in range(len(data_test_x) // batch_size):
+        n_batches = len(data_test_x)//batch_size
+        print("Testing %d batches"%n_batches)
+        for it in range(n_batches):
             x = Variable(extract_batch(data_test_x, it, batch_size).view(-1, channels * image_height * image_width).data, requires_grad=True)
             label = extract_batch(data_test_y, it, batch_size)
 
@@ -538,6 +548,9 @@ def main(folding_id, inliner_classes, total_classes, folds=5, cfg = None):
 
                 result.append(((label[i].item() in outlier_classes), -P))
 
+                print("Batch %d/%d: image %d/%d"%(it+1,len(data_test_x)//batch_size,i+1, batch_size))
+            print("Batch %d/%d complete"%(it+1,len(data_test_x)//batch_size))
+
         error = 100 * (true_positive + true_negative) / count
 
         y_true = [x[0] for x in result]
@@ -549,10 +562,10 @@ def main(folding_id, inliner_classes, total_classes, folds=5, cfg = None):
             auc = 0
 
         # Pickle results, they are then extracted by other function to produce metrics
-        with open(results_dir + experiment_name + '_result_p%d.pkl'%(str(percentage)), 'wb') as output:
+        with open(results_dir + experiment_name + '_result_p%d.pkl'%(percentage), 'wb') as output:
             pickle.dump(result, output)
         
-        if cfg.nd_original_output:
+        if cfg.nd_original_GPND:
 
             print("Percentage ", percentage)
             print("Error ", error)
@@ -659,7 +672,7 @@ def main(folding_id, inliner_classes, total_classes, folds=5, cfg = None):
 
             return auc, f1, fpr95, error, auprin, auprout
 
-    if cfg.nd_original_input: # This is used in original GPND experiment
+    if cfg.nd_original_GPND: # This is used in original GPND experiment
         percentages = cfg.percentages
 
         results = {}
@@ -668,9 +681,11 @@ def main(folding_id, inliner_classes, total_classes, folds=5, cfg = None):
             e = compute_threshold(data_valid, p)
             results[p] = test(data_test, p, e)
 
+        return results
+
     else: # this is used in SMILE experiments, to get only metrics specified in reuse_results.get_performace_metrics
         for p in cfg.percentages:
-            test(data_test,p)  
+            test(data_test,p)
 
         metrics_str = reuse_results.get_performance_metrics() # loads pickled results for experiment and percentages specified in cfg
         print(metrics_str)
@@ -679,10 +694,10 @@ def main(folding_id, inliner_classes, total_classes, folds=5, cfg = None):
     with open(results_dir + "configuration.txt",'w') as f_out:
         with open("./configuration.py", "r") as f_in:
             for line in f_in:
-                    f_out.write(line)
+                f_out.write(line)
             # write additional logs
-
-    return results
+            for line in metrics_str:
+                f_out.write(line)
 
 if __name__ == '__main__':
     main(0, [0], 10)

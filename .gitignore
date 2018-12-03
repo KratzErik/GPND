@@ -8,9 +8,9 @@ mnist/
 MNIST_cGAN_results/
 .idea/
 *.pdf
-*.png
+#*.png
 *.eps
-*.txt
+#*.txt
 results*/
 net.py.save
 train_AAE.py.save

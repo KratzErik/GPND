@@ -347,9 +347,10 @@ def main(folding_id, inliner_classes, total_classes, folds=5, cfg = None):
             GEtrain_loss  += Recon_loss.item()
             Etrain_loss  += E_loss.item()
 
-            if it == 0 and (epoch+1) % (train_epoch//cfg.num_sample_epochs) == 0:
-                #comparison = torch.cat([x[:cfg.sample_size//2], x_d[:cfg.sample_size//2]])
-                comparison = torch.cat([[x[i],x_d[i]] for i in range(cfg.sample_size//2)])
+            if it == 0 and (epoch+1) % max(train_epoch//cfg.num_sample_epochs,1) == 0:
+                comparison = torch.cat([x[:cfg.sample_size//2], x_d[:cfg.sample_size//2]])
+                #comparison = [comparison[i] if i%2 == 0 else comparison[cfg.sample_size//2+i] for i in range(cfg.sample_size//2)]
+                #comparison = torch.cat([x[i//2] if i%2 == 0 else x_d[i//2] for i in range(cfg.sample_size)])
                 save_image(comparison.cpu(), train_dir + 'reconstruction_' + str(epoch) + '.png', nrow=cfg.sample_rows)
 
         Gtrain_loss /= (len(data_train_x))
@@ -363,7 +364,7 @@ def main(folding_id, inliner_classes, total_classes, folds=5, cfg = None):
 
         print('[%d/%d] - ptime: %.2f, Gloss: %.3f, Dloss: %.3f, ZDloss: %.3f, GEloss: %.3f, Eloss: %.3f' % ((epoch + 1), train_epoch, per_epoch_ptime, Gtrain_loss, Dtrain_loss, ZDtrain_loss, GEtrain_loss, Etrain_loss))
 
-        if (epoch+1) % (train_epoch//cfg.num_sample_epochs) == 0:
+        if (epoch+1) % max(train_epoch//cfg.num_sample_epochs,1) == 0:
             with torch.no_grad():
                 resultsample = G(sample).cpu()
                 save_image(resultsample.view(cfg.sample_size, channels, image_height, image_width), train_dir + 'sample_' + str(epoch) + '.png', nrow = cfg.sample_rows)
