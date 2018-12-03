@@ -20,25 +20,24 @@ def load_results(test_dir = cfg.log_dir + "test/", experiment_name = cfg.experim
     return results
 
 def get_performance_metrics(test_dir = cfg.log_dir + "test/", experiment_name = cfg.experiment_name):
-    output_str = "Result for experiment:\n"
-    output_str += "Inliers: %s\n"%cfg.outliers_name
-    output_str += "Outliers %s\n"%cfg.inliers_name
 
     results = load_results(test_dir, experiment_name)
-
+    output_str = []
     for y in results:
+        y_output_str
         percentage = y[0]
         result = y[1]
         y_true = [x[0] for x in result]
         y_scores = [x[1] for x in result]
-        output_str += "\tPercentage of outliers: %d\n"%percentage
+        y_output_str += "Percentage of outliers: %d\n"%percentage
         if cfg.auroc:
             AUROC = roc_auc_score(y_true, y_scores)
-            output_str += "\tAUROC:\t%.5f\n"%AUROC
+            y_output_str += "\tAUROC:\t%.5f\n"%AUROC
 
         if cfg.auprc:
             pr, rc, _ = precision_recall_curve(y_true, y_scores)
             AUPRC = compute_auc(rc,pr)
-            output_str += "\tAUPRC:\t%.5f\n"%AUPRC
+            y_output_str += "\tAUPRC:\t%.5f\n"%AUPRC
+        output_str.append(y_output_str)
 
     return output_str

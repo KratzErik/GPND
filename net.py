@@ -605,11 +605,15 @@ class Discriminator(nn.Module):
                 self.bn_layers.append(nn.BatchNorm2d(num_filters))
                 self.pool_layers.append(nn.MaxPool2d((2,2)))
                 print("\tAdded conv_layer %d" % (len(self.conv_layers)+1))
-
-                # Add dense layer
                 num_dense_in =  c_1 * (2**(n_conv-1))
-                self.dense_layer = nn.Linear(num_dense_in,1)
-                print("\tAdded output dense layer")
+                self.dense_layers = []
+                for dense_i in range(n_dense):
+                    num_dense_out = n_dense_units[dense_i] if dense_i < n_dense-1 else 1
+
+                    # Add dense layer
+                    
+                    self.dense_layer.append(nn.Linear(num_dense_in,num_dense_out))
+                    print("\tAdded output dense layer %d"%dense_i+1)
             else:
                 # Add final conv_layer:
                 h = cfg.image_height // (2**(n_conv-1))
@@ -661,6 +665,8 @@ class Discriminator(nn.Module):
             pad = int(tmp[7])
             num_filters = c_1
 
+            self.batch_size = input.shape[0]
+
             x = self.input_layer(input)
 
             if cfg.use_batchnorm:
@@ -674,12 +680,16 @@ class Discriminator(nn.Module):
                     x = bn(x)
                 if use_pool:
                     x = pool(x)
+                print("After conv: ", x.shape)
+
             if n_dense > 0:
-                x = x.view(x.numel())
-                x = self.dense_layer(x)
+                x = x.view(self.batch_size,1,1,-1)
+                for dense_i in range(n_dense):
+                    x = self.dense_layers[dense_i](x)
+                    print("After dense: ", x.shape)
             else:
                 x = self.output_convlayer(x)
-
+            print("Output: ", x.shape)
             return F.sigmoid(x)
 
 
@@ -818,6 +828,7 @@ class Encoder(nn.Module):
             pad = int(tmp[7])
             num_filters = c_1
 
+            self.batch_size = input.shape[0]
             x = self.input_layer(input)
 
 #            print("input: ",input.shape)
@@ -833,20 +844,20 @@ class Encoder(nn.Module):
 
             for conv, bn, pool in zip(self.conv_layers, self.bn_layers, self.pool_layers):
                 x = conv(x)
-#                print("x: ",x.shape)
+                print("x: ",x.shape)
                 if cfg.use_batchnorm:
                     x = bn(x)
                 if use_pool:
                     x = pool(x)
 
             if n_dense > 0:
-                x = x.view(-1, 1,1,self.num_dense_in)
+                x = x.view(self.batch_size, 1,1,-1)
 
-#                print("into dense: ", x.shape)
+            print("into dense: ", x.shape)
                 x = self.dense_layer(x).permute(0,3,1,2)
             else:
                 x = self.output_convlayer(x)
-#            print("Output: ", x.shape)
+            print("Output: ", x.shape)
             return x
 
 class ZDiscriminator(nn.Module):

@@ -10,7 +10,7 @@ class Configuration(object):
     #architecture = '1_5_1_8_256_5_1_0' # with dense layer, maxpool
     #architecture = '1_5_0_8_256_5_1_0' # no dense layer, maxpool
     #architecture = "0_4_0_8_256_4_2_1"
-    architecture = "0_6_0_16_256_4_2_1"
+    
     #architecture = "b2"
 
     # Hyperparameters
@@ -55,6 +55,9 @@ class Configuration(object):
     # dataset specific options below
 
     if dataset == "dreyeve":
+
+        architecture = "0_6_0_16_256_4_2_1"
+        
         # Hyperparameters
         betas = (0.5,0.999) # adam solver standard
         learning_rate = 0.001

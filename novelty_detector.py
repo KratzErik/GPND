@@ -492,7 +492,10 @@ def main(folding_id, inliner_classes, total_classes, folds=5, cfg = None):
         result = []
         n_batches = len(data_test_x)//batch_size
         print("Testing %d batches"%n_batches)
+        total_time = 0
         for it in range(n_batches):
+            start_time = time.time()
+
             x = Variable(extract_batch(data_test_x, it, batch_size).view(-1, channels * image_height * image_width).data, requires_grad=True)
             label = extract_batch(data_test_y, it, batch_size)
 
@@ -549,7 +552,11 @@ def main(folding_id, inliner_classes, total_classes, folds=5, cfg = None):
                 result.append(((label[i].item() in outlier_classes), -P))
 
                 print("Batch %d/%d: image %d/%d"%(it+1,len(data_test_x)//batch_size,i+1, batch_size))
-            print("Batch %d/%d complete"%(it+1,len(data_test_x)//batch_size))
+            per_batch_time = time.time()-start_time
+            total_time += per_batch_time 
+            complete_batches = it + 1
+            remaining_time = (n_batches - complete_batches)*total_time/complete_batches
+            print("Batch %d/%d complete\ttime: %.2f\tETA:%dh%dm%.1fs"%(it+1,len(data_test_x)//batch_size, per_batch_time, remaining_time//3600, (remaining_time%3600)//60, remaining_time%60))
 
         error = 100 * (true_positive + true_negative) / count
 
@@ -672,6 +679,9 @@ def main(folding_id, inliner_classes, total_classes, folds=5, cfg = None):
 
             return auc, f1, fpr95, error, auprin, auprout
 
+        else:
+            return result, total_time
+
     if cfg.nd_original_GPND: # This is used in original GPND experiment
         percentages = cfg.percentages
 
@@ -684,20 +694,26 @@ def main(folding_id, inliner_classes, total_classes, folds=5, cfg = None):
         return results
 
     else: # this is used in SMILE experiments, to get only metrics specified in reuse_results.get_performace_metrics
+        log = ["Testing started at %s"%time.strftime("%a, %d %b %Y %H:%M:%S UTC", gmtime())]
+        total_time = []
         for p in cfg.percentages:
-            test(data_test,p)
+            _, percentage_time = test(data_test,p)
+            total_time.append(percentage_time)
 
+        log.append("Results for experiment:")
+        log.append("Inliers: %s"%cfg.outliers_name)
+        log.append("Outliers %s"%cfg.inliers_name)
+        
         metrics_str = reuse_results.get_performance_metrics() # loads pickled results for experiment and percentages specified in cfg
-        print(metrics_str)
+        for i, line in enumerate(metrics_str):
+            line += "\tTest time for percentage:\t%dh%dm%.1fs"%(total_time[i]//3600, (total_time[i]%3600)//60, total_time[i]%60)
+            log.append(line)
 
-    print("Logging test configuration")
-    with open(results_dir + "configuration.txt",'w') as f_out:
-        with open("./configuration.py", "r") as f_in:
-            for line in f_in:
-                f_out.write(line)
-            # write additional logs
-            for line in metrics_str:
-                f_out.write(line)
+        print("Logging test configuration and results:")
+        with open(cfg.log_dir + "train/configuration.py",'a') as f_out:
+            for line in log:
+                print(line)
+                f_out.write(line+'\n')
 
 if __name__ == '__main__':
     main(0, [0], 10)

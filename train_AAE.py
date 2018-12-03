@@ -231,7 +231,7 @@ def main(folding_id, inliner_classes, total_classes, folds=5, cfg = None):
 
     cfg.sample_size = 64
     sample = torch.randn(cfg.sample_size, zsize).view(-1, zsize, 1, 1)
-
+    total_time = 0
     for epoch in range(train_epoch):
         G.train()
         D.train()
@@ -361,8 +361,11 @@ def main(folding_id, inliner_classes, total_classes, folds=5, cfg = None):
 
         epoch_end_time = time.time()
         per_epoch_ptime = epoch_end_time - epoch_start_time
+        total_time += per_epoch_ptime
+        complete_epochs = epoch+1
+        remaining_time = (train_epoch-complete_epochs) * total_time/complete_epochs
 
-        print('[%d/%d] - ptime: %.2f, Gloss: %.3f, Dloss: %.3f, ZDloss: %.3f, GEloss: %.3f, Eloss: %.3f' % ((epoch + 1), train_epoch, per_epoch_ptime, Gtrain_loss, Dtrain_loss, ZDtrain_loss, GEtrain_loss, Etrain_loss))
+        print('[%d/%d] - ptime: %.2f, Gloss: %.3f, Dloss: %.3f, ZDloss: %.3f, GEloss: %.3f, Eloss: %.3f, ETA: %dh%dm%.1fs' % ((epoch + 1), train_epoch, per_epoch_ptime, Gtrain_loss, Dtrain_loss, ZDtrain_loss, GEtrain_loss, Etrain_loss, remaining_time//3600, (remaining_time%3600)//60, remaining_time%60))
 
         if (epoch+1) % max(train_epoch//cfg.num_sample_epochs,1) == 0:
             with torch.no_grad():
@@ -380,13 +383,14 @@ def main(folding_id, inliner_classes, total_classes, folds=5, cfg = None):
     torch.save(ZD.state_dict(), model_dir + "ZDmodel.pkl")
 
     print("Logging training configuration")
-    with open(train_dir + "configuration.txt",'w') as f_out:
+    with open(train_dir + "configuration.py",'w') as f_out:
         with open("./configuration.py", "r") as f_in:
             for line in f_in:
                     f_out.write(line)
             # write additional logs
-    
-
+            f_out.write("# Training logged at %s\n", time.strftime("%a, %d %b %Y %H:%M:%S UTC", gmtime()))
+            f_out.write("# Total training time:\t%dh%dm%.1fs\n"%(total_time//3600, (total_time%3600)//60, total_time%60))
+            f_out.write("# Average time/epoch:\t%dm%.2fs"%((total_time/train_epoch)//60, (total_time/train_epoch)%60))
 if __name__ == '__main__':
     main(0, [0], 10)
 
