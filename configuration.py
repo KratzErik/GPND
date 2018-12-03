@@ -5,6 +5,16 @@ class Configuration(object):
 
 
     # Neural network architecture options 
+    # How to specify architecture: (order of numbers in string, separated by "_" as A_B_C_...)
+    # A: use_maxpool = #1 or 0
+    # B: n_conv
+    # C: n_dense
+    # D: channels out of first conv. layer
+            zsize = int(tmp[4])
+            ksize= int(tmp[5])
+            stride = int(tmp[6])
+            pad = int(tmp[7])
+            num_filters = c_1
     #architecture = '0_5_1_8_256_5_2_0' # with dense layer, stride instead of pool
     #architecture = '0_5_0_8_256_5_2_0' # no dense layer, stride instead of pool
     #architecture = '1_5_1_8_256_5_1_0' # with dense layer, maxpool
@@ -12,38 +22,24 @@ class Configuration(object):
     #architecture = "0_4_0_8_256_4_2_1"
     
     #architecture = "b2"
-
+    
     # Hyperparameters
     betas = (0.5,0.999) # adam solver standard
     learning_rate = 0.001
     n_train_epochs = 2
     n_epochs_between_lr_change = n_train_epochs+1
     num_sample_epochs = 5
-    batch_size = 64
 
-    # Dataset options
-    data_div = 5
-    n_train = 7000 // data_div
-    n_val = 1413 // data_div
-    n_test = 787 // data_div # for GPND algorithm, the test set is split into val and test set during testing, since the valset contains outliers in order to compute an optimal threshold. This is used to compute some of the output values, but not AUPRIN or AUROC, which are threshold independent.
-    n_test_in = 787 // data_div
 
     dataset = "dreyeve"
-    inliers_name = "sunny_highway"
-    outliers_name = "rainy_highway"
-
-    image_height = 256
-    image_width = 256
-    channels = 3
-    model_name = "_".join([inliers_name, architecture])
-    experiment_name = "_vs_".join([inliers_name,outliers_name])
-    use_batchnorm = True
-    log_dir = './log/' + dataset + '/' + model_name + '/'
+    experiment_name = "debug"
+    log_dir = './log/' + dataset + '/' + experiment_name + '/'
 
 
     # Diagnostics
     sample_size = 16
     sample_rows = 4 # nrow to save_image grid
+
     # Testing options
     nd_original_GPND = False
     percentages = [50] # percentage of outliers to use during testing
@@ -57,7 +53,16 @@ class Configuration(object):
     if dataset == "dreyeve":
 
         architecture = "0_6_0_16_256_4_2_1"
-        
+        inliers_name = "sunny_highway"
+        outliers_name = "rainy_highway"
+
+        image_height = 256
+        image_width = 256
+        channels = 3
+        model_name = "_".join([inliers_name, architecture])
+
+        use_batchnorm = True
+
         # Hyperparameters
         betas = (0.5,0.999) # adam solver standard
         learning_rate = 0.001
@@ -81,6 +86,20 @@ class Configuration(object):
 
     
     elif dataset == "prosivic":
+        # Dataset options
+        image_height = 256
+        image_width = 256
+        channels = 3
+        model_name = "_".join([inliers_name, architecture])
+
+        experiment_name = "debug"
+        use_batchnorm = True
+        data_div = 5
+        n_train = 7000 // data_div
+        n_val = 1413 // data_div
+        n_test = 787 // data_div # for GPND algorithm, the test set is split into val and test set during testing, since the valset contains outliers in order to compute an optimal threshold. This is used to compute some of the output values, but not AUPRIN or AUROC, which are threshold independent.
+        n_test_in = 787 // data_div
+
         img_folder =   "../weather_detection_data/prosivic/"
         train_folder = "../weather_detection_data/prosivic/train/"
         val_folder =   "../weather_detection_data/prosivic/val/"

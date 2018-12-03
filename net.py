@@ -680,16 +680,16 @@ class Discriminator(nn.Module):
                     x = bn(x)
                 if use_pool:
                     x = pool(x)
-                print("After conv: ", x.shape)
+               # print("After conv: ", x.shape)
 
             if n_dense > 0:
                 x = x.view(self.batch_size,1,1,-1)
                 for dense_i in range(n_dense):
                     x = self.dense_layers[dense_i](x)
-                    print("After dense: ", x.shape)
+                    #print("After dense: ", x.shape)
             else:
                 x = self.output_convlayer(x)
-            print("Output: ", x.shape)
+            #print("Output: ", x.shape)
             return F.sigmoid(x)
 
 
@@ -844,7 +844,7 @@ class Encoder(nn.Module):
 
             for conv, bn, pool in zip(self.conv_layers, self.bn_layers, self.pool_layers):
                 x = conv(x)
-                print("x: ",x.shape)
+                #print("x: ",x.shape)
                 if cfg.use_batchnorm:
                     x = bn(x)
                 if use_pool:
@@ -853,11 +853,11 @@ class Encoder(nn.Module):
             if n_dense > 0:
                 x = x.view(self.batch_size, 1,1,-1)
 
-            print("into dense: ", x.shape)
+                #print("into dense: ", x.shape)
                 x = self.dense_layer(x).permute(0,3,1,2)
             else:
                 x = self.output_convlayer(x)
-            print("Output: ", x.shape)
+            #print("Output: ", x.shape)
             return x
 
 class ZDiscriminator(nn.Module):
