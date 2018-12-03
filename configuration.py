@@ -19,9 +19,6 @@ class Configuration(object):
     experiment_name = "debug"
     log_dir = './log/' + dataset + '/' + experiment_name + '/'
 
-
-
-
     # Diagnostics
     sample_size = 16
     sample_rows = 4 # nrow to save_image grid
@@ -35,8 +32,50 @@ class Configuration(object):
     plot_prc = True
 
     # dataset specific options below
+    if dataset == "prosivic":
+        # Hyperparameters
+        betas = (0.5,0.999) # adam solver standard is (0.5, 0.999), GPND standard is (0.9,0.999)
+#        learning_rate = 0.001
+        n_train_epochs = 1000
+        n_epochs_between_lr_change = n_train_epochs+1
+        num_sample_epochs = 10
+        lr_g  = 0.002
+        lr_e  = 0.002
+        lr_d  = 0.002
+        lr_ge = 0.002
+        lr_zd = 0.002
+        rec_loss_weight = 10
+        weight_g_loss = 0.1
+        architecture = "0_3_0_64_256_4_2_1"
+        n_dense_units = None
+        inliers_name = "sunny"
+        outliers_name = "foggy"
+        zd_n_layers = 3
+        zd_out_units = [256,256,1]
 
-    if dataset == "dreyeve":
+        # Dataset options
+        image_height = 256
+        image_width = 256
+        channels = 3
+        model_name = "_".join([inliers_name, architecture])
+
+        experiment_name = "debug"
+        batch_size = 10
+        use_batchnorm = True
+        data_div = 140
+        n_train = 7000 // data_div
+        n_val = 1413 // data_div
+        n_test = 787 // data_div # for GPND algorithm, the test set is split into val and test set during testing, since the valset contains outliers in order to compute an optimal threshold. This is used to compute some of the output values, but not AUPRIN or AUROC, which are threshold independent.
+        n_test_in = 787 // data_div
+
+        img_folder =   "../weather_detection_data/prosivic/"
+        train_folder = "../weather_detection_data/prosivic/train/"
+        val_folder =   "../weather_detection_data/prosivic/val/"
+        test_in_folder =  "../weather_detection_data/prosivic/test/in/"
+        test_out_folder =  "../weather_detection_data/prosivic/test/out/"
+
+
+    elif dataset == "dreyeve":
 
         architecture = "0_6_0_16_256_4_2_1"
         inliers_name = "sunny_highway"
@@ -80,48 +119,6 @@ class Configuration(object):
         test_out_folder = "../weather_detection_data/dreyeve/sunny_highway_countryside_morning_evening_vs_rainy_highway_countryside_morning_evening/test/out/foggy"
 
     
-    elif dataset == "prosivic":
-        # Hyperparameters
-        betas = (0.9,0.999) # adam solver standard is (0.5, 0.999), GPND standard is (0.9,0.999)
-#        learning_rate = 0.001
-        n_train_epochs = 100
-        n_epochs_between_lr_change = n_train_epochs+1
-        num_sample_epochs = 5
-        lr_g  = 0.002
-        lr_e  = 0.002
-        lr_d  = 0.002
-        lr_ge = 0.002
-        lr_zd = 0.002
-        rec_loss_weight = 1000
-
-        architecture = "0_4_0_16_256_4_2_1"
-        n_dense_units = None
-        inliers_name = "sunny_highway"
-        outliers_name = "rainy_highway"
-        zd_n_layers = 3
-        zd_out_units = [256,256,1]
-
-        # Dataset options
-        image_height = 256
-        image_width = 256
-        channels = 3
-        model_name = "_".join([inliers_name, architecture])
-
-        experiment_name = "debug"
-        batch_size = 16
-        use_batchnorm = True
-        data_div = 50
-        n_train = 7000 // data_div
-        n_val = 1413 // data_div
-        n_test = 787 // data_div # for GPND algorithm, the test set is split into val and test set during testing, since the valset contains outliers in order to compute an optimal threshold. This is used to compute some of the output values, but not AUPRIN or AUROC, which are threshold independent.
-        n_test_in = 787 // data_div
-
-        img_folder =   "../weather_detection_data/prosivic/"
-        train_folder = "../weather_detection_data/prosivic/train/"
-        val_folder =   "../weather_detection_data/prosivic/val/"
-        test_in_folder =  "../weather_detection_data/prosivic/test/in/"
-        test_out_folder =  "../weather_detection_data/prosivic/test/out/"
-
     elif dataset == "mnist":
         batch_size = 128
         architecture = None

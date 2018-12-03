@@ -77,27 +77,27 @@ class Configuration(object):
         train_folder = "../weather_detection_data/dreyeve/sunny_highway_countryside_morning_evening_vs_rainy_highway_countryside_morning_evening/train/"
         val_folder =   "../weather_detection_data/dreyeve/sunny_highway_countryside_morning_evening_vs_rainy_highway_countryside_morning_evening/val/"
         test_in_folder =  "../weather_detection_data/dreyeve/sunny_highway_countryside_morning_evening_vs_rainy_highway_countryside_morning_evening/test/in/"
-        test_out_folder = "../weather_detection_data/dreyeve/sunny_highway_countryside_morning_evening_vs_rainy_highway_countryside_morning_evening/test/out/"
+        test_out_folder = "../weather_detection_data/dreyeve/sunny_highway_countryside_morning_evening_vs_rainy_highway_countryside_morning_evening/test/out/foggy"
 
     
     elif dataset == "prosivic":
         # Hyperparameters
         betas = (0.9,0.999) # adam solver standard is (0.5, 0.999), GPND standard is (0.9,0.999)
 #        learning_rate = 0.001
-        n_train_epochs = 100
+        n_train_epochs = 1000
         n_epochs_between_lr_change = n_train_epochs+1
-        num_sample_epochs = 5
+        num_sample_epochs = 10
         lr_g  = 0.002
         lr_e  = 0.002
         lr_d  = 0.002
         lr_ge = 0.002
         lr_zd = 0.002
-        rec_loss_weight = 1000
+        rec_loss_weight = 1
 
         architecture = "0_4_0_16_256_4_2_1"
         n_dense_units = None
-        inliers_name = "sunny_highway"
-        outliers_name = "rainy_highway"
+        inliers_name = "sunny"
+        outliers_name = "foggy"
         zd_n_layers = 3
         zd_out_units = [256,256,1]
 
@@ -108,9 +108,9 @@ class Configuration(object):
         model_name = "_".join([inliers_name, architecture])
 
         experiment_name = "debug"
-        batch_size = 16
+        batch_size = 5
         use_batchnorm = True
-        data_div = 50
+        data_div = 1400
         n_train = 7000 // data_div
         n_val = 1413 // data_div
         n_test = 787 // data_div # for GPND algorithm, the test set is split into val and test set during testing, since the valset contains outliers in order to compute an optimal threshold. This is used to compute some of the output values, but not AUPRIN or AUROC, which are threshold independent.
@@ -144,6 +144,6 @@ class Configuration(object):
         out_filenames = loadbdd100k.get_namelist_from_file(out_file)
         norm_spec = [["weather", ["clear","partly cloudy", "overcast"]],["scene", "highway"],["timeofday", "daytime"]]
         out_spec = [["weather", ["rainy", "snowy", "foggy"]],["scene", "highway"],["timeofday",["daytime","dawn/dusk","night"]]]
-# Training logged at Mon, 03 Dec 2018 18:31:31 UTC
-# Total training time:	0h22m31.8s
-# Average time/epoch:	0m13.52s
+# Training logged at Mon, 03 Dec 2018 18:52:49 UTC
+# Total training time:	0h1m44.7s
+# Average time/epoch:	0m0.10s

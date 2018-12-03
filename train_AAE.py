@@ -127,7 +127,7 @@ def main(folding_id, inliner_classes, total_classes, folds=5, cfg = None):
         image_width = cfg.image_width
         data_train_x = [img_to_array(load_img(cfg.train_folder + filename)) for filename in os.listdir(cfg.train_folder)][:cfg.n_train]
         valid_imgs = [img_to_array(load_img(cfg.val_folder + filename)) for filename in os.listdir(cfg.val_folder)][:cfg.n_val]
-        
+
         # experiment_name = cfg.experiment_name
         model_name = cfg.model_name
 
@@ -306,7 +306,7 @@ def main(folding_id, inliner_classes, total_classes, folds=5, cfg = None):
             x_fake = G(z)
             D_result = D(x_fake).squeeze()
 
-            G_train_loss = BCE_loss(D_result, y_real_)
+            G_train_loss = BCE_loss(D_result, y_real_) * cfg.weight_g_loss
 
             G_train_loss.backward()
             G_optimizer.step()
@@ -350,6 +350,7 @@ def main(folding_id, inliner_classes, total_classes, folds=5, cfg = None):
             Recon_loss = cfg.rec_loss_weight*F.binary_cross_entropy(x_d, x)
 
             (Recon_loss + E_loss).backward()
+#            Recon_loss.backward()
 
             GE_optimizer.step()
 
