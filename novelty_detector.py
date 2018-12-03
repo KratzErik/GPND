@@ -710,7 +710,7 @@ def main(folding_id, inliner_classes, total_classes, folds=5, cfg = None):
             log.append(line)
 
         print("Logging test configuration and results:")
-        with open(cfg.log_dir + "train/configuration.py",'a') as f_out:
+        with open(cfg.log_dir + "configuration.py",'a') as f_out:
             for line in log:
                 print(line)
                 f_out.write(line+'\n')

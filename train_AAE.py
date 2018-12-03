@@ -31,6 +31,7 @@ import os
 from utils import loadbdd100k
 import datetime
 from keras.preprocessing.image import load_img, img_to_array
+from matplotlib import pyplot as plt
 
 use_cuda = torch.cuda.is_available()
 
@@ -229,7 +230,13 @@ def main(folding_id, inliner_classes, total_classes, folds=5, cfg = None):
     y_real_z = torch.ones(1 if zd_merge else batch_size)
     y_fake_z = torch.zeros(1 if zd_merge else batch_size)
 
-    cfg.sample_size = 64
+    # Save losses for diagnostics plots
+    Gtrain_losses_diag = []
+    Dtrain_losses_diag = []
+    Etrain_losses_diag = []
+    GEtrain_losses_diag = []
+    ZDtrain_losses_diag = []
+
     sample = torch.randn(cfg.sample_size, zsize).view(-1, zsize, 1, 1)
     total_time = 0
     for epoch in range(train_epoch):
@@ -359,6 +366,12 @@ def main(folding_id, inliner_classes, total_classes, folds=5, cfg = None):
         GEtrain_loss /= (len(data_train_x))
         Etrain_loss /= (len(data_train_x))
 
+        Gtrain_losses_diag.append(Gtrain_loss)
+        Dtrain_losses_diag.append(Dtrain_loss)
+        Etrain_losses_diag.append(Etrain_loss)
+        GEtrain_losses_diag.append(GEtrain_loss)
+        ZDtrain_losses_diag.append(ZDtrain_loss)
+
         epoch_end_time = time.time()
         per_epoch_ptime = epoch_end_time - epoch_start_time
         total_time += per_epoch_ptime
@@ -382,8 +395,50 @@ def main(folding_id, inliner_classes, total_classes, folds=5, cfg = None):
     torch.save(D.state_dict(),  model_dir + "Dmodel.pkl")
     torch.save(ZD.state_dict(), model_dir + "ZDmodel.pkl")
 
+    print("Exporting loss plots")
+    plot_epochs = range(len(Gtrain_losses_diag))
+    # Export the Generator/R network reconstruction losses as a plot.
+    plt.title('Generator loss')
+    plt.xlabel('Epoch')
+    plt.ylabel('Training loss')
+    plt.grid()
+    plt.plot(plot_epochs, Gtrain_losses_diag, label="G() loss")
+    plt.savefig(train_dir+'G_loss.png')
+
+    plt.clf()
+    plt.title('Discriminator loss')
+    plt.xlabel('Epoch')
+    plt.ylabel('Training loss')
+    plt.grid()
+    plt.plot(plot_epochs, Dtrain_losses_diag, label="D() loss")
+    plt.savefig(train_dir+'D_loss.png')
+
+    plt.clf()
+    plt.title('Encoder loss')
+    plt.xlabel('Epoch')
+    plt.ylabel('Training loss')
+    plt.grid()
+    plt.plot(plot_epochs, Etrain_losses_diag, label="E() loss")
+    plt.savefig(train_dir+'E_loss.png')
+
+    plt.clf()
+    plt.title('Encoder-Generator reconstruction loss')
+    plt.xlabel('Epoch')
+    plt.ylabel('Training loss')
+    plt.grid()
+    plt.plot(plot_epochs, GEtrain_losses_diag, label="GE() loss")
+    plt.savefig(train_dir+'recon_loss.png')
+
+    plt.clf()
+    plt.title('ZDiscriminator loss')
+    plt.xlabel('Epoch')
+    plt.ylabel('Training loss')
+    plt.grid()
+    plt.plot(plot_epochs, ZDtrain_losses_diag, label="ZD() loss")
+    plt.savefig(train_dir+'ZD_loss.png')
+
     print("Logging training configuration")
-    with open(train_dir + "configuration.py",'w') as f_out:
+    with open(cfg.log_dir + "configuration.py",'w') as f_out:
         with open("./configuration.py", "r") as f_in:
             for line in f_in:
                     f_out.write(line)
