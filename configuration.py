@@ -15,23 +15,7 @@ class Configuration(object):
     # G: stride 
     # H: pad
 
-    #architecture = '0_5_1_8_256_5_2_0' # with dense layer, stride instead of pool
-    #architecture = '0_5_0_8_256_5_2_0' # no dense layer, stride instead of pool
-    #architecture = '1_5_1_8_256_5_1_0' # with dense layer, maxpool
-    #architecture = '1_5_0_8_256_5_1_0' # no dense layer, maxpool
-    #architecture = "0_4_0_8_256_4_2_1"
-    
-    #architecture = "b2"
-    
-    # Hyperparameters
-    betas = (0.5,0.999) # adam solver standard
-    learning_rate = 0.001
-    n_train_epochs = 2
-    n_epochs_between_lr_change = n_train_epochs+1
-    num_sample_epochs = 5
-
-
-    dataset = "dreyeve"
+    dataset = "mnist"
     experiment_name = "debug"
     log_dir = './log/' + dataset + '/' + experiment_name + '/'
 
@@ -52,10 +36,10 @@ class Configuration(object):
 
     if dataset == "dreyeve":
 
-        architecture = "0_6_1_16_256_4_2_1"
+        architecture = "0_6_0_16_256_4_2_1"
         inliers_name = "sunny_highway"
         outliers_name = "rainy_highway"
-
+        n_dense_units = [256]
         image_height = 256
         image_width = 256
         channels = 3
@@ -65,14 +49,14 @@ class Configuration(object):
 
         # Hyperparameters
         betas = (0.5,0.999) # adam solver standard
-        learning_rate = 0.001
+        learning_rate = 0.0001
         n_train_epochs = 500
         n_epochs_between_lr_change = n_train_epochs+1
         num_sample_epochs = 5
         batch_size = 16
 
         # Dataset options
-        data_div = 2
+        data_div = 12
         n_train = 6000 // data_div
         n_val = 600 // data_div
         n_test = 1200 // data_div # for GPND algorithm, the test set is split into val and test set during testing, since the valset contains outli$
@@ -86,6 +70,18 @@ class Configuration(object):
 
     
     elif dataset == "prosivic":
+        # Hyperparameters
+        betas = (0.5,0.999) # adam solver standard
+        learning_rate = 0.001
+        n_train_epochs = 100
+        n_epochs_between_lr_change = n_train_epochs+1
+        num_sample_epochs = 5
+
+        architecture = "0_4_0_16_256_4_2_1"
+        n_dense_units = None
+        inliers_name = "sunny_highway"
+        outliers_name = "rainy_highway"
+
         # Dataset options
         image_height = 256
         image_width = 256
@@ -93,8 +89,9 @@ class Configuration(object):
         model_name = "_".join([inliers_name, architecture])
 
         experiment_name = "debug"
+        batch_size = 16
         use_batchnorm = True
-        data_div = 5
+        data_div = 50
         n_train = 7000 // data_div
         n_val = 1413 // data_div
         n_test = 787 // data_div # for GPND algorithm, the test set is split into val and test set during testing, since the valset contains outliers in order to compute an optimal threshold. This is used to compute some of the output values, but not AUPRIN or AUROC, which are threshold independent.
@@ -106,6 +103,14 @@ class Configuration(object):
         test_in_folder =  "../weather_detection_data/prosivic/test/in/"
         test_out_folder =  "../weather_detection_data/prosivic/test/out/"
 
+    elif dataset == "mnist":
+        batch_size = 128
+        architecture = None
+        betas = (0.9,0.999) # GPND standard
+        learning_rate = 0.0001
+        n_train_epochs = 100
+        n_epochs_between_lr_change = 40
+        num_sample_epochs = 5
 
     elif dataset == "bdd100k":
         img_folder = Path("/data/bdd100k/images/train_and_val_256by256")

@@ -189,8 +189,9 @@ def main(folding_id, inliner_classes, total_classes, folds=5, cfg = None):
     print("Train set size:", len(data_train_x))
     print("Data type:", data_train_x.dtype)
     print("Max pixel value:", np.amax(data_train_x))
+    if architecture is not None:
+        print("Configuring networks with architecture:" + architecture)
 
-    print("Configuring networks with architecture:" + architecture)
     G = Generator(zsize, channels = channels, architecture = architecture)
     setup(G)
     G.weight_init(mean=0, std=0.02)
