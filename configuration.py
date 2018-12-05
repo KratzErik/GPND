@@ -33,6 +33,7 @@ class Configuration(object):
 
     # dataset specific options below
     if dataset == "prosivic":
+        training_mode = "autoencoder"
         # Hyperparameters
         betas = (0.5,0.999) # adam solver standard is (0.5, 0.999), GPND standard is (0.9,0.999)
 #        learning_rate = 0.001
@@ -76,7 +77,7 @@ class Configuration(object):
 
 
     elif dataset == "dreyeve":
-
+        training_mode = "autoencoder"
         architecture = "0_6_0_16_256_4_2_1"
         inliers_name = "sunny_highway"
         outliers_name = "rainy_highway"
