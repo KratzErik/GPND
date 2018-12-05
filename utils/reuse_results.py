@@ -24,7 +24,7 @@ def get_performance_metrics(test_dir = cfg.log_dir + "test/", experiment_name = 
     results = load_results(test_dir, experiment_name)
     output_str = []
     for y in results:
-        y_output_str
+        y_output_str = ""
         percentage = y[0]
         result = y[1]
         y_true = [x[0] for x in result]

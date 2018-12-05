@@ -694,7 +694,7 @@ def main(folding_id, inliner_classes, total_classes, folds=5, cfg = None):
         return results
 
     else: # this is used in SMILE experiments, to get only metrics specified in reuse_results.get_performace_metrics
-        log = ["Testing started at %s"%time.strftime("%a, %d %b %Y %H:%M:%S UTC", gmtime())]
+        log = ["Testing started at %s"%time.strftime("%a, %d %b %Y %H:%M:%S UTC")]
         total_time = []
         for p in cfg.percentages:
             _, percentage_time = test(data_test,p)

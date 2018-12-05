@@ -863,6 +863,7 @@ class Encoder(nn.Module):
             else:
                 x = self.output_convlayer(x)
             #print("Output: ", x.shape)
+            #print("Image dim: %d, encoded dim: %d"%(input.shape[1]*input.shape[2]*input.shape[3],x.shape[1]*x.shape[2]*x.shape[3]))
             return x
 
 class ZDiscriminator(nn.Module):

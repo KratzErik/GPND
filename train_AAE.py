@@ -196,7 +196,7 @@ def main(folding_id, inliner_classes, total_classes, folds=5, cfg = None):
     setup(G)
     G.weight_init(mean=0, std=0.02)
 
-    if cfg.training_mode = "GPND_default":
+    if cfg.training_mode == "GPND_default":
         D = Discriminator(channels = channels, architecture = architecture)
         setup(D)
         D.weight_init(mean=0, std=0.02)
@@ -205,7 +205,7 @@ def main(folding_id, inliner_classes, total_classes, folds=5, cfg = None):
     setup(E)
     E.weight_init(mean=0, std=0.02)
 
-    if cfg.training_mode = "GPND_default":
+    if cfg.training_mode == "GPND_default":
         if zd_merge:
             ZD = ZDiscriminator_mergebatch(zsize, batch_size).to(device)
         else:
@@ -217,11 +217,11 @@ def main(folding_id, inliner_classes, total_classes, folds=5, cfg = None):
     #lr = cfg.learning_rate
     betas = cfg.betas
 
-    G_optimizer = optim.Adam(G.parameters(), lr=cfg.lr_g, betas = betas)
-    E_optimizer = optim.Adam(E.parameters(), lr=cfg.lr_e, betas = betas)
     GE_optimizer = optim.Adam(list(E.parameters()) + list(G.parameters()), lr=cfg.lr_ge)
     
-    if cfg.training_mode = "GPND_default":
+    if cfg.training_mode == "GPND_default":
+        G_optimizer = optim.Adam(G.parameters(), lr=cfg.lr_g, betas = betas)
+        E_optimizer = optim.Adam(E.parameters(), lr=cfg.lr_e, betas = betas)
         D_optimizer = optim.Adam(D.parameters(), lr=cfg.lr_d, betas = betas)
         ZD_optimizer = optim.Adam(ZD.parameters(), lr=cfg.lr_zd, betas = betas)
 
@@ -232,7 +232,7 @@ def main(folding_id, inliner_classes, total_classes, folds=5, cfg = None):
     y_real_ = torch.ones(batch_size)
     y_fake_ = torch.zeros(batch_size)
 
-    if cfg.training_mode = "GPND_default":
+    if cfg.training_mode == "GPND_default":
         y_real_z = torch.ones(1 if zd_merge else batch_size)
         y_fake_z = torch.zeros(1 if zd_merge else batch_size)
 
@@ -240,7 +240,7 @@ def main(folding_id, inliner_classes, total_classes, folds=5, cfg = None):
     Gtrain_losses_diag = []
     Etrain_losses_diag = []
     GEtrain_losses_diag = []
-    if cfg.training_mode = "GPND_default":
+    if cfg.training_mode == "GPND_default":
         Dtrain_losses_diag = []
         ZDtrain_losses_diag = []
 
@@ -249,15 +249,15 @@ def main(folding_id, inliner_classes, total_classes, folds=5, cfg = None):
     for epoch in range(train_epoch):
         G.train()
         E.train()
-        if cfg.training_mode = "GPND_default":
+        if cfg.training_mode == "GPND_default":
             D.train()
             ZD.train()
+            Gtrain_loss = 0
+            Etrain_loss = 0
 
-        Gtrain_loss = 0
-        Etrain_loss = 0
         GEtrain_loss = 0
 
-        if cfg.training_mode = "GPND_default":
+        if cfg.training_mode == "GPND_default":
             Dtrain_loss = 0
             ZDtrain_loss = 0
 
@@ -269,10 +269,10 @@ def main(folding_id, inliner_classes, total_classes, folds=5, cfg = None):
         shuffle(data_train_x)
 
         if (epoch + 1) % cfg.n_epochs_between_lr_change == 0:
-            G_optimizer.param_groups[0]['lr'] /= 4
             GE_optimizer.param_groups[0]['lr'] /= 4
-            E_optimizer.param_groups[0]['lr'] /= 4
-            if cfg.training_mode = "GPND_default":
+            if cfg.training_mode == "GPND_default":
+                E_optimizer.param_groups[0]['lr'] /= 4
+                G_optimizer.param_groups[0]['lr'] /= 4
                 D_optimizer.param_groups[0]['lr'] /= 4
                 ZD_optimizer.param_groups[0]['lr'] /= 4
             print("learning rate change!")
@@ -285,8 +285,8 @@ def main(folding_id, inliner_classes, total_classes, folds=5, cfg = None):
            # print("Shape of batch:")
            # print(x.shape)
             #############################################
-            if cfg.training_mode = "GPND_default":
-                D.zero_grad() 
+            if cfg.training_mode == "GPND_default":
+                D.zero_grad()
 
                 D_result = D(x).squeeze() # removes all dimensions with size 1
                 D_real_loss = BCE_loss(D_result, y_real_)
@@ -374,7 +374,7 @@ def main(folding_id, inliner_classes, total_classes, folds=5, cfg = None):
                 z = E(x)
                 x_d = G(z)
 
-                Recon_loss = cfg.rec_loss_weight*F.binary_cross_entropy(x_d, x)
+                Recon_loss = BCE_loss(x_d, x)
 
                 Recon_loss.backward()
 
@@ -419,7 +419,7 @@ def main(folding_id, inliner_classes, total_classes, folds=5, cfg = None):
             with torch.no_grad():
                 resultsample = G(sample).cpu()
                 save_image(resultsample.view(cfg.sample_size, channels, image_height, image_width), train_dir + 'sample_' + str(epoch) + '.png', nrow = cfg.sample_rows)
-Gtrain_loss, Dtrain_loss, ZDtr
+
     model_dir = log_dir + "models/"
     if not os.path.exists(model_dir):
         os.makedirs(model_dir)
@@ -441,7 +441,7 @@ Gtrain_loss, Dtrain_loss, ZDtr
     plt.grid()
     plt.plot(plot_epochs, GEtrain_losses_diag, label="GE() loss")
     plt.savefig(train_dir+'recon_loss.png')
-    
+
     if cfg.training_mode == "GPND_default":
         plt.clf()
         plt.title('Generator loss')
