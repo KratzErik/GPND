@@ -37,7 +37,7 @@ class Configuration(object):
         # Hyperparameters
         betas = (0.9,0.999) # adam solver standard is (0.5, 0.999), GPND standard is (0.9,0.999)
 #        learning_rate = 0.001
-        n_train_epochs = 200
+        n_train_epochs = 500
         n_epochs_between_lr_change = 80
         num_sample_epochs = 10
         lr_g  = 0.002
@@ -47,7 +47,7 @@ class Configuration(object):
         lr_zd = 0.002
         rec_loss_weight = 1
         weight_g_loss = 1
-        architecture = "0_4_0_16_256_4_2_1"
+        #architecture = "0_4_0_16_256_4_2_1"
         architecture = "0_4_1_16_512_5_2_2"
         n_dense_units = None
         inliers_name = "sunny"
@@ -61,10 +61,9 @@ class Configuration(object):
         channels = 3
         model_name = "_".join([inliers_name, architecture])
 
-        experiment_name = "debug"
-        batch_size = 10
+        batch_size = 64
         use_batchnorm = True
-        data_div = 70
+        data_div = 1
         n_train = 7000 // data_div
         n_val = 1413 // data_div
         n_test = 787*2 // data_div # for GPND algorithm, the test set is split into val and test set during testing, since the valset contains outliers in order to compute an optimal threshold. This is used to compute some of the output values, but not AUPRIN or AUROC, which are threshold independent.

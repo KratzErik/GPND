@@ -703,7 +703,7 @@ def main(folding_id, inliner_classes, total_classes, folds=5, cfg = None):
         log.append("Results for experiment:")
         log.append("Inliers: %s"%cfg.outliers_name)
         log.append("Outliers %s"%cfg.inliers_name)
-        
+
         metrics_str = reuse_results.get_performance_metrics() # loads pickled results for experiment and percentages specified in cfg
         for i, line in enumerate(metrics_str):
             line += "\tTest time for percentage:\t%dh%dm%.1fs"%(total_time[i]//3600, (total_time[i]%3600)//60, total_time[i]%60)

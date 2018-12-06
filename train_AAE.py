@@ -383,7 +383,7 @@ def main(folding_id, inliner_classes, total_classes, folds=5, cfg = None):
                 GEtrain_loss  += Recon_loss.item()
 
 
-            print("[%d/%d]: (%d/%d): Recon_loss: %.6f"%(epoch+1,train_epoch,it+1,n_batches,Recon_loss/batch_size))
+            #print("[%d/%d]: (%d/%d): Recon_loss: %.6f"%(epoch+1,train_epoch,it+1,n_batches,Recon_loss/batch_size))
             if it == 0 and (epoch+1) % max(train_epoch//cfg.num_sample_epochs,1) == 0:
                 comparison = torch.cat([x[:cfg.sample_size//2], x_d[:cfg.sample_size//2]])
                 #comparison = [comparison[i] if i%2 == 0 else comparison[cfg.sample_size//2+i] for i in range(cfg.sample_size//2)]

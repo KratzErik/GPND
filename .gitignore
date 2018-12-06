@@ -9,7 +9,7 @@ MNIST_cGAN_results/
 .idea/
 *.pdf
 #*.png
-*.eps
+#*.eps
 #*.txt
 results*/
 net.py.save
