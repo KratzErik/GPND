@@ -41,3 +41,9 @@ def get_performance_metrics(test_dir = cfg.log_dir + "test/", experiment_name = 
         output_str.append(y_output_str)
 
     return output_str
+
+def export_scores(test_dir = cfg.log_dir + "test/", experiment_name = cfg.experiment_name, dataset = cfg.dataset):
+    result = load_results(test_dir, experiment_name)[0][1]
+    labels = [x[0] for x in result]
+    scores = [x[1] for x in result]
+    pickle.dump([scores,labels],'/home/exjobb_resultat/data/%s_GPND.pkl'%dataset)

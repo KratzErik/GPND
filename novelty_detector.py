@@ -35,6 +35,7 @@ from sklearn.metrics import roc_auc_score, auc, precision_recall_curve
 from utils import loadbdd100k, reuse_results
 import datetime
 from keras.preprocessing.image import load_img, img_to_array
+from shutils import copyfile
 
 title_size = 16
 axis_title_size = 14
@@ -714,6 +715,15 @@ def main(folding_id, inliner_classes, total_classes, folds=5, cfg = None):
             for line in log:
                 print(line)
                 f_out.write(line+'\n')
+
+        # Export pickled result to common results repo
+        if len(cfg.percentages) == 1 and cfg.export_results:
+            reuse_results.export_scores()
+            
+        # Update data source dict with experiment name
+        common_results_dict = pickle.load(open('/home/exjobb_resultat/data/name_dict.pkl','rb'))
+        common_results_dict[dataset]["GPND"] == experiment_name
+        pickle.dump(common_results_dict,open('/home/exjobb_resultat/data/name_dict.pkl','wb'))
 
 if __name__ == '__main__':
     main(0, [0], 10)
