@@ -51,5 +51,5 @@ def export_scores(test_dir = cfg.log_dir + "test/", experiment_name = cfg.experi
     # Update data source dict with experiment name
     common_results_dict = pickle.load(open('/home/exjobb_resultat/data/name_dict.pkl','rb'))
     common_results_dict[dataset]["GPND"] == experiment_name
-    pickle.dump(common_results_dict,open('/home/exjobb_resultat/data/name_dict.pkl','wb'))
+    pickle.dump(common_results_dict,open('/home/exjobb_resultat/data/name_dict.pkl','wb'), protocol=2)
     print("Updated entry ['%s']['GPND'] = '%s' in file /home/exjobb_resultat/data/name_dict.pkl"%(dataset,experiment_name))
