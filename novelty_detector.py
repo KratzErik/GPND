@@ -714,6 +714,7 @@ def main(folding_id, inliner_classes, total_classes, folds=5, cfg = None):
                 _, percentage_time = test(data_test,p)
                 total_time.append(percentage_time)
         else:
+            total_time.append(0)
             print("Result already found: p = %d"%p)
 
         log.append("Results for experiment:")
@@ -734,6 +735,6 @@ def main(folding_id, inliner_classes, total_classes, folds=5, cfg = None):
         # Export pickled result to common results repo
         if len(cfg.percentages) == 1 and cfg.export_results:
             reuse_results.export_scores()
-
+        print('\n\n')
 if __name__ == '__main__':
     main(0, [0], 10)
