@@ -47,3 +47,8 @@ def export_scores(test_dir = cfg.log_dir + "test/", experiment_name = cfg.experi
     labels = [x[0] for x in result]
     scores = [x[1] for x in result]
     pickle.dump([scores,labels],'/home/exjobb_resultat/data/%s_GPND.pkl'%dataset)
+
+    # Update data source dict with experiment name
+    common_results_dict = pickle.load(open('/home/exjobb_resultat/data/name_dict.pkl','rb'))
+    common_results_dict[dataset]["GPND"] == experiment_name
+    pickle.dump(common_results_dict,open('/home/exjobb_resultat/data/name_dict.pkl','wb'))

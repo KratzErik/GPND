@@ -698,8 +698,9 @@ def main(folding_id, inliner_classes, total_classes, folds=5, cfg = None):
         log = ["Testing started at %s"%time.strftime("%a, %d %b %Y %H:%M:%S UTC")]
         total_time = []
         for p in cfg.percentages:
-            _, percentage_time = test(data_test,p)
-            total_time.append(percentage_time)
+            if not os.path.exists(results_dir + experiment_name + '_result_p%d.pkl'%(p)):
+                _, percentage_time = test(data_test,p)
+                total_time.append(percentage_time)
 
         log.append("Results for experiment:")
         log.append("Inliers: %s"%cfg.outliers_name)
@@ -719,11 +720,6 @@ def main(folding_id, inliner_classes, total_classes, folds=5, cfg = None):
         # Export pickled result to common results repo
         if len(cfg.percentages) == 1 and cfg.export_results:
             reuse_results.export_scores()
-            
-        # Update data source dict with experiment name
-        common_results_dict = pickle.load(open('/home/exjobb_resultat/data/name_dict.pkl','rb'))
-        common_results_dict[dataset]["GPND"] == experiment_name
-        pickle.dump(common_results_dict,open('/home/exjobb_resultat/data/name_dict.pkl','wb'))
 
 if __name__ == '__main__':
     main(0, [0], 10)
