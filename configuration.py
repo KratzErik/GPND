@@ -15,10 +15,10 @@ class Configuration(object):
     # G: stride 
     # H: pad
 
-    dataset = "prosivic"
-    experiment_name = "common_architecture"
+    dataset = "dreyeve"
+    experiment_name = "full_experiment"
     log_dir = './log/' + dataset + '/' + experiment_name + '/'
-
+    export_results = True
     # Diagnostics
     sample_size = 16
     sample_rows = 4 # nrow to save_image grid

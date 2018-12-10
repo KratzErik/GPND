@@ -35,7 +35,7 @@ from sklearn.metrics import roc_auc_score, auc, precision_recall_curve
 from utils import loadbdd100k, reuse_results
 import datetime
 from keras.preprocessing.image import load_img, img_to_array
-from shutils import copyfile
+from shutil import copyfile
 
 title_size = 16
 axis_title_size = 14
@@ -117,6 +117,24 @@ def main(folding_id, inliner_classes, total_classes, folds=5, cfg = None):
         print("No configuration provided, aborting...")
         return
 
+    results_dir = cfg.log_dir + "test/"
+
+    if not os.path.exists(results_dir):
+        print("Creating directory ", results_dir)
+        os.makedirs(results_dir)
+
+    perform_tests = False
+    for p in cfg.percentages:
+        if not os.path.exists(results_dir + 'result_p%d.pkl'%(p)):
+            print("Result not found for p = %d"%p)
+            perform_tests= True
+        else:
+            print("Result found for p = %d"%p)
+
+    if not perform_tests:
+        print("Previous results found for all specified percentages, proceeding to evaluation")
+
+    else:
     dataset = cfg.dataset
     zsize = 32
     batch_size = cfg.batch_size
@@ -242,12 +260,6 @@ def main(folding_id, inliner_classes, total_classes, folds=5, cfg = None):
 
     # Rescale before training (not batchwise)
     data_train_x /= 255.0
-
-    results_dir = cfg.log_dir + "test/"
-
-    if not os.path.exists(results_dir):
-        print("Creating directory ", results_dir)
-        os.makedirs(results_dir)
 
     print("Train set size:", len(data_train_x))
 
@@ -570,7 +582,7 @@ def main(folding_id, inliner_classes, total_classes, folds=5, cfg = None):
             auc = 0
 
         # Pickle results, they are then extracted by other function to produce metrics
-        with open(results_dir + experiment_name + '_result_p%d.pkl'%(percentage), 'wb') as output:
+        with open(results_dir + 'result_p%d.pkl'%(percentage), 'wb') as output:
             pickle.dump(result, output)
         
         if cfg.nd_original_GPND:
@@ -698,9 +710,11 @@ def main(folding_id, inliner_classes, total_classes, folds=5, cfg = None):
         log = ["Testing started at %s"%time.strftime("%a, %d %b %Y %H:%M:%S UTC")]
         total_time = []
         for p in cfg.percentages:
-            if not os.path.exists(results_dir + experiment_name + '_result_p%d.pkl'%(p)):
+            if not os.path.exists(results_dir + 'result_p%d.pkl'%(p)):
                 _, percentage_time = test(data_test,p)
                 total_time.append(percentage_time)
+        else:
+            print("Result already found: p = %d"%p)
 
         log.append("Results for experiment:")
         log.append("Inliers: %s"%cfg.outliers_name)

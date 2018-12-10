@@ -8,11 +8,10 @@ def load_results(test_dir = cfg.log_dir + "test/", experiment_name = cfg.experim
 
     assert(os.path.exists(test_dir))
     
-    files = [filename for filename in os.listdir(test_dir) if experiment_name+"_result_p" in filename]
+    files = [filename for filename in os.listdir(test_dir) if "result_p" in filename]
     
     results = []
-    for filename in files: 
-        percentage = int(filename.replace(experiment_name+"_result_p","").replace(".pkl",""))
+    for filename in files:
         with open(test_dir+filename,'rb') as file:
             result = pickle.load(file)
         results.append((percentage,result))
