@@ -16,7 +16,7 @@ class Configuration(object):
     # H: pad
 
     dataset = "prosivic"
-    experiment_name = "debug"
+    experiment_name = "common_architecture"
     log_dir = './log/' + dataset + '/' + experiment_name + '/'
 
     # Diagnostics
@@ -37,8 +37,8 @@ class Configuration(object):
         # Hyperparameters
         betas = (0.9,0.999) # adam solver standard is (0.5, 0.999), GPND standard is (0.9,0.999)
 #        learning_rate = 0.001
-        n_train_epochs = 500
-        n_epochs_between_lr_change = 80
+        n_train_epochs = 1000
+        n_epochs_between_lr_change = 300
         num_sample_epochs = 10
         lr_g  = 0.002
         lr_e  = 0.002
@@ -48,7 +48,7 @@ class Configuration(object):
         rec_loss_weight = 1
         weight_g_loss = 1
         #architecture = "0_4_0_16_256_4_2_1"
-        architecture = "0_4_1_16_512_5_2_2"
+        architecture = "0_4_1_16_512_4_2_1"
         n_dense_units = None
         inliers_name = "sunny"
         outliers_name = "foggy"
