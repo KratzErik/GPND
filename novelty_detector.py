@@ -488,11 +488,11 @@ def main(folding_id, inliner_classes, total_classes, folds=5, cfg = None):
                 print("Found enough outliers for correct percentage, using specified inlier count")
                 data_test_outlier = data_test_outlier[:outlier_count]
             else:
+                print("Not enough outliers for correct percentage, adjusting:\ninliers: %d, outliers:%d -> %d%"%(inliner_count, outlier_count,len(data_test_outlier)))
                 outlier_count = len(data_test_outlier)
                 inliner_count = outlier_count * (100 - percentage) // percentage
                 data_test_inliner = data_test_inliner[:inliner_count]
-                print("Not enough outliers for correct percentage, adjusting:\ninliers: %d, outliers: %d%"(inliner_count, outlier_count))
-            print("Inliers: %d\nOutlier: %d"%(len(data_test_inliner), len(data_test_outlier)))
+            print("Inliers: %d\nOutliers: %d"%(len(data_test_inliner), len(data_test_outlier)))
             data_test = data_test_outlier + data_test_inliner
             random.shuffle(data_test)
 

@@ -15,8 +15,8 @@ class Configuration(object):
     # G: stride 
     # H: pad
 
-    dataset = "dreyeve"
-    experiment_name = "full_experiment"
+    dataset = "prosivic"
+    experiment_name = "common_architecture"
     log_dir = './log/' + dataset + '/' + experiment_name + '/'
     export_results = True
     # Diagnostics
@@ -48,7 +48,7 @@ class Configuration(object):
         rec_loss_weight = 1
         weight_g_loss = 1
         #architecture = "0_4_0_16_256_4_2_1"
-        architecture = "0_4_1_16_512_4_2_1"
+        architecture = "0_5_1_16_512_5_2_2"
         n_dense_units = None
         inliers_name = "sunny"
         outliers_name = "foggy"
@@ -78,7 +78,7 @@ class Configuration(object):
 
     elif dataset == "dreyeve":
         training_mode = "autoencoder"
-        architecture = "0_6_0_16_256_4_2_1"
+        architecture = "0_6_1_16_512_5_2_2"
         inliers_name = "sunny_highway"
         outliers_name = "rainy_highway"
         n_dense_units = [256]
@@ -107,7 +107,7 @@ class Configuration(object):
         rec_loss_weight = 10
 
         # Dataset options
-        data_div = 12
+        data_div = 1
         n_train = 6000 // data_div
         n_val = 600 // data_div
         n_test = 1200 // data_div # for GPND algorithm, the test set is split into val and test set during testing, since the valset contains outli$

@@ -18,7 +18,7 @@ class Configuration(object):
     dataset = "prosivic"
     experiment_name = "common_architecture"
     log_dir = './log/' + dataset + '/' + experiment_name + '/'
-
+    export_results = True
     # Diagnostics
     sample_size = 16
     sample_rows = 4 # nrow to save_image grid
@@ -48,7 +48,7 @@ class Configuration(object):
         rec_loss_weight = 1
         weight_g_loss = 1
         #architecture = "0_4_0_16_256_4_2_1"
-        architecture = "0_4_1_16_512_4_2_1"
+        architecture = "0_5_1_16_512_5_2_2"
         n_dense_units = None
         inliers_name = "sunny"
         outliers_name = "foggy"
@@ -78,7 +78,7 @@ class Configuration(object):
 
     elif dataset == "dreyeve":
         training_mode = "autoencoder"
-        architecture = "0_6_0_16_256_4_2_1"
+        architecture = "0_6_1_16_512_5_2_2"
         inliers_name = "sunny_highway"
         outliers_name = "rainy_highway"
         n_dense_units = [256]
@@ -107,7 +107,7 @@ class Configuration(object):
         rec_loss_weight = 10
 
         # Dataset options
-        data_div = 12
+        data_div = 1
         n_train = 6000 // data_div
         n_val = 600 // data_div
         n_test = 1200 // data_div # for GPND algorithm, the test set is split into val and test set during testing, since the valset contains outli$
@@ -142,6 +142,6 @@ class Configuration(object):
         out_filenames = loadbdd100k.get_namelist_from_file(out_file)
         norm_spec = [["weather", ["clear","partly cloudy", "overcast"]],["scene", "highway"],["timeofday", "daytime"]]
         out_spec = [["weather", ["rainy", "snowy", "foggy"]],["scene", "highway"],["timeofday",["daytime","dawn/dusk","night"]]]
-# Training logged at Mon, 10 Dec 2018 00:11:43 UTC
-# Total training time:	5h21m35.6s
-# Average time/epoch:	0m19.30s
+# Training logged at Tue, 11 Dec 2018 17:43:56 UTC
+# Total training time:	8h28m26.1s
+# Average time/epoch:	0m30.51s
