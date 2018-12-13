@@ -214,7 +214,6 @@ def main(folding_id, inliner_classes, total_classes, folds=5, cfg = None):
         setup(ZD)
         ZD.weight_init(mean=0, std=0.02)
 
-    #lr = cfg.learning_rate
     betas = cfg.betas
 
     GE_optimizer = optim.Adam(list(E.parameters()) + list(G.parameters()), lr=cfg.lr_ge)

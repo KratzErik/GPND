@@ -16,7 +16,7 @@ class Configuration(object):
     # H: pad
 
     dataset = "prosivic"
-    experiment_name = "common_architecture"
+    experiment_name = "debug"
     log_dir = './log/' + dataset + '/' + experiment_name + '/'
     export_results = True
     # Diagnostics
@@ -36,9 +36,8 @@ class Configuration(object):
         training_mode = "autoencoder"
         # Hyperparameters
         betas = (0.5,0.999) # adam solver standard is (0.5, 0.999), GPND standard is (0.9,0.999)
-#        learning_rate = 0.001
-        n_train_epochs = 500
-        n_epochs_between_lr_change = 250
+        n_train_epochs = 10
+        n_epochs_between_lr_change = int(n_train_epochs * 1/2)
         lr_drop_factor = 10
         num_sample_epochs = 10
         lr_g  = 0.001
@@ -66,10 +65,10 @@ class Configuration(object):
         test_batch_size = 16 # Jacobian computations require smaller batches
         use_batchnorm = True
         data_div = 1
-        n_train = 7000 // data_div
-        n_val = 1413 // data_div
-        n_test = 787*2 // data_div # for GPND algorithm, the test set is split into val and test set during testing, since the valset contains outliers in order to compute an optimal threshold. This is used to compute some of the output values, but not AUPRIN or AUROC, which are threshold independent.
-        n_test_in = 787 // data_div
+        n_train = 6785 // data_div
+        n_val = 840 // data_div
+        n_test = 500*2 // data_div # for GPND algorithm, the test set is split into val and test set during testing, since the valset contains outliers in order to compute an optimal threshold. This is used to compute some of the output values, but not AUPRIN or AUROC, which are threshold independent.
+        n_test_in = 500 // data_div
 
         img_folder =   "../weather_detection_data/prosivic/"
         train_folder = "../weather_detection_data/prosivic/train/"
@@ -96,9 +95,8 @@ class Configuration(object):
 
         # Hyperparameters
         betas = (0.5,0.999) # adam solver standard is (0.5, 0.999), GPND standard is (0.9,0.999)
-        learning_rate = 0.0001
         n_train_epochs = 500
-        n_epochs_between_lr_change = 250
+        n_epochs_between_lr_change = int(n_train_epochs * 1/2)
         lr_drop_factor = 10
         num_sample_epochs = 5
         batch_size = 64
