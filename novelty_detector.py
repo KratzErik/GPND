@@ -137,7 +137,7 @@ def main(folding_id, inliner_classes, total_classes, folds=5, cfg = None):
     else:
         dataset = cfg.dataset
         zsize = 32
-        batch_size = cfg.batch_size
+        batch_size = cfg.test_batch_size
         data_train = []
         data_valid = []
 

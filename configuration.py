@@ -22,7 +22,7 @@ class Configuration(object):
     # Diagnostics
     sample_size = 16
     sample_rows = 4 # nrow to save_image grid
-
+    loss = "bce"
     # Testing options
     nd_original_GPND = False
     percentages = [50] # percentage of outliers to use during testing
@@ -35,16 +35,17 @@ class Configuration(object):
     if dataset == "prosivic":
         training_mode = "autoencoder"
         # Hyperparameters
-        betas = (0.9,0.999) # adam solver standard is (0.5, 0.999), GPND standard is (0.9,0.999)
+        betas = (0.5,0.999) # adam solver standard is (0.5, 0.999), GPND standard is (0.9,0.999)
 #        learning_rate = 0.001
-        n_train_epochs = 1000
-        n_epochs_between_lr_change = 300
+        n_train_epochs = 500
+        n_epochs_between_lr_change = 250
+        lr_drop_factor = 10
         num_sample_epochs = 10
-        lr_g  = 0.002
-        lr_e  = 0.002
-        lr_d  = 0.002
-        lr_ge = 0.002
-        lr_zd = 0.002
+        lr_g  = 0.001
+        lr_e  = 0.001
+        lr_d  = 0.001
+        lr_ge = 0.001
+        lr_zd = 0.001
         rec_loss_weight = 1
         weight_g_loss = 1
         #architecture = "0_4_0_16_256_4_2_1"
@@ -62,6 +63,7 @@ class Configuration(object):
         model_name = "_".join([inliers_name, architecture])
 
         batch_size = 64
+        test_batch_size = 16 # Jacobian computations require smaller batches
         use_batchnorm = True
         data_div = 1
         n_train = 7000 // data_div
@@ -93,12 +95,14 @@ class Configuration(object):
         use_batchnorm = True
 
         # Hyperparameters
-        betas = (0.9,0.999) # adam solver standard is (0.5, 0.999), GPND standard is (0.9,0.999)
+        betas = (0.5,0.999) # adam solver standard is (0.5, 0.999), GPND standard is (0.9,0.999)
         learning_rate = 0.0001
         n_train_epochs = 500
-        n_epochs_between_lr_change = n_train_epochs+1
+        n_epochs_between_lr_change = 250
+        lr_drop_factor = 10
         num_sample_epochs = 5
-        batch_size = 16
+        batch_size = 64
+        test_batch_size = 16 # Jacobian computations require smaller batches
         lr_g = 0.002
         lr_e = 0.002
         lr_d = 0.002
@@ -122,6 +126,7 @@ class Configuration(object):
     
     elif dataset == "mnist":
         batch_size = 128
+        test_batch_size = batch_size # Jacobian computations require smaller batches
         architecture = None
         betas = (0.9,0.999) # GPND standard
         n_train_epochs = 100

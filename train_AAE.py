@@ -228,7 +228,12 @@ def main(folding_id, inliner_classes, total_classes, folds=5, cfg = None):
     train_epoch = cfg.n_train_epochs
     lr_change_each_ep = cfg.n_epochs_between_lr_change
 
-    BCE_loss = nn.BCELoss()
+    assert cfg.loss.lower() in ("bce", "l2")
+    if cfg.lossl.lower() == "bce":
+        loss = nn.BCELoss()
+    elif cfg.loss.lower() == "l2":
+        loss == nn.MSELoss()
+        
     y_real_ = torch.ones(batch_size)
     y_fake_ = torch.zeros(batch_size)
 
@@ -269,12 +274,12 @@ def main(folding_id, inliner_classes, total_classes, folds=5, cfg = None):
         shuffle(data_train_x)
 
         if (epoch + 1) % cfg.n_epochs_between_lr_change == 0:
-            GE_optimizer.param_groups[0]['lr'] /= 4
+            GE_optimizer.param_groups[0]['lr'] /= cfg.lr_drop_factor
             if cfg.training_mode == "GPND_default":
-                E_optimizer.param_groups[0]['lr'] /= 4
-                G_optimizer.param_groups[0]['lr'] /= 4
-                D_optimizer.param_groups[0]['lr'] /= 4
-                ZD_optimizer.param_groups[0]['lr'] /= 4
+                E_optimizer.param_groups[0]['lr'] /= cfg.lr_drop_factor
+                G_optimizer.param_groups[0]['lr'] /= cfg.lr_drop_factor
+                D_optimizer.param_groups[0]['lr'] /= cfg.lr_drop_factor
+                ZD_optimizer.param_groups[0]['lr'] /= cfg.lr_drop_factor
             print("learning rate change!")
 
         n_batches = len(data_train_x) // batch_size
@@ -289,7 +294,7 @@ def main(folding_id, inliner_classes, total_classes, folds=5, cfg = None):
                 D.zero_grad()
 
                 D_result = D(x).squeeze() # removes all dimensions with size 1
-                D_real_loss = BCE_loss(D_result, y_real_)
+                D_real_loss = loss(D_result, y_real_)
 
                 z = torch.randn((batch_size, zsize)).view(-1, zsize, 1, 1)
                 z = Variable(z)
@@ -297,7 +302,7 @@ def main(folding_id, inliner_classes, total_classes, folds=5, cfg = None):
                 x_fake = G(z).detach()
     #           print("Shape of x_fake:",x_fake.shape)
                 D_result = D(x_fake).squeeze()
-                D_fake_loss = BCE_loss(D_result, y_fake_)
+                D_fake_loss = loss(D_result, y_fake_)
 
                 D_train_loss = D_real_loss + D_fake_loss
                 D_train_loss.backward()
@@ -316,7 +321,7 @@ def main(folding_id, inliner_classes, total_classes, folds=5, cfg = None):
                 x_fake = G(z)
                 D_result = D(x_fake).squeeze()
 
-                G_train_loss = BCE_loss(D_result, y_real_) * cfg.weight_g_loss
+                G_train_loss = loss(D_result, y_real_) * cfg.weight_g_loss
 
                 G_train_loss.backward()
                 G_optimizer.step()
@@ -331,12 +336,12 @@ def main(folding_id, inliner_classes, total_classes, folds=5, cfg = None):
                 z = Variable(z)
 
                 ZD_result = ZD(z).squeeze()
-                ZD_real_loss = BCE_loss(ZD_result, y_real_z)
+                ZD_real_loss = loss(ZD_result, y_real_z)
 
                 z = E(x).squeeze().detach()
 
                 ZD_result = ZD(z).squeeze()
-                ZD_fake_loss = BCE_loss(ZD_result, y_fake_z)
+                ZD_fake_loss = loss(ZD_result, y_fake_z)
 
                 ZD_train_loss = ZD_real_loss + ZD_fake_loss
                 ZD_train_loss.backward()
@@ -355,7 +360,7 @@ def main(folding_id, inliner_classes, total_classes, folds=5, cfg = None):
 
                 ZD_result = ZD(z.squeeze()).squeeze()
 
-                E_loss = BCE_loss(ZD_result, y_real_z) * 2.0
+                E_loss = loss(ZD_result, y_real_z) * 2.0
 
                 Recon_loss = cfg.rec_loss_weight*F.binary_cross_entropy(x_d, x)
 
@@ -374,7 +379,7 @@ def main(folding_id, inliner_classes, total_classes, folds=5, cfg = None):
                 z = E(x)
                 x_d = G(z)
 
-                Recon_loss = BCE_loss(x_d, x)
+                Recon_loss = loss(x_d, x)
 
                 Recon_loss.backward()
 
