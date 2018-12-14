@@ -513,6 +513,7 @@ class Generator(nn.Module):
 
             # height of image at start of deconvolutions
             if n_dense > 0:
+                #print("G() input:", input.shape)
                 #input = input.permute(0,2,3,1)
                 h1 = cfg.image_height // (2**n_conv) # height = width of image going into first conv layer
                 num_filters =  c_out * (2**(n_conv-1))
@@ -611,7 +612,7 @@ class Discriminator(nn.Module):
                 self.bn_layers.append(nn.BatchNorm2d(num_filters))
                 self.pool_layers.append(nn.MaxPool2d((2,2)))
                 print("\tAdded conv_layer %d" % (len(self.conv_layers)+1))
-                num_dense_in =  c_1 * (2**(n_conv-1))
+                num_dense_in =  c_1 * cfg.image_height**2 // (2**(n_conv+1))
                 self.dense_layers = []
                 self.dense_bn = []
                 for dense_i in range(n_dense):
@@ -620,7 +621,8 @@ class Discriminator(nn.Module):
                     self.dense_layers.append(nn.Linear(num_dense_in,num_dense_out))
                     if dense_i < n_dense-1:
                         self.dense_bn.append(nn.BatchNorm1d(num_dense_out))
-                    print("\tAdded output dense layer %d"%dense_i+1)
+                    print("\tAdded output dense layer %d"%(dense_i+1))
+                    print("\t\t%d->%d"%(num_dense_in,num_dense_out))
             else:
                 # Add final conv_layer:
                 h = cfg.image_height // (2**(n_conv-1))
@@ -691,8 +693,9 @@ class Discriminator(nn.Module):
                # print("After conv: ", x.shape)
 
             if n_dense > 0:
-                x = x.view(self.batch_size,1,1,-1)
+                x = x.view(self.batch_size,-1)
                 for dense_i in range(n_dense):
+                    print("Into dense %d:"%dense_i, x.shape)
                     x = self.dense_layers[dense_i](x)
                     #print("After dense: ", x.shape)
                     if dense_i < n_dense-1:
@@ -882,7 +885,7 @@ class Encoder(nn.Module):
                 x = F.leaky_relu(x)
             else:
                 x = F.leaky_relu(self.output_convlayer(x))
-            #print("Output: ", x.shape)
+            #print("E() output: ", x.shape)
             #print("Image dim: %d, encoded dim: %d"%(input.shape[1]*input.shape[2]*input.shape[3],x.shape[1]*x.shape[2]*x.shape[3]))
             return x
 

@@ -248,7 +248,7 @@ def main(folding_id, inliner_classes, total_classes, folds=5, cfg = None):
         Dtrain_losses_diag = []
         ZDtrain_losses_diag = []
 
-    sample = torch.randn(cfg.sample_size, zsize).view(-1, zsize, 1, 1)
+    sample = torch.randn(cfg.sample_size, zsize).view(-1, zsize)
     total_time = 0
     for epoch in range(train_epoch):
         G.train()
@@ -295,7 +295,7 @@ def main(folding_id, inliner_classes, total_classes, folds=5, cfg = None):
                 D_result = D(x).squeeze() # removes all dimensions with size 1
                 D_real_loss = loss(D_result, y_real_)
 
-                z = torch.randn((batch_size, zsize)).view(-1, zsize, 1, 1)
+                z = torch.randn((batch_size, zsize)).view(-1, zsize)
                 z = Variable(z)
 
                 x_fake = G(z).detach()
@@ -314,7 +314,7 @@ def main(folding_id, inliner_classes, total_classes, folds=5, cfg = None):
 
                 G.zero_grad()
 
-                z = torch.randn((batch_size, zsize)).view(-1, zsize, 1, 1)
+                z = torch.randn((batch_size, zsize)).view(-1, zsize)
                 z = Variable(z)
 
                 x_fake = G(z)
@@ -415,7 +415,7 @@ def main(folding_id, inliner_classes, total_classes, folds=5, cfg = None):
         remaining_time = (train_epoch-complete_epochs) * total_time/complete_epochs
 
         if cfg.training_mode == "GPND_default":
-            print('[%d/%d] - ptime: %.2f, Gloss: %.3f, Dloss: %.3f, ZDloss: %.3f, Reconloss: %.3f, Eloss: %.3f, ETA: %dh%dm%.1fs' % ((epoch + 1), train_epoch, per_epoch_ptime, Gtrain_loss, Dtrain_loss, ZDtrain_loss, GEtrain_loss, Etrain_loss, remaining_time//3600, (remaining_time%3600)//60, remaining_time%60))
+            print('[%d/%d] - ptime: %.2f, Gloss: %.6f, Dloss: %.6f, ZDloss: %.6f, Reconloss: %.6f, Eloss: %.6f, ETA: %dh%dm%.1fs' % ((epoch + 1), train_epoch, per_epoch_ptime, Gtrain_loss, Dtrain_loss, ZDtrain_loss, GEtrain_loss, Etrain_loss, remaining_time//3600, (remaining_time%3600)//60, remaining_time%60))
         else:
              print('[%d/%d] - ptime: %.2f, Reconloss: %.6f, ETA: %dh%dm%.1fs' % ((epoch + 1), train_epoch, per_epoch_ptime, GEtrain_loss, remaining_time//3600, (remaining_time%3600)//60, remaining_time%60))
 
