@@ -228,7 +228,7 @@ def main(folding_id, inliner_classes, total_classes, folds=5, cfg = None):
     lr_change_each_ep = cfg.n_epochs_between_lr_change
 
     assert cfg.loss.lower() in ("bce", "l2")
-    if cfg.lossl.lower() == "bce":
+    if cfg.loss.lower() == "bce":
         loss = nn.BCELoss()
     elif cfg.loss.lower() == "l2":
         loss == nn.MSELoss()
@@ -417,8 +417,8 @@ def main(folding_id, inliner_classes, total_classes, folds=5, cfg = None):
         if cfg.training_mode == "GPND_default":
             print('[%d/%d] - ptime: %.2f, Gloss: %.3f, Dloss: %.3f, ZDloss: %.3f, Reconloss: %.3f, Eloss: %.3f, ETA: %dh%dm%.1fs' % ((epoch + 1), train_epoch, per_epoch_ptime, Gtrain_loss, Dtrain_loss, ZDtrain_loss, GEtrain_loss, Etrain_loss, remaining_time//3600, (remaining_time%3600)//60, remaining_time%60))
         else:
-             print('[%d/%d] - ptime: %.2f, Reconloss: %.3f, ETA: %dh%dm%.1fs' % ((epoch + 1), train_epoch, per_epoch_ptime, GEtrain_loss, remaining_time//3600, (remaining_time%3600)//60, remaining_time%60))
-        
+             print('[%d/%d] - ptime: %.2f, Reconloss: %.6f, ETA: %dh%dm%.1fs' % ((epoch + 1), train_epoch, per_epoch_ptime, GEtrain_loss, remaining_time//3600, (remaining_time%3600)//60, remaining_time%60))
+
         if (epoch+1) % max(train_epoch//cfg.num_sample_epochs,1) == 0:
             with torch.no_grad():
                 resultsample = G(sample).cpu()

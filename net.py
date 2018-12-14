@@ -513,12 +513,12 @@ class Generator(nn.Module):
 
             # height of image at start of deconvolutions
             if n_dense > 0:
-                input = input.permute(0,2,3,1)
+                #input = input.permute(0,2,3,1)
                 h1 = cfg.image_height // (2**n_conv) # height = width of image going into first conv layer
                 num_filters =  c_out * (2**(n_conv-1))
                 x = self.dense_layer(input)
-                x = x.permute(0,3,1,2)
-                x = x.view(-1,h1**2 * num_filters)
+                #x = x.permute(0,3,1,2)
+                #x = x.view(-1,h1**2 * num_filters)
                 if cfg.use_batchnorm:
                     x = self.dense_bn(x)
                 x = F.leaky_relu(x)
@@ -871,15 +871,17 @@ class Encoder(nn.Module):
                 x = F.leaky_relu(x)
 
             if n_dense > 0:
-                x = x.view(self.batch_size, 1,1,-1)
+                #x = x.view(self.batch_size, 1,1,-1)
+                x = x.view(-1, self.num_dense_in)
 
                 #print("into dense: ", x.shape)
-                x = self.dense_layer(x).permute(0,3,1,2)
+                x = self.dense_layer(x)
+                #x = x.view(self.batch_size,-1)
                 if cfg.use_batchnorm:
                     x = self.dense_bn(x)
                 x = F.leaky_relu(x)
             else:
-                x = self.output_convlayer(x)
+                x = F.leaky_relu(self.output_convlayer(x))
             #print("Output: ", x.shape)
             #print("Image dim: %d, encoded dim: %d"%(input.shape[1]*input.shape[2]*input.shape[3],x.shape[1]*x.shape[2]*x.shape[3]))
             return x
