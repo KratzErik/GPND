@@ -695,7 +695,6 @@ class Discriminator(nn.Module):
             if n_dense > 0:
                 x = x.view(self.batch_size,-1)
                 for dense_i in range(n_dense):
-                    print("Into dense %d:"%dense_i, x.shape)
                     x = self.dense_layers[dense_i](x)
                     #print("After dense: ", x.shape)
                     if dense_i < n_dense-1:
