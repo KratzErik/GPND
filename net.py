@@ -519,15 +519,20 @@ class Generator(nn.Module):
                 x = self.dense_layer(input)
                 x = x.permute(0,3,1,2)
                 x = x.view(-1,h1**2 * num_filters)
-                x = self.dense_bn(x)
-                x = F.relu(x)
+                if cfg.use_batchnorm:
+                    x = self.dense_bn(x)
+                x = F.leaky_relu(x)
                 x = x.view(-1,num_filters,h1,h1)
             else:
                 x = input
             for bn, deconv in zip(self.bn_layers,self.deconv_layers):
                 if use_pool:
                     x = F.interpolate(x, scale_factor = 2, mode = 'nearest')
-                x = F.relu(bn(deconv(x)))
+                x = deconv(x)
+                if cfg.use_batchnorm:
+                    x = bn(x)
+                x = F.leaky_relu(x)
+
             if use_pool:
                 x = F.interpolate(x, scale_factor = 2, mode = 'nearest')
 
@@ -608,10 +613,13 @@ class Discriminator(nn.Module):
                 print("\tAdded conv_layer %d" % (len(self.conv_layers)+1))
                 num_dense_in =  c_1 * (2**(n_conv-1))
                 self.dense_layers = []
+                self.dense_bn = []
                 for dense_i in range(n_dense):
                     num_dense_out = n_dense_units[dense_i] if dense_i < n_dense-1 else 1
                     # Add dense layer
                     self.dense_layers.append(nn.Linear(num_dense_in,num_dense_out))
+                    if dense_i < n_dense-1:
+                        self.dense_bn.append(nn.BatchNorm1d(num_dense_out))
                     print("\tAdded output dense layer %d"%dense_i+1)
             else:
                 # Add final conv_layer:
@@ -679,6 +687,7 @@ class Discriminator(nn.Module):
                     x = bn(x)
                 if use_pool:
                     x = pool(x)
+                x = F.leaky_relu(x)
                # print("After conv: ", x.shape)
 
             if n_dense > 0:
@@ -686,6 +695,10 @@ class Discriminator(nn.Module):
                 for dense_i in range(n_dense):
                     x = self.dense_layers[dense_i](x)
                     #print("After dense: ", x.shape)
+                    if dense_i < n_dense-1:
+                        if cfg.use_batchnorm:
+                            x = self.dense_bn[dense_i](x)
+                        x = F.leaky_relu(x)
             else:
                 x = self.output_convlayer(x)
             #print("Output: ", x.shape)
@@ -772,15 +785,16 @@ class Encoder(nn.Module):
                 self.pool_layers.append(nn.MaxPool2d((2,2)))
                 print("\tAdded conv_layer %d" % (len(self.conv_layers)+1))
 
-                # Add dense layers
-                self.dense_layers = []
+                # Add dense layer
+
                 self.num_dense_in =  c_1 * cfg.image_height**2 // (2**(n_conv+1))
                 n_in = self.num_dense_in
-                for i in range(n_dense):
-                    n_out = n_dense_units[i] if i < n_dense-1 else zsize
-                    self.dense_layer = nn.Linear(n_in,n_out)
-                    n_in = n_out
-                    print("\tAdded dense layer")
+
+                n_out = n_dense_units[i] if i < n_dense-1 else zsize
+                self.dense_layer = nn.Linear(n_in,n_out)
+                self.dense_bn = nn.BatchNorm1d(n_out)
+                n_in = n_out
+                print("\tAdded dense layer")
 
             else:
                 # Add final conv_layer:
@@ -854,12 +868,16 @@ class Encoder(nn.Module):
                     x = bn(x)
                 if use_pool:
                     x = pool(x)
+                x = F.leaky_relu(x)
 
             if n_dense > 0:
                 x = x.view(self.batch_size, 1,1,-1)
 
                 #print("into dense: ", x.shape)
                 x = self.dense_layer(x).permute(0,3,1,2)
+                if cfg.use_batchnorm:
+                    x = self.dense_bn(x)
+                x = F.leaky_relu(x)
             else:
                 x = self.output_convlayer(x)
             #print("Output: ", x.shape)
@@ -883,8 +901,8 @@ class ZDiscriminator(nn.Module):
             for i in range(cfg.zd_n_layers):
                 n_out = cfg.zd_out_units[i]
                 self.layers.append(nn.Linear(n_in,n_out))
-#                if i < cfg.zd_n_layers - 1:
-#                    self.bn_layers.append(nn.BatchNorm1d(n_out))
+                if i < cfg.zd_n_layers - 1:
+                    self.bn_layers.append(nn.BatchNorm1d(n_out))
                 print("\tAdded linear layer %d: %d -> %d"%(i+1,n_in,n_out))
                 n_in = n_out
 
