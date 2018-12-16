@@ -147,4 +147,11 @@ class Configuration(object):
         out_spec = [["weather", ["rainy", "snowy", "foggy"]],["scene", "highway"],["timeofday",["daytime","dawn/dusk","night"]]]
 # Training logged at Fri, 14 Dec 2018 14:35:44 UTC
 # Total training time:	1h36m57.3s
-# Average time/epoch:	0m58.17s
+# Average time/epoch:	0m58.17sTesting started at Sun, 16 Dec 2018 01:59:49 UTC
+Results for experiment:
+Inliers: foggy
+Outliers sunny
+Percentage of outliers: 50
+	AUROC:	0.95998
+	AUPRC:	0.97968
+	Test time for percentage:	6h11m28.3s

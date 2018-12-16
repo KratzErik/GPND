@@ -15,8 +15,8 @@ class Configuration(object):
     # G: stride 
     # H: pad
 
-    dataset = "prosivic"
-    experiment_name = "AE_common_architecture_181214"
+    dataset = "dreyeve"
+    experiment_name = "GPND_common_architecture_181216"
     log_dir = './log/' + dataset + '/' + experiment_name + '/'
     export_results = True
     # Diagnostics
@@ -62,7 +62,7 @@ class Configuration(object):
         model_name = "_".join([inliers_name, architecture])
 
         batch_size = 64
-        test_batch_size = 16 # Jacobian computations require smaller batches
+        test_batch_size = 8 # Jacobian computations require smaller batches
         use_batchnorm = True
         data_div = 1
         n_train = 6785 // data_div
@@ -101,11 +101,11 @@ class Configuration(object):
         num_sample_epochs = 5
         batch_size = 64
         test_batch_size = 16 # Jacobian computations require smaller batches
-        lr_g = 0.002
-        lr_e = 0.002
-        lr_d = 0.002
-        lr_ge = 0.002
-        lr_zd = 0.002
+        lr_g = 0.001
+        lr_e = 0.001
+        lr_d = 0.001
+        lr_ge = 0.001
+        lr_zd = 0.001
         rec_loss_weight = 10
 
         # Dataset options

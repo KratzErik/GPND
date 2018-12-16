@@ -275,7 +275,7 @@ def main(folding_id, inliner_classes, total_classes, folds=5, cfg = None):
 
         sample_size = 64
         sample = torch.randn(sample_size, zsize).to(device)
-        sample = G(sample.view(-1, zsize, 1, 1)).cpu()
+        sample = G(sample.view(-1, zsize)).cpu()
         save_image(sample.view(sample_size, channels, image_height, image_width), results_dir +  'Generator_sample.png')
 
         if True:
@@ -504,7 +504,7 @@ def main(folding_id, inliner_classes, total_classes, folds=5, cfg = None):
 
             result = []
             n_batches = len(data_test_x)//batch_size
-            print("Testing %d batches"%n_batches)
+            print("Testing %d batches of size %d"%(n_batches, batch_size))
             total_time = 0
             for it in range(n_batches):
                 start_time = time.time()
