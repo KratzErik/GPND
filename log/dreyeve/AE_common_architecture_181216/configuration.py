@@ -16,7 +16,7 @@ class Configuration(object):
     # H: pad
 
     dataset = "dreyeve"
-    experiment_name = "GPND_common_architecture_181216"
+    experiment_name = "AE_common_architecture_181216"
     log_dir = './log/' + dataset + '/' + experiment_name + '/'
     export_results = True
     # Diagnostics
@@ -78,7 +78,7 @@ class Configuration(object):
 
 
     elif dataset == "dreyeve":
-        training_mode = "GPND_default"
+        training_mode = "autoencoder"
         architecture = "0_6_1_16_512_5_2_2"
         inliers_name = "sunny_highway"
         outliers_name = "rainy_highway"
@@ -145,3 +145,6 @@ class Configuration(object):
         out_filenames = loadbdd100k.get_namelist_from_file(out_file)
         norm_spec = [["weather", ["clear","partly cloudy", "overcast"]],["scene", "highway"],["timeofday", "daytime"]]
         out_spec = [["weather", ["rainy", "snowy", "foggy"]],["scene", "highway"],["timeofday",["daytime","dawn/dusk","night"]]]
+# Training logged at Sun, 16 Dec 2018 13:49:14 UTC
+# Total training time:	3h41m32.4s
+# Average time/epoch:	0m26.58s
