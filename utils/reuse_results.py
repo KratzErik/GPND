@@ -43,13 +43,20 @@ def get_performance_metrics(test_dir = cfg.log_dir + "test/", experiment_name = 
     return output_str
 
 def export_scores(test_dir = cfg.log_dir + "test/", experiment_name = cfg.experiment_name, dataset = cfg.dataset):
+
+    if cfg.training_mode == "GPND_default":
+        alg_name = "GPND"
+    elif cfg.training_mode.lower() == "autoencoder":
+        alg_name = "GPND_AE"
+
     result = load_results(test_dir, experiment_name)[0][1]
     labels = [x[0] for x in result]
     scores = [x[1] for x in result]
-    pickle.dump([scores,labels],open('/home/exjobb_resultat/data/%s_GPND.pkl'%dataset,'wb'))
-    print("Exported results to '/home/exjobb_resultat/data/%s_GPND.pkl'"%dataset)
+    pickle.dump([scores,labels],open('/home/exjobb_resultat/data/%s_%s.pkl'%(dataset,alg_name),'wb'))
+    print("Exported results to '/home/exjobb_resultat/data/%s_%s.pkl'"%(dataset,alg_name))
     # Update data source dict with experiment name
     common_results_dict = pickle.load(open('/home/exjobb_resultat/data/name_dict.pkl','rb'))
-    common_results_dict[dataset]["GPND"] == experiment_name
+
+    common_results_dict[dataset][alg_name] = experiment_name
     pickle.dump(common_results_dict,open('/home/exjobb_resultat/data/name_dict.pkl','wb'), protocol=2)
-    print("Updated entry ['%s']['GPND'] = '%s' in file /home/exjobb_resultat/data/name_dict.pkl"%(dataset,experiment_name))
+    print("Updated entry ['%s']['%s'] = '%s' in file /home/exjobb_resultat/data/name_dict.pkl"%(dataset,alg_name,experiment_name))

@@ -155,3 +155,51 @@ Percentage of outliers: 50
 	AUROC:	0.90690
 	AUPRC:	0.84729
 	Test time for percentage:	6h11m33.5s
+Testing started at Sun, 16 Dec 2018 14:35:16 UTC
+Results for experiment:
+Inliers: foggy
+Outliers sunny
+Percentage of outliers: 50
+	AUROC:	0.90690
+	AUPRC:	0.84729
+	Test time for percentage:	0h0m0.0s
+Testing started at Sun, 16 Dec 2018 14:35:49 UTC
+Results for experiment:
+Inliers: foggy
+Outliers sunny
+Percentage of outliers: 50
+	AUROC:	0.90690
+	AUPRC:	0.84729
+	Test time for percentage:	0h0m0.0s
+Testing started at Sun, 16 Dec 2018 14:39:02 UTC
+Results for experiment:
+Inliers: foggy
+Outliers sunny
+Percentage of outliers: 50
+	AUROC:	0.90690
+	AUPRC:	0.84729
+	Test time for percentage:	0h0m0.0s
+Testing started at Sun, 16 Dec 2018 14:42:37 UTC
+Results for experiment:
+Inliers: foggy
+Outliers sunny
+Percentage of outliers: 50
+	AUROC:	0.90690
+	AUPRC:	0.84729
+	Test time for percentage:	0h0m0.0s
+Testing started at Sun, 16 Dec 2018 14:43:05 UTC
+Results for experiment:
+Inliers: foggy
+Outliers sunny
+Percentage of outliers: 50
+	AUROC:	0.90690
+	AUPRC:	0.84729
+	Test time for percentage:	0h0m0.0s
+Testing started at Sun, 16 Dec 2018 14:44:06 UTC
+Results for experiment:
+Inliers: foggy
+Outliers sunny
+Percentage of outliers: 50
+	AUROC:	0.90690
+	AUPRC:	0.84729
+	Test time for percentage:	0h0m0.0s

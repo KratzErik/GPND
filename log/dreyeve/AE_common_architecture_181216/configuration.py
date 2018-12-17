@@ -148,3 +148,19 @@ class Configuration(object):
 # Training logged at Sun, 16 Dec 2018 13:49:14 UTC
 # Total training time:	3h41m32.4s
 # Average time/epoch:	0m26.58s
+Testing started at Sun, 16 Dec 2018 14:50:46 UTC
+Results for experiment:
+Inliers: rainy_highway
+Outliers sunny_highway
+Percentage of outliers: 50
+	AUROC:	0.57376
+	AUPRC:	0.57120
+	Test time for percentage:	7h27m31.5s
+Testing started at Mon, 17 Dec 2018 06:15:36 UTC
+Results for experiment:
+Inliers: rainy_highway
+Outliers sunny_highway
+Percentage of outliers: 50
+	AUROC:	0.57376
+	AUPRC:	0.57120
+	Test time for percentage:	0h0m0.0s

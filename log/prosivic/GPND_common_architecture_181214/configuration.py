@@ -155,3 +155,27 @@ Percentage of outliers: 50
 	AUROC:	0.95998
 	AUPRC:	0.97968
 	Test time for percentage:	6h11m28.3s
+Testing started at Sun, 16 Dec 2018 14:36:36 UTC
+Results for experiment:
+Inliers: foggy
+Outliers sunny
+Percentage of outliers: 50
+	AUROC:	0.95998
+	AUPRC:	0.97968
+	Test time for percentage:	0h0m0.0s
+Testing started at Sun, 16 Dec 2018 14:38:19 UTC
+Results for experiment:
+Inliers: foggy
+Outliers sunny
+Percentage of outliers: 50
+	AUROC:	0.95998
+	AUPRC:	0.97968
+	Test time for percentage:	0h0m0.0s
+Testing started at Sun, 16 Dec 2018 14:43:43 UTC
+Results for experiment:
+Inliers: foggy
+Outliers sunny
+Percentage of outliers: 50
+	AUROC:	0.95998
+	AUPRC:	0.97968
+	Test time for percentage:	0h0m0.0s

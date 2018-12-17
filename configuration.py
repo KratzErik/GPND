@@ -16,7 +16,7 @@ class Configuration(object):
     # H: pad
 
     dataset = "dreyeve"
-    experiment_name = "GPND_common_architecture_181216"
+    experiment_name = "GPND_common_architecture_181217"
     log_dir = './log/' + dataset + '/' + experiment_name + '/'
     export_results = True
     # Diagnostics
@@ -33,7 +33,7 @@ class Configuration(object):
 
     # dataset specific options below
     if dataset == "prosivic":
-        training_mode = "autoencoder" # Options: "autoencoder", "GPND_default"
+        training_mode = ("autoencoder","GPND_default")[0] # Options: "autoencoder", "GPND_default"
         # Hyperparameters
         betas = (0.5,0.999) # adam solver standard is (0.5, 0.999), GPND standard is (0.9,0.999)
         n_train_epochs = 500
@@ -78,11 +78,11 @@ class Configuration(object):
 
 
     elif dataset == "dreyeve":
-        training_mode = "GPND_default"
+        training_mode = ("autoencoder","GPND_default")[1]
         architecture = "0_6_1_16_512_5_2_2"
         inliers_name = "sunny_highway"
         outliers_name = "rainy_highway"
-        n_dense_units = [256]
+        n_dense_units = None
         zd_n_layers = 3
         zd_out_units = [256,256,1]
 
@@ -100,13 +100,14 @@ class Configuration(object):
         lr_drop_factor = 10
         num_sample_epochs = 5
         batch_size = 64
-        test_batch_size = 16 # Jacobian computations require smaller batches
+        test_batch_size = 8 # Jacobian computations require smaller batches
         lr_g = 0.001
         lr_e = 0.001
         lr_d = 0.001
         lr_ge = 0.001
         lr_zd = 0.001
-        rec_loss_weight = 10
+        rec_loss_weight = 1
+        weight_g_loss = 1
 
         # Dataset options
         data_div = 1
@@ -121,7 +122,6 @@ class Configuration(object):
         test_in_folder =  "../weather_detection_data/dreyeve/sunny_highway_countryside_morning_evening_vs_rainy_highway_countryside_morning_evening/test/in/"
         test_out_folder = "../weather_detection_data/dreyeve/sunny_highway_countryside_morning_evening_vs_rainy_highway_countryside_morning_evening/test/out/"
 
-    
     elif dataset == "mnist":
         batch_size = 128
         test_batch_size = batch_size # Jacobian computations require smaller batches
