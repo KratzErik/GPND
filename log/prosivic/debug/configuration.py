@@ -19,10 +19,15 @@ class Configuration(object):
     experiment_name = "debug"
     log_dir = './log/' + dataset + '/' + experiment_name + '/'
     export_results = True
+
     # Diagnostics
     sample_size = 16
     sample_rows = 4 # nrow to save_image grid
-    loss = "l2"
+
+    # Train options
+    loss = "bce"
+    weight_init = ("normal", "xavier_normal", "xavier_uniform")[1]
+
     # Testing options
     nd_original_GPND = False
     percentages = [50] # percentage of outliers to use during testing
@@ -145,6 +150,6 @@ class Configuration(object):
         out_filenames = loadbdd100k.get_namelist_from_file(out_file)
         norm_spec = [["weather", ["clear","partly cloudy", "overcast"]],["scene", "highway"],["timeofday", "daytime"]]
         out_spec = [["weather", ["rainy", "snowy", "foggy"]],["scene", "highway"],["timeofday",["daytime","dawn/dusk","night"]]]
-# Training logged at Tue, 18 Dec 2018 14:44:49 UTC
-# Total training time:	0h5m47.9s
+# Training logged at Tue, 18 Dec 2018 15:31:48 UTC
+# Total training time:	0h5m48.5s
 # Average time/epoch:	0m0.70s

@@ -25,8 +25,8 @@ class Configuration(object):
     sample_rows = 4 # nrow to save_image grid
 
     # Train options
-    loss = "l2"
-    weight_init = ("normal", "xavier")[1]
+    loss = "bce"
+    weight_init = ("normal", "xavier_normal", "xavier_uniform")[1]
 
     # Testing options
     nd_original_GPND = False

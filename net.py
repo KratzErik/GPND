@@ -341,7 +341,7 @@ class VAE(nn.Module):
         for m in self._modules:
             if cfg.weight_init == 'normal':
                 normal_init(self._modules[m], mean, std)
-            elif cfg.weight_init == 'xavier':
+            elif 'xavier' in cfg.weight_init:
                 xavier_init(self._modules[m])
 
 
@@ -472,7 +472,7 @@ class Generator(nn.Module):
         for m in self._modules:
             if cfg.weight_init == 'normal':
                 normal_init(self._modules[m], mean, std)
-            elif cfg.weight_init == 'xavier':
+            elif 'xavier' in cfg.weight_init:
                 xavier_init(self._modules[m])
 
     # forward method
@@ -642,7 +642,7 @@ class Discriminator(nn.Module):
         for m in self._modules:
             if cfg.weight_init == 'normal':
                 normal_init(self._modules[m], mean, std)
-            elif cfg.weight_init == 'xavier':
+            elif 'xavier' in cfg.weight_init:
                 xavier_init(self._modules[m])
 
     # forward method
@@ -820,7 +820,7 @@ class Encoder(nn.Module):
         for m in self._modules:
             if cfg.weight_init == 'normal':
                 normal_init(self._modules[m], mean, std)
-            elif cfg.weight_init == 'xavier':
+            elif 'xavier' in cfg.weight_init:
                 xavier_init(self._modules[m])
 
     # forward method
@@ -929,7 +929,7 @@ class ZDiscriminator(nn.Module):
         for m in self._modules:
             if cfg.weight_init == 'normal':
                 normal_init(self._modules[m], mean, std)
-            elif cfg.weight_init == 'xavier':
+            elif 'xavier' in cfg.weight_init:
                 xavier_init(self._modules[m])
 
     # forward method
@@ -960,7 +960,7 @@ class ZDiscriminator_mergebatch(nn.Module):
         for m in self._modules:
             if cfg.weight_init == 'normal':
                 normal_init(self._modules[m], mean, std)
-            elif cfg.weight_init == 'xavier':
+            elif 'xavier' in cfg.weight_init:
                 xavier_init(self._modules[m])
 
     # forward method
@@ -978,5 +978,9 @@ def normal_init(m, mean, std):
 
 def xavier_init(m):
     if isinstance(m, nn.ConvTranspose2d) or isinstance(m, nn.Conv2d) or isinstance(m, nn.Linear):
-        nn.init.xavier_uniform(m.weight)
-         m.bias.data.zero_()
+        if cfg.weight_init == "xavier_uniform":
+            nn.init.xavier_uniform(m.weight, gain=nn.init.calculate_gain('leaky_relu'))
+        elif cfg.weight_init == "xavier_normal":
+            nn.init.xavier_uniform(m.weight, gain=nn.init.calculate_gain('leaky_relu'))
+
+        m.bias.data.zero_()
