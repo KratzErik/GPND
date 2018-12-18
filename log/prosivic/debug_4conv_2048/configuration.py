@@ -16,7 +16,7 @@ class Configuration(object):
     # H: pad
 
     dataset = "prosivic"
-    experiment_name = "debug_4conv"
+    experiment_name = "debug_4conv_2048"
     log_dir = './log/' + dataset + '/' + experiment_name + '/'
     export_results = True
 
@@ -52,7 +52,7 @@ class Configuration(object):
         lr_zd = 0.001
         rec_loss_weight = 1
         weight_g_loss = 1
-        architecture = "0_5_1_16_512_4_2_1"
+        architecture = "0_2_1_16_512_4_2_1"
         #architecture = "0_5_1_16_512_5_2_2"
         n_dense_units = None
         inliers_name = "sunny"
@@ -150,3 +150,6 @@ class Configuration(object):
         out_filenames = loadbdd100k.get_namelist_from_file(out_file)
         norm_spec = [["weather", ["clear","partly cloudy", "overcast"]],["scene", "highway"],["timeofday", "daytime"]]
         out_spec = [["weather", ["rainy", "snowy", "foggy"]],["scene", "highway"],["timeofday",["daytime","dawn/dusk","night"]]]
+# Training logged at Tue, 18 Dec 2018 16:08:53 UTC
+# Total training time:	0h3m55.8s
+# Average time/epoch:	0m0.47s

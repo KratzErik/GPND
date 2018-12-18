@@ -803,7 +803,7 @@ class Encoder(nn.Module):
                 self.num_dense_in =  c_1 * cfg.image_height**2 // (2**(n_conv+1))
                 n_in = self.num_dense_in
 
-                n_out = n_dense_units[i] if i < n_dense-1 else zsize
+                n_out = zsize
                 self.dense_layer = nn.Linear(n_in,n_out)
                 self.dense_bn = nn.BatchNorm1d(n_out)
                 n_in = n_out
