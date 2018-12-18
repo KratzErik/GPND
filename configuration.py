@@ -15,7 +15,7 @@ class Configuration(object):
     # G: stride 
     # H: pad
 
-    dataset = "dreyeve"
+    dataset = "prosivic"
     experiment_name = "GPND_common_architecture_181217"
     log_dir = './log/' + dataset + '/' + experiment_name + '/'
     export_results = True
@@ -33,7 +33,7 @@ class Configuration(object):
 
     # dataset specific options below
     if dataset == "prosivic":
-        training_mode = ("autoencoder","GPND_default")[0] # Options: "autoencoder", "GPND_default"
+        training_mode = ("autoencoder","GPND_default")[1] # Options: "autoencoder", "GPND_default"
         # Hyperparameters
         betas = (0.5,0.999) # adam solver standard is (0.5, 0.999), GPND standard is (0.9,0.999)
         n_train_epochs = 500
@@ -98,7 +98,7 @@ class Configuration(object):
         n_train_epochs = 500
         n_epochs_between_lr_change = int(n_train_epochs * 1/2)
         lr_drop_factor = 10
-        num_sample_epochs = 5
+        num_sample_epochs = 10
         batch_size = 64
         test_batch_size = 8 # Jacobian computations require smaller batches
         lr_g = 0.001
