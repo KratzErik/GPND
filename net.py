@@ -326,7 +326,7 @@ class VAE(nn.Module):
             if use_pool:
                 x = F.interpolate(x, scale_factor = 2, mode = 'nearest')
 
-            x = tanh(self.output_layer(x))*0.5 + 0.5
+            x = sigmoid(self.output_layer(x))
 
             return x
 
@@ -537,7 +537,7 @@ class Generator(nn.Module):
             if use_pool:
                 x = F.interpolate(x, scale_factor = 2, mode = 'nearest')
 
-            x = tanh(self.output_layer(x))*0.5 + 0.5
+            x = sigmoid(self.output_layer(x))
             return x
 
 class Discriminator(nn.Module):
