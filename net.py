@@ -979,4 +979,4 @@ def normal_init(m, mean, std):
 def xavier_init(m):
     if isinstance(m, nn.ConvTranspose2d) or isinstance(m, nn.Conv2d) or isinstance(m, nn.Linear):
         nn.init.xavier_uniform(m.weight)
-        nn.init.xavier_uniform(m.bias)
+         m.bias.data.zero_()
