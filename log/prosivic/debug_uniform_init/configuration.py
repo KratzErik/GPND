@@ -150,3 +150,6 @@ class Configuration(object):
         out_filenames = loadbdd100k.get_namelist_from_file(out_file)
         norm_spec = [["weather", ["clear","partly cloudy", "overcast"]],["scene", "highway"],["timeofday", "daytime"]]
         out_spec = [["weather", ["rainy", "snowy", "foggy"]],["scene", "highway"],["timeofday",["daytime","dawn/dusk","night"]]]
+# Training logged at Tue, 18 Dec 2018 15:43:23 UTC
+# Total training time:	0h5m48.7s
+# Average time/epoch:	0m0.70s
