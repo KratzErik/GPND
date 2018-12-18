@@ -22,7 +22,7 @@ class Configuration(object):
     # Diagnostics
     sample_size = 16
     sample_rows = 4 # nrow to save_image grid
-    loss = "bce"
+    loss = "l2"
     # Testing options
     nd_original_GPND = False
     percentages = [50] # percentage of outliers to use during testing
@@ -63,7 +63,7 @@ class Configuration(object):
 
         test_batch_size = 8 # Jacobian computations require smaller batches
         use_batchnorm = True
-        data_div = 50
+        data_div = 30
         n_train = 6785 // data_div
         n_val = 840 // data_div
         n_test = 500*2 // data_div # for GPND algorithm, the test set is split into val and test set during testing, since the valset contains outliers in order to compute an optimal threshold. This is used to compute some of the output values, but not AUPRIN or AUROC, which are threshold independent.
@@ -145,6 +145,6 @@ class Configuration(object):
         out_filenames = loadbdd100k.get_namelist_from_file(out_file)
         norm_spec = [["weather", ["clear","partly cloudy", "overcast"]],["scene", "highway"],["timeofday", "daytime"]]
         out_spec = [["weather", ["rainy", "snowy", "foggy"]],["scene", "highway"],["timeofday",["daytime","dawn/dusk","night"]]]
-# Training logged at Tue, 18 Dec 2018 14:04:13 UTC
-# Total training time:	0h0m47.8s
-# Average time/epoch:	0m0.48s
+# Training logged at Tue, 18 Dec 2018 14:33:05 UTC
+# Total training time:	0h1m12.5s
+# Average time/epoch:	0m0.72s
