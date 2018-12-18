@@ -16,7 +16,7 @@ class Configuration(object):
     # H: pad
 
     dataset = "prosivic"
-    experiment_name = "GPND_common_architecture_181217"
+    experiment_name = "debug"
     log_dir = './log/' + dataset + '/' + experiment_name + '/'
     export_results = True
     # Diagnostics
@@ -64,7 +64,7 @@ class Configuration(object):
         batch_size = 64
         test_batch_size = 8 # Jacobian computations require smaller batches
         use_batchnorm = True
-        data_div = 1
+        data_div = 60
         n_train = 6785 // data_div
         n_val = 840 // data_div
         n_test = 500*2 // data_div # for GPND algorithm, the test set is split into val and test set during testing, since the valset contains outliers in order to compute an optimal threshold. This is used to compute some of the output values, but not AUPRIN or AUROC, which are threshold independent.

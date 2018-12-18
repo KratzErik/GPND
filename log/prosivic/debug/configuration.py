@@ -33,10 +33,10 @@ class Configuration(object):
 
     # dataset specific options below
     if dataset == "prosivic":
-        training_mode = "GPND_default" # Options: "autoencoder", "GPND_default"
+        training_mode = ("autoencoder","GPND_default")[1] # Options: "autoencoder", "GPND_default"
         # Hyperparameters
         betas = (0.5,0.999) # adam solver standard is (0.5, 0.999), GPND standard is (0.9,0.999)
-        n_train_epochs = 100
+        n_train_epochs = 500
         n_epochs_between_lr_change = int(n_train_epochs * 1/2)
         lr_drop_factor = 10
         num_sample_epochs = 10
@@ -62,9 +62,9 @@ class Configuration(object):
         model_name = "_".join([inliers_name, architecture])
 
         batch_size = 64
-        test_batch_size = 16 # Jacobian computations require smaller batches
+        test_batch_size = 8 # Jacobian computations require smaller batches
         use_batchnorm = True
-        data_div = 50
+        data_div = 60
         n_train = 6785 // data_div
         n_val = 840 // data_div
         n_test = 500*2 // data_div # for GPND algorithm, the test set is split into val and test set during testing, since the valset contains outliers in order to compute an optimal threshold. This is used to compute some of the output values, but not AUPRIN or AUROC, which are threshold independent.
@@ -78,11 +78,11 @@ class Configuration(object):
 
 
     elif dataset == "dreyeve":
-        training_mode = "autoencoder"
+        training_mode = ("autoencoder","GPND_default")[1]
         architecture = "0_6_1_16_512_5_2_2"
         inliers_name = "sunny_highway"
         outliers_name = "rainy_highway"
-        n_dense_units = [256]
+        n_dense_units = None
         zd_n_layers = 3
         zd_out_units = [256,256,1]
 
@@ -98,15 +98,16 @@ class Configuration(object):
         n_train_epochs = 500
         n_epochs_between_lr_change = int(n_train_epochs * 1/2)
         lr_drop_factor = 10
-        num_sample_epochs = 5
+        num_sample_epochs = 10
         batch_size = 64
-        test_batch_size = 16 # Jacobian computations require smaller batches
-        lr_g = 0.002
-        lr_e = 0.002
-        lr_d = 0.002
-        lr_ge = 0.002
-        lr_zd = 0.002
-        rec_loss_weight = 10
+        test_batch_size = 8 # Jacobian computations require smaller batches
+        lr_g = 0.001
+        lr_e = 0.001
+        lr_d = 0.001
+        lr_ge = 0.001
+        lr_zd = 0.001
+        rec_loss_weight = 1
+        weight_g_loss = 1
 
         # Dataset options
         data_div = 1
@@ -121,7 +122,6 @@ class Configuration(object):
         test_in_folder =  "../weather_detection_data/dreyeve/sunny_highway_countryside_morning_evening_vs_rainy_highway_countryside_morning_evening/test/in/"
         test_out_folder = "../weather_detection_data/dreyeve/sunny_highway_countryside_morning_evening_vs_rainy_highway_countryside_morning_evening/test/out/"
 
-    
     elif dataset == "mnist":
         batch_size = 128
         test_batch_size = batch_size # Jacobian computations require smaller batches
@@ -145,6 +145,6 @@ class Configuration(object):
         out_filenames = loadbdd100k.get_namelist_from_file(out_file)
         norm_spec = [["weather", ["clear","partly cloudy", "overcast"]],["scene", "highway"],["timeofday", "daytime"]]
         out_spec = [["weather", ["rainy", "snowy", "foggy"]],["scene", "highway"],["timeofday",["daytime","dawn/dusk","night"]]]
-# Training logged at Fri, 14 Dec 2018 12:52:04 UTC
-# Total training time:	0h1m43.1s
-# Average time/epoch:	0m1.03s
+# Training logged at Tue, 18 Dec 2018 13:34:27 UTC
+# Total training time:	0h5m23.0s
+# Average time/epoch:	0m0.65s
