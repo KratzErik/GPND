@@ -533,11 +533,13 @@ class Generator(nn.Module):
                 if cfg.use_batchnorm:
                     x = bn(x)
                 x = F.leaky_relu(x)
+                #print("x: ",x.shape)
 
             if use_pool:
                 x = F.interpolate(x, scale_factor = 2, mode = 'nearest')
 
             x = sigmoid(self.output_layer(x))
+            #print("G() output: ", x.shape)
             return x
 
 class Discriminator(nn.Module):
@@ -852,8 +854,8 @@ class Encoder(nn.Module):
             self.batch_size = input.shape[0]
             x = self.input_layer(input)
 
-#            print("input: ",input.shape)
-#            print("x: ",x.shape)
+            #print("input: ",input.shape)
+            #print("x: ",x.shape)
 
             if cfg.use_batchnorm:
                 x = self.input_bn(x)

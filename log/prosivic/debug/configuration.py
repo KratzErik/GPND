@@ -33,10 +33,10 @@ class Configuration(object):
 
     # dataset specific options below
     if dataset == "prosivic":
-        training_mode = ("autoencoder","GPND_default")[1] # Options: "autoencoder", "GPND_default"
+        training_mode = ("autoencoder","GPND_default")[0] # Options: "autoencoder", "GPND_default"
         # Hyperparameters
         betas = (0.5,0.999) # adam solver standard is (0.5, 0.999), GPND standard is (0.9,0.999)
-        n_train_epochs = 500
+        n_train_epochs = 100
         n_epochs_between_lr_change = int(n_train_epochs * 1/2)
         lr_drop_factor = 10
         num_sample_epochs = 10
@@ -61,14 +61,14 @@ class Configuration(object):
         channels = 3
         model_name = "_".join([inliers_name, architecture])
 
-        batch_size = 64
         test_batch_size = 8 # Jacobian computations require smaller batches
         use_batchnorm = True
-        data_div = 60
+        data_div = 50
         n_train = 6785 // data_div
         n_val = 840 // data_div
         n_test = 500*2 // data_div # for GPND algorithm, the test set is split into val and test set during testing, since the valset contains outliers in order to compute an optimal threshold. This is used to compute some of the output values, but not AUPRIN or AUROC, which are threshold independent.
         n_test_in = 500 // data_div
+        batch_size = 64
 
         img_folder =   "../weather_detection_data/prosivic/"
         train_folder = "../weather_detection_data/prosivic/train/"
@@ -145,6 +145,6 @@ class Configuration(object):
         out_filenames = loadbdd100k.get_namelist_from_file(out_file)
         norm_spec = [["weather", ["clear","partly cloudy", "overcast"]],["scene", "highway"],["timeofday", "daytime"]]
         out_spec = [["weather", ["rainy", "snowy", "foggy"]],["scene", "highway"],["timeofday",["daytime","dawn/dusk","night"]]]
-# Training logged at Tue, 18 Dec 2018 13:34:27 UTC
-# Total training time:	0h5m23.0s
-# Average time/epoch:	0m0.65s
+# Training logged at Tue, 18 Dec 2018 14:04:13 UTC
+# Total training time:	0h0m47.8s
+# Average time/epoch:	0m0.48s

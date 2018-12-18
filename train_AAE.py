@@ -240,6 +240,9 @@ def main(folding_id, inliner_classes, total_classes, folds=5, cfg = None):
         y_real_z = torch.ones(1 if zd_merge else batch_size)
         y_fake_z = torch.zeros(1 if zd_merge else batch_size)
 
+    def shuffle(X):
+        np.take(X, np.random.permutation(X.shape[0]), axis=0, out=X)
+
     # Save losses for diagnostics plots
     Gtrain_losses_diag = []
     Etrain_losses_diag = []
@@ -266,9 +269,6 @@ def main(folding_id, inliner_classes, total_classes, folds=5, cfg = None):
             ZDtrain_loss = 0
 
         epoch_start_time = time.time()
-
-        def shuffle(X):
-            np.take(X, np.random.permutation(X.shape[0]), axis=0, out=X)
 
         shuffle(data_train_x)
 
