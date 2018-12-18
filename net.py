@@ -339,7 +339,10 @@ class VAE(nn.Module):
 
     def weight_init(self, mean, std):
         for m in self._modules:
-            normal_init(self._modules[m], mean, std)
+            if cfg.weight_init == 'normal':
+                normal_init(self._modules[m], mean, std)
+            elif cfg.weight_init == 'xavier':
+                xavier_init(self._modules[m])
 
 
 class Generator(nn.Module):
@@ -464,10 +467,13 @@ class Generator(nn.Module):
             self.output_layer = nn.ConvTranspose2d(num_filters*2, cfg.channels, ksize, stride, pad, output_padding = outpad)
             print("\tAdded deconv_layer %d (reconstruction)" % (len(self.deconv_layers)+1))
 
-    # weight_init
+    
     def weight_init(self, mean, std):
         for m in self._modules:
-            normal_init(self._modules[m], mean, std)
+            if cfg.weight_init == 'normal':
+                normal_init(self._modules[m], mean, std)
+            elif cfg.weight_init == 'xavier':
+                xavier_init(self._modules[m])
 
     # forward method
     def forward(self, input):#, label):
@@ -631,10 +637,13 @@ class Discriminator(nn.Module):
                 self.output_convlayer = nn.Conv2d(num_filters//2, 1, h, 1, 0)
                 print("\tAdded conv_layer %d (output)" % (len(self.conv_layers)+2))
 
-    # weight_init
+    
     def weight_init(self, mean, std):
         for m in self._modules:
-            normal_init(self._modules[m], mean, std)
+            if cfg.weight_init == 'normal':
+                normal_init(self._modules[m], mean, std)
+            elif cfg.weight_init == 'xavier':
+                xavier_init(self._modules[m])
 
     # forward method
     def forward(self, input):
@@ -806,10 +815,13 @@ class Encoder(nn.Module):
                 self.output_convlayer = nn.Conv2d(num_filters//2, zsize, h, 1, 0)
                 print("\tAdded conv_layer %d (encoding)" % (len(self.conv_layers)+2))
 
-    # weight_init
+    
     def weight_init(self, mean, std):
         for m in self._modules:
-            normal_init(self._modules[m], mean, std)
+            if cfg.weight_init == 'normal':
+                normal_init(self._modules[m], mean, std)
+            elif cfg.weight_init == 'xavier':
+                xavier_init(self._modules[m])
 
     # forward method
     def forward(self, input):
@@ -912,10 +924,13 @@ class ZDiscriminator(nn.Module):
                 print("\tAdded linear layer %d: %d -> %d"%(i+1,n_in,n_out))
                 n_in = n_out
 
-    # weight_init
+    
     def weight_init(self, mean, std):
         for m in self._modules:
-            normal_init(self._modules[m], mean, std)
+            if cfg.weight_init == 'normal':
+                normal_init(self._modules[m], mean, std)
+            elif cfg.weight_init == 'xavier':
+                xavier_init(self._modules[m])
 
     # forward method
     def forward(self, x):
@@ -940,10 +955,13 @@ class ZDiscriminator_mergebatch(nn.Module):
         self.linear2 = nn.Linear(d * batchSize, d)
         self.linear3 = nn.Linear(d, 1)
 
-    # weight_init
+    
     def weight_init(self, mean, std):
         for m in self._modules:
-            normal_init(self._modules[m], mean, std)
+            if cfg.weight_init == 'normal':
+                normal_init(self._modules[m], mean, std)
+            elif cfg.weight_init == 'xavier':
+                xavier_init(self._modules[m])
 
     # forward method
     def forward(self, x):
@@ -957,3 +975,8 @@ def normal_init(m, mean, std):
     if isinstance(m, nn.ConvTranspose2d) or isinstance(m, nn.Conv2d) or isinstance(m, nn.Linear):
         m.weight.data.normal_(mean, std)
         m.bias.data.zero_()
+
+def xavier_init(m):
+    if isinstance(m, nn.ConvTranspose2d) or isinstance(m, nn.Conv2d) or isinstance(m, nn.Linear):
+        nn.init.xavier_uniform(m.weight)
+        nn.init.xavier_uniform(m.bias)

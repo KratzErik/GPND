@@ -19,10 +19,15 @@ class Configuration(object):
     experiment_name = "debug"
     log_dir = './log/' + dataset + '/' + experiment_name + '/'
     export_results = True
+
     # Diagnostics
     sample_size = 16
     sample_rows = 4 # nrow to save_image grid
+
+    # Train options
     loss = "l2"
+    weight_init = ("normal", "xavier")[1]
+
     # Testing options
     nd_original_GPND = False
     percentages = [50] # percentage of outliers to use during testing
