@@ -36,7 +36,7 @@ class Configuration(object):
         training_mode = ("autoencoder","GPND_default")[0] # Options: "autoencoder", "GPND_default"
         # Hyperparameters
         betas = (0.5,0.999) # adam solver standard is (0.5, 0.999), GPND standard is (0.9,0.999)
-        n_train_epochs = 100
+        n_train_epochs = 500
         n_epochs_between_lr_change = int(n_train_epochs * 1/2)
         lr_drop_factor = 10
         num_sample_epochs = 10
@@ -145,6 +145,6 @@ class Configuration(object):
         out_filenames = loadbdd100k.get_namelist_from_file(out_file)
         norm_spec = [["weather", ["clear","partly cloudy", "overcast"]],["scene", "highway"],["timeofday", "daytime"]]
         out_spec = [["weather", ["rainy", "snowy", "foggy"]],["scene", "highway"],["timeofday",["daytime","dawn/dusk","night"]]]
-# Training logged at Tue, 18 Dec 2018 14:33:05 UTC
-# Total training time:	0h1m12.5s
-# Average time/epoch:	0m0.72s
+# Training logged at Tue, 18 Dec 2018 14:44:49 UTC
+# Total training time:	0h5m47.9s
+# Average time/epoch:	0m0.70s

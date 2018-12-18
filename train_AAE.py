@@ -254,8 +254,8 @@ def main(folding_id, inliner_classes, total_classes, folds=5, cfg = None):
     sample = torch.randn(cfg.sample_size, zsize).view(-1, zsize)
     total_time = 0
     for epoch in range(train_epoch):
-        #G.train()
-        #E.train()
+        G.train()
+        E.train()
         if cfg.training_mode == "GPND_default":
             D.train()
             ZD.train()
@@ -372,8 +372,6 @@ def main(folding_id, inliner_classes, total_classes, folds=5, cfg = None):
                 Etrain_loss  += E_loss.item()
 
             else: # only autoencoder training
-                G.train()
-                E.train()
                 E.zero_grad()
                 G.zero_grad()
 

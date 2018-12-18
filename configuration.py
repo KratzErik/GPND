@@ -36,7 +36,7 @@ class Configuration(object):
         training_mode = ("autoencoder","GPND_default")[0] # Options: "autoencoder", "GPND_default"
         # Hyperparameters
         betas = (0.5,0.999) # adam solver standard is (0.5, 0.999), GPND standard is (0.9,0.999)
-        n_train_epochs = 100
+        n_train_epochs = 500
         n_epochs_between_lr_change = int(n_train_epochs * 1/2)
         lr_drop_factor = 10
         num_sample_epochs = 10
