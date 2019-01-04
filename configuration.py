@@ -19,6 +19,8 @@ class Configuration(object):
     experiment_name = "debug_4conv"
     log_dir = './log/' + dataset + '/' + experiment_name + '/'
     export_results = True
+    test_name = None # If you want to run several test sets for same trained model, specify a test name to store results separately
+
 
     # Diagnostics
     sample_size = 16

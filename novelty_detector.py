@@ -125,7 +125,12 @@ def main(folding_id, inliner_classes, total_classes, folds=5, cfg = None):
 
     perform_tests = False
     for p in cfg.percentages:
-        if not os.path.exists(results_dir + 'result_p%d.pkl'%(p)):
+        if cfg.test_name is None:
+            wanted_result_name = results_dir + 'result_p%d.pkl'%(p)
+        else:
+            wanted_result_name = results_dir + 'result_%s_p%d.pkl'%(cfg.test_name,p)
+
+        if not os.path.exists(wanted_result_name):
             print("Result not found for p = %d"%p)
             perform_tests= True
         else:
@@ -582,7 +587,11 @@ def main(folding_id, inliner_classes, total_classes, folds=5, cfg = None):
                 auc = 0
 
             # Pickle results, they are then extracted by other function to produce metrics
-            with open(results_dir + 'result_p%d.pkl'%(percentage), 'wb') as output:
+            if cfg.test_name is None:
+                results_path = results_dir + 'result_p%d.pkl'%(percentage)
+            else:
+                results_path = results_dir + 'result_%s_p%d.pkl'%(cfg.test_name,percentage)
+            with open(results_path, 'wb') as output:
                 pickle.dump(result, output)
         
             if cfg.nd_original_GPND:
@@ -713,13 +722,13 @@ def main(folding_id, inliner_classes, total_classes, folds=5, cfg = None):
             if not os.path.exists(results_dir + 'result_p%d.pkl'%(p)):
                 _, percentage_time = test(data_test,p)
                 total_time.append(percentage_time)
-        else:
-            total_time.append(0)
-            print("Result already found: p = %d"%p)
+            else:
+                total_time.append(0)
+                print("Result already found: p = %d"%p)
 
         log.append("Results for experiment:")
         log.append("Inliers: %s"%cfg.outliers_name)
-        log.append("Outliers %s"%cfg.inliers_name)
+        log.append("Outliers: %s"%cfg.inliers_name)
 
         metrics_str = reuse_results.get_performance_metrics() # loads pickled results for experiment and percentages specified in cfg
         for i, line in enumerate(metrics_str):

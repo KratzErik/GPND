@@ -8,11 +8,17 @@ def load_results(test_dir = cfg.log_dir + "test/", experiment_name = cfg.experim
 
     assert(os.path.exists(test_dir))
     
-    files = [filename for filename in os.listdir(test_dir) if "result_p" in filename]
-    
+    # Find relevant files
+    if cfg.test_name is None:
+        files = [filename for filename in os.listdir(test_dir) if "result_p" in filename]
+    else:
+        files = [filename for filename in os.listdir(test_dir) if "result_p" in filename and cfg.test_name in filename]
     results = []
     for filename in files:
-        percentage = int(filename.replace("result_p","").replace(".pkl",""))
+        if cfg.test_name is None:
+            percentage = int(filename.replace("result_p","").replace(".pkl",""))
+        else:
+            percentage = int(filename.replace("result_%s_p"%cfg.test_name,"").replace(".pkl",""))
         with open(test_dir+filename,'rb') as file:
             result = pickle.load(file)
         results.append((percentage,result))
@@ -52,11 +58,22 @@ def export_scores(test_dir = cfg.log_dir + "test/", experiment_name = cfg.experi
     result = load_results(test_dir, experiment_name)[0][1]
     labels = [x[0] for x in result]
     scores = [x[1] for x in result]
-    pickle.dump([scores,labels],open('/home/exjobb_resultat/data/%s_%s.pkl'%(dataset,alg_name),'wb'))
-    print("Exported results to '/home/exjobb_resultat/data/%s_%s.pkl'"%(dataset,alg_name))
-    # Update data source dict with experiment name
-    common_results_dict = pickle.load(open('/home/exjobb_resultat/data/name_dict.pkl','rb'))
+    if Cfg.test_name is None:
+        results_filepath = '/home/exjobb_resultat/data/%s_%s.pkl'%(dataset,alg_name)
+        exp_name_file = '/home/exjobb_resultat/data/experiment_names/%s_%s.txt'%(dataset,alg_name)
+    else:
+        results_filepath = '/home/exjobb_resultat/data/%s_%s_%s.pkl'%(dataset,alg_name,cfg.test_name)
+        exp_name_file = '/home/exjobb_resultat/data/experiment_names/%s_%s_%s.txt'%(dataset,alg_name, cfg.test_name)
 
-    common_results_dict[dataset][alg_name] = experiment_name
-    pickle.dump(common_results_dict,open('/home/exjobb_resultat/data/name_dict.pkl','wb'), protocol=2)
-    print("Updated entry ['%s']['%s'] = '%s' in file /home/exjobb_resultat/data/name_dict.pkl"%(dataset,alg_name,experiment_name))
+    pickle.dump([scores,labels], open(results_filepath,'wb'))
+
+    print("Exported results to '%s'"%(results_filepath))
+
+    # Update data source dict with experiment name
+    with open(exp_name_file, 'w') as f:
+        f.write(experiment_name)
+
+    # common_results_dict = pickle.load(open('/home/exjobb_resultat/data/name_dict.pkl','rb'))
+    # common_results_dict[dataset][alg_name] = experiment_name
+    # pickle.dump(common_results_dict,open('/home/exjobb_resultat/data/name_dict.pkl','wb'), protocol=2)
+    # print("Updated entry ['%s']['%s'] = '%s' in file /home/exjobb_resultat/data/name_dict.pkl"%(dataset,alg_name,experiment_name))
