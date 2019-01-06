@@ -20,14 +20,14 @@ def load_results(test_dir = cfg.log_dir + "test/", experiment_name = cfg.experim
         else:
             percentage = int(filename.replace("result_%s_p"%cfg.test_name,"").replace(".pkl",""))
         with open(test_dir+filename,'rb') as file:
-            result = pickle.load(file)
+            [result, recon_errors] = pickle.load(file)
         results.append((percentage,result))
     
-    return results
+    return results, recon_errors
 
 def get_performance_metrics(test_dir = cfg.log_dir + "test/", experiment_name = cfg.experiment_name):
 
-    results = load_results(test_dir, experiment_name)
+    results, recon_errors = load_results(test_dir, experiment_name)
     output_str = []
     for y in results:
         y_output_str = ""
@@ -51,27 +51,33 @@ def get_performance_metrics(test_dir = cfg.log_dir + "test/", experiment_name = 
 def export_scores(test_dir = cfg.log_dir + "test/", experiment_name = cfg.experiment_name, dataset = cfg.dataset):
 
     if cfg.training_mode == "GPND_default":
-        alg_name = "GPND"
+        alg_name = "GPND_pX"
     elif cfg.training_mode.lower() == "autoencoder":
-        alg_name = "GPND_AE"
+        alg_name = "GPND_reconerr"
 
-    result = load_results(test_dir, experiment_name)[0][1]
+    results, recon_errors = load_results(test_dir, experiment_name)
+    result = results[0][1]
     labels = [x[0] for x in result]
     scores = [x[1] for x in result]
-    if Cfg.test_name is None:
-        results_filepath = '/home/exjobb_resultat/data/%s_%s.pkl'%(dataset,alg_name)
-        exp_name_file = '/home/exjobb_resultat/data/experiment_names/%s_%s.txt'%(dataset,alg_name)
-    else:
-        results_filepath = '/home/exjobb_resultat/data/%s_%s_%s.pkl'%(dataset,alg_name,cfg.test_name)
-        exp_name_file = '/home/exjobb_resultat/data/experiment_names/%s_%s_%s.txt'%(dataset,alg_name, cfg.test_name)
 
-    pickle.dump([scores,labels], open(results_filepath,'wb'))
+    def export_one_score_type(score_vector, score_name):
+        if Cfg.test_name is None:
+            results_filepath = '/home/exjobb_resultat/data/%s_%s.pkl'%(dataset,score_name)
+            exp_name_file = '/home/exjobb_resultat/data/experiment_names/%s_%s.txt'%(dataset,score_name)
+        else:
+            results_filepath = '/home/exjobb_resultat/data/%s_%s_%s.pkl'%(dataset,score_name,cfg.test_name)
+            exp_name_file = '/home/exjobb_resultat/data/experiment_names/%s_%s_%s.txt'%(dataset,score_name, cfg.test_name)
+        
+        pickle.dump([score_vector,labels], open(results_filepath,'wb'))
 
-    print("Exported results to '%s'"%(results_filepath))
+        print("Exported results to '%s'"%(results_filepath))
 
-    # Update data source dict with experiment name
-    with open(exp_name_file, 'w') as f:
-        f.write(experiment_name)
+        # Update data source dict with experiment name
+        with open(exp_name_file, 'w') as f:
+            f.write(experiment_name)
+
+    export_one_score_type(scores,"GPND_pX")
+    export_one_score_type(recon_errors, "GPND_reconerr")
 
     # common_results_dict = pickle.load(open('/home/exjobb_resultat/data/name_dict.pkl','rb'))
     # common_results_dict[dataset][alg_name] = experiment_name

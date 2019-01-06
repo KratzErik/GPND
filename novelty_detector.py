@@ -477,6 +477,12 @@ def main(folding_id, inliner_classes, total_classes, folds=5, cfg = None):
             return best_e
 
         def test(data_test, percentage, e = None):
+
+            # Set recon_loss mode from config file
+            if cfg.loss.lower() == "bce":
+                recon_loss = nn.BCELoss()
+            elif cfg.loss.lower() == "l2":
+                recon_loss = nn.MSELoss()
             true_positive = 0
             true_negative = 0
             false_positive = 0
@@ -507,6 +513,7 @@ def main(folding_id, inliner_classes, total_classes, folds=5, cfg = None):
             data_test_x /= 255.0
             count = 0
 
+            recon_losses = []
             result = []
             n_batches = len(data_test_x)//batch_size
             print("Testing %d batches of size %d"%(n_batches, batch_size))
@@ -519,6 +526,11 @@ def main(folding_id, inliner_classes, total_classes, folds=5, cfg = None):
 
                 z = E(x.view(-1, channels, image_height, image_width))
                 recon_batch = G(z)
+
+                # Compute reconstruction error for comparison with GPND result
+                recon_losses_batch = recon_loss(x,recon_batch)
+                recon_losses.append(recon_losses_batch)
+
                 z = z.squeeze()
 
                 J = compute_jacobian(x, z)
@@ -592,7 +604,7 @@ def main(folding_id, inliner_classes, total_classes, folds=5, cfg = None):
             else:
                 results_path = results_dir + 'result_%s_p%d.pkl'%(cfg.test_name,percentage)
             with open(results_path, 'wb') as output:
-                pickle.dump(result, output)
+                pickle.dump([result,recon_losses], output)
         
             if cfg.nd_original_GPND:
 
