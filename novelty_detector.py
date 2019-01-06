@@ -476,245 +476,245 @@ def main(folding_id, inliner_classes, total_classes, folds=5, cfg = None):
             print("Best e: ", best_e)
             return best_e
 
-        def test(data_test, percentage, e = None):
+    def test(data_test, percentage, e = None):
 
-            # Set recon_loss mode from config file
-            if cfg.loss.lower() == "bce":
-                recon_loss = nn.BCELoss()
-            elif cfg.loss.lower() == "l2":
-                recon_loss = nn.MSELoss()
-            true_positive = 0
-            true_negative = 0
-            false_positive = 0
-            false_negative = 0
+        # Set recon_loss mode from config file
+        if cfg.loss.lower() == "bce":
+            recon_loss = nn.BCELoss()
+        elif cfg.loss.lower() == "l2":
+            recon_loss = nn.MSELoss()
+        true_positive = 0
+        true_negative = 0
+        false_positive = 0
+        false_negative = 0
 
-            random.shuffle(data_test)
-            data_test_outlier = [x for x in data_test if x[0] in outlier_classes]
-            data_test_inliner = [x for x in data_test if x[0] in inliner_classes]
+        random.shuffle(data_test)
+        data_test_outlier = [x for x in data_test if x[0] in outlier_classes]
+        data_test_inliner = [x for x in data_test if x[0] in inliner_classes]
 
-            inliner_count = len(data_test_inliner)
-            outlier_count = inliner_count * percentage // (100 - percentage)
+        inliner_count = len(data_test_inliner)
+        outlier_count = inliner_count * percentage // (100 - percentage)
 
-            if len(data_test_outlier) >= outlier_count:
-                print("Found enough outliers for correct percentage, using specified inlier count")
-                data_test_outlier = data_test_outlier[:outlier_count]
-            else:
-                print("Not enough outliers for correct percentage, adjusting:\ninliers: %d, outliers:%d -> %d%"%(inliner_count, outlier_count,len(data_test_outlier)))
-                outlier_count = len(data_test_outlier)
-                inliner_count = outlier_count * (100 - percentage) // percentage
-                data_test_inliner = data_test_inliner[:inliner_count]
-            print("Inliers: %d\nOutliers: %d"%(len(data_test_inliner), len(data_test_outlier)))
-            data_test = data_test_outlier + data_test_inliner
-            random.shuffle(data_test)
+        if len(data_test_outlier) >= outlier_count:
+            print("Found enough outliers for correct percentage, using specified inlier count")
+            data_test_outlier = data_test_outlier[:outlier_count]
+        else:
+            print("Not enough outliers for correct percentage, adjusting:\ninliers: %d, outliers:%d -> %d%"%(inliner_count, outlier_count,len(data_test_outlier)))
+            outlier_count = len(data_test_outlier)
+            inliner_count = outlier_count * (100 - percentage) // percentage
+            data_test_inliner = data_test_inliner[:inliner_count]
+        print("Inliers: %d\nOutliers: %d"%(len(data_test_inliner), len(data_test_outlier)))
+        data_test = data_test_outlier + data_test_inliner
+        random.shuffle(data_test)
 
-            data_test_x, data_test_y = list_of_pairs_to_numpy(data_test)
+        data_test_x, data_test_y = list_of_pairs_to_numpy(data_test)
 
-            # Rescale test data
-            data_test_x /= 255.0
-            count = 0
+        # Rescale test data
+        data_test_x /= 255.0
+        count = 0
 
-            recon_losses = []
-            result = []
-            n_batches = len(data_test_x)//batch_size
-            print("Testing %d batches of size %d"%(n_batches, batch_size))
-            total_time = 0
-            for it in range(n_batches):
-                start_time = time.time()
+        recon_losses = []
+        result = []
+        n_batches = len(data_test_x)//batch_size
+        print("Testing %d batches of size %d"%(n_batches, batch_size))
+        total_time = 0
+        for it in range(n_batches):
+            start_time = time.time()
 
-                x = Variable(extract_batch(data_test_x, it, batch_size).view(-1, channels * image_height * image_width).data, requires_grad=True)
-                label = extract_batch(data_test_y, it, batch_size)
+            x = Variable(extract_batch(data_test_x, it, batch_size).view(-1, channels * image_height * image_width).data, requires_grad=True)
+            label = extract_batch(data_test_y, it, batch_size)
 
-                z = E(x.view(-1, channels, image_height, image_width))
-                recon_batch = G(z)
+            z = E(x.view(-1, channels, image_height, image_width))
+            recon_batch = G(z)
 
-                # Compute reconstruction error for comparison with GPND result
-                recon_losses_batch = recon_loss(x,Variable(recon_batch))
-                recon_losses.append(recon_losses_batch)
+            # Compute reconstruction error for comparison with GPND result
+            recon_losses_batch = recon_loss(x,Variable(recon_batch))
+            recon_losses.append(recon_losses_batch)
 
-                z = z.squeeze()
+            z = z.squeeze()
 
-                J = compute_jacobian(x, z)
+            J = compute_jacobian(x, z)
 
-                J = J.cpu().numpy()
+            J = J.cpu().numpy()
 
-                z = z.cpu().detach().numpy()
+            z = z.cpu().detach().numpy()
 
-                recon_batch = recon_batch.squeeze().cpu().detach().numpy()
-                x = x.squeeze().cpu().detach().numpy()
+            recon_batch = recon_batch.squeeze().cpu().detach().numpy()
+            x = x.squeeze().cpu().detach().numpy()
 
-                for i in range(batch_size):
-                    u, s, vh = np.linalg.svd(J[i, :, :], full_matrices=False)
-                    logD = np.sum(np.log(np.abs(s)))
+            for i in range(batch_size):
+                u, s, vh = np.linalg.svd(J[i, :, :], full_matrices=False)
+                logD = np.sum(np.log(np.abs(s)))
 
-                    p = scipy.stats.gennorm.pdf(z[i], gennorm_param[0, :], gennorm_param[1, :], gennorm_param[2, :])
-                    logPz = np.sum(np.log(p))
+                p = scipy.stats.gennorm.pdf(z[i], gennorm_param[0, :], gennorm_param[1, :], gennorm_param[2, :])
+                logPz = np.sum(np.log(p))
 
-                    # Sometimes, due to rounding some element in p may be zero resulting in Inf in logPz
-                    # In this case, just assign some large negative value to make sure that the sample 
-                    # is classified as unknown. 
-                    if not np.isfinite(logPz):
-                        logPz = -1000
+                # Sometimes, due to rounding some element in p may be zero resulting in Inf in logPz
+                # In this case, just assign some large negative value to make sure that the sample 
+                # is classified as unknown. 
+                if not np.isfinite(logPz):
+                    logPz = -1000
 
-                    if not np.isfinite(logD):
-                        logD = -1000
+                if not np.isfinite(logD):
+                    logD = -1000
 
-                    distance = np.sum(np.power(x[i].flatten() - recon_batch[i].flatten(), power))
+                distance = np.sum(np.power(x[i].flatten() - recon_batch[i].flatten(), power))
 
-                    logPe = np.log(r_pdf(distance, bin_edges, counts))
-                    logPe -= np.log(distance) * (channels * image_height * image_width - zsize)
-                    
-                    count += 1
+                logPe = np.log(r_pdf(distance, bin_edges, counts))
+                logPe -= np.log(distance) * (channels * image_height * image_width - zsize)
+                
+                count += 1
 
-                    P = logD + logPz + logPe
-                    
-                    if e is not None:
-                        if (label[i].item() in inliner_classes) != (P > e):
-                            if not label[i].item() in inliner_classes:
-                                false_positive += 1
-                            if label[i].item() in inliner_classes:
-                                false_negative += 1
+                P = logD + logPz + logPe
+                
+                if e is not None:
+                    if (label[i].item() in inliner_classes) != (P > e):
+                        if not label[i].item() in inliner_classes:
+                            false_positive += 1
+                        if label[i].item() in inliner_classes:
+                            false_negative += 1
+                    else:
+                        if label[i].item() in inliner_classes:
+                            true_positive += 1
                         else:
-                            if label[i].item() in inliner_classes:
-                                true_positive += 1
-                            else:
-                                true_negative += 1
+                            true_negative += 1
 
-                    result.append(((label[i].item() in outlier_classes), -P))
+                result.append(((label[i].item() in outlier_classes), -P))
 
-                    print("Batch %d/%d: image %d/%d"%(it+1,len(data_test_x)//batch_size,i+1, batch_size))
-                per_batch_time = time.time()-start_time
-                total_time += per_batch_time 
-                complete_batches = it + 1
-                remaining_time = (n_batches - complete_batches)*total_time/complete_batches
-                print("Batch %d/%d complete\ttime: %.2f\tETA:%dh%dm%.1fs"%(it+1,len(data_test_x)//batch_size, per_batch_time, remaining_time//3600, (remaining_time%3600)//60, remaining_time%60))
+                print("Batch %d/%d: image %d/%d"%(it+1,len(data_test_x)//batch_size,i+1, batch_size))
+            per_batch_time = time.time()-start_time
+            total_time += per_batch_time 
+            complete_batches = it + 1
+            remaining_time = (n_batches - complete_batches)*total_time/complete_batches
+            print("Batch %d/%d complete\ttime: %.2f\tETA:%dh%dm%.1fs"%(it+1,len(data_test_x)//batch_size, per_batch_time, remaining_time//3600, (remaining_time%3600)//60, remaining_time%60))
 
-            error = 100 * (true_positive + true_negative) / count
+        error = 100 * (true_positive + true_negative) / count
 
-            y_true = [x[0] for x in result]
-            y_scores = [x[1] for x in result]
+        y_true = [x[0] for x in result]
+        y_scores = [x[1] for x in result]
 
-            try:
-                auc = roc_auc_score(y_true, y_scores)
-            except:
-                auc = 0
+        try:
+            auc = roc_auc_score(y_true, y_scores)
+        except:
+            auc = 0
 
-            # Pickle results, they are then extracted by other function to produce metrics
-            if cfg.test_name is None:
-                results_path = results_dir + 'result_p%d.pkl'%(percentage)
+        # Pickle results, they are then extracted by other function to produce metrics
+        if cfg.test_name is None:
+            results_path = results_dir + 'result_p%d.pkl'%(percentage)
+        else:
+            results_path = results_dir + 'result_%s_p%d.pkl'%(cfg.test_name,percentage)
+        with open(results_path, 'wb') as output:
+            pickle.dump([result,recon_losses], output)
+    
+        if cfg.nd_original_GPND:
+
+            print("Percentage ", percentage)
+            print("Error ", error)
+            f1 = GetF1(true_positive, false_positive, false_negative)
+            print("F1 ", GetF1(true_positive, false_positive, false_negative))
+            print("AUC ", auc)
+
+            #inliers
+            X1 = [x[1] for x in result if not x[0]]
+
+            #outliers
+            Y1 = [x[1] for x in result if x[0]]
+
+            minP = min([x[1] for x in result]) - 1
+            maxP = max([x[1] for x in result]) + 1
+
+
+            # For looping over values of e:
+            max_vals = 10000
+            if (maxP-minP)//0.2 > max_vals:
+                p_range = np.linspace(minP,maxP,num=max_vals)
             else:
-                results_path = results_dir + 'result_%s_p%d.pkl'%(cfg.test_name,percentage)
-            with open(results_path, 'wb') as output:
-                pickle.dump([result,recon_losses], output)
-        
-            if cfg.nd_original_GPND:
+                p_range = np.arange(minP, maxP, 0.2)
+            ##################################################################
+            # FPR at TPR 95
+            ##################################################################
+            fpr95 = 0.0
+            clothest_tpr = 1.0
+            dist_tpr = 1.0
+            for e in p_range:
+                tpr = np.sum(np.greater_equal(X1, e)) / np.float(len(X1))
+                fpr = np.sum(np.greater_equal(Y1, e)) / np.float(len(Y1))
+                if abs(tpr - 0.95) < dist_tpr:
+                    dist_tpr = abs(tpr - 0.95)
+                    clothest_tpr = tpr
+                    fpr95 = fpr
 
-                print("Percentage ", percentage)
-                print("Error ", error)
-                f1 = GetF1(true_positive, false_positive, false_negative)
-                print("F1 ", GetF1(true_positive, false_positive, false_negative))
-                print("AUC ", auc)
+            print("tpr: ", clothest_tpr)
+            print("fpr95: ", fpr95)
 
-                #inliers
-                X1 = [x[1] for x in result if not x[0]]
+            ##################################################################
+            # Detection error
+            ##################################################################
+            error = 1.0
+            for e in p_range:
+                tpr = np.sum(np.less(X1, e)) / np.float(len(X1))
+                fpr = np.sum(np.greater_equal(Y1, e)) / np.float(len(Y1))
+                error = np.minimum(error, (tpr + fpr) / 2.0)
 
-                #outliers
-                Y1 = [x[1] for x in result if x[0]]
+            print("Detection error: ", error)
 
-                minP = min([x[1] for x in result]) - 1
-                maxP = max([x[1] for x in result]) + 1
+            ##################################################################
+            # AUPR IN
+            ##################################################################
+            auprin = 0.0
+            recallTemp = 1.0
+            for e in p_range:
+                tp = np.sum(np.greater_equal(X1, e))
+                fp = np.sum(np.greater_equal(Y1, e))
+                if tp + fp == 0:
+                    continue
+                precision = tp / (tp + fp)
+                recall = tp / np.float(len(X1))
+                auprin += (recallTemp-recall)*precision
+                recallTemp = recall
+            auprin += recall * precision
 
-
-                # For looping over values of e:
-                max_vals = 10000
-                if (maxP-minP)//0.2 > max_vals:
-                    p_range = np.linspace(minP,maxP,num=max_vals)
-                else:
-                    p_range = np.arange(minP, maxP, 0.2)
-                ##################################################################
-                # FPR at TPR 95
-                ##################################################################
-                fpr95 = 0.0
-                clothest_tpr = 1.0
-                dist_tpr = 1.0
-                for e in p_range:
-                    tpr = np.sum(np.greater_equal(X1, e)) / np.float(len(X1))
-                    fpr = np.sum(np.greater_equal(Y1, e)) / np.float(len(Y1))
-                    if abs(tpr - 0.95) < dist_tpr:
-                        dist_tpr = abs(tpr - 0.95)
-                        clothest_tpr = tpr
-                        fpr95 = fpr
-
-                print("tpr: ", clothest_tpr)
-                print("fpr95: ", fpr95)
-
-                ##################################################################
-                # Detection error
-                ##################################################################
-                error = 1.0
-                for e in p_range:
-                    tpr = np.sum(np.less(X1, e)) / np.float(len(X1))
-                    fpr = np.sum(np.greater_equal(Y1, e)) / np.float(len(Y1))
-                    error = np.minimum(error, (tpr + fpr) / 2.0)
-
-                print("Detection error: ", error)
-
-                ##################################################################
-                # AUPR IN
-                ##################################################################
-                auprin = 0.0
-                recallTemp = 1.0
-                for e in p_range:
-                    tp = np.sum(np.greater_equal(X1, e))
-                    fp = np.sum(np.greater_equal(Y1, e))
-                    if tp + fp == 0:
-                        continue
-                    precision = tp / (tp + fp)
-                    recall = tp / np.float(len(X1))
-                    auprin += (recallTemp-recall)*precision
-                    recallTemp = recall
-                auprin += recall * precision
-
-                print("auprin: ", auprin)
+            print("auprin: ", auprin)
 
 
-                ##################################################################
-                # AUPR OUT
-                ##################################################################
-                minp, maxP = -maxP, -minP
+            ##################################################################
+            # AUPR OUT
+            ##################################################################
+            minp, maxP = -maxP, -minP
 
-                if (maxP-minP)//0.2 > max_vals:
-                    p_range = np.linspace(minP,maxP,num=max_vals)
-                else:
-                    p_range = np.arange(minP, maxP, 0.2)
-
-                X1 = [-x for x in X1]
-                Y1 = [-x for x in Y1]
-                auprout = 0.0
-                recallTemp = 1.0
-                for e in p_range:
-                    tp = np.sum(np.greater_equal(Y1, e))
-                    fp = np.sum(np.greater_equal(X1, e))
-                    if tp + fp == 0:
-                        continue
-                    precision = tp / (tp + fp)
-                    recall = tp / np.float(len(Y1))
-                    auprout += (recallTemp-recall)*precision
-                    recallTemp = recall
-                auprout += recall * precision
-
-                print("auprout: ", auprout)
-
-                with open(results_dir + "results_%s.txt", "a") as file:
-                    file.write(
-                        "Class: %d\n Percentage: %d\n"
-                        "Error: %f\n F1: %f\n AUC: %f\nfpr95: %f"
-                        "\nDetection: %f\nauprin: %f\nauprout: %f\n\n" %
-                        (inliner_classes[0], percentage, error, f1, auc, fpr95, error, auprin, auprout))
-
-                return auc, f1, fpr95, error, auprin, auprout
-
+            if (maxP-minP)//0.2 > max_vals:
+                p_range = np.linspace(minP,maxP,num=max_vals)
             else:
-                return result, total_time
+                p_range = np.arange(minP, maxP, 0.2)
+
+            X1 = [-x for x in X1]
+            Y1 = [-x for x in Y1]
+            auprout = 0.0
+            recallTemp = 1.0
+            for e in p_range:
+                tp = np.sum(np.greater_equal(Y1, e))
+                fp = np.sum(np.greater_equal(X1, e))
+                if tp + fp == 0:
+                    continue
+                precision = tp / (tp + fp)
+                recall = tp / np.float(len(Y1))
+                auprout += (recallTemp-recall)*precision
+                recallTemp = recall
+            auprout += recall * precision
+
+            print("auprout: ", auprout)
+
+            with open(results_dir + "results_%s.txt", "a") as file:
+                file.write(
+                    "Class: %d\n Percentage: %d\n"
+                    "Error: %f\n F1: %f\n AUC: %f\nfpr95: %f"
+                    "\nDetection: %f\nauprin: %f\nauprout: %f\n\n" %
+                    (inliner_classes[0], percentage, error, f1, auc, fpr95, error, auprin, auprout))
+
+            return auc, f1, fpr95, error, auprin, auprout
+
+        else:
+            return result, total_time
 
     if cfg.nd_original_GPND: # This is used in original GPND experiment
         percentages = cfg.percentages
