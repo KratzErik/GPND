@@ -528,7 +528,7 @@ def main(folding_id, inliner_classes, total_classes, folds=5, cfg = None):
                 recon_batch = G(z)
 
                 # Compute reconstruction error for comparison with GPND result
-                recon_losses_batch = recon_loss(x,recon_batch)
+                recon_losses_batch = recon_loss(x,Variable(recon_batch))
                 recon_losses.append(recon_losses_batch)
 
                 z = z.squeeze()

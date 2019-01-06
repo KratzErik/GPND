@@ -14,16 +14,19 @@ def load_results(test_dir = cfg.log_dir + "test/", experiment_name = cfg.experim
     else:
         files = [filename for filename in os.listdir(test_dir) if "result_p" in filename and cfg.test_name in filename]
     results = []
+    recon_error_list = []
     for filename in files:
         if cfg.test_name is None:
             percentage = int(filename.replace("result_p","").replace(".pkl",""))
         else:
             percentage = int(filename.replace("result_%s_p"%cfg.test_name,"").replace(".pkl",""))
+
         with open(test_dir+filename,'rb') as file:
             [result, recon_errors] = pickle.load(file)
         results.append((percentage,result))
-    
-    return results, recon_errors
+        recon_error_list.append(recon_errors)
+
+    return results, recon_error_list
 
 def get_performance_metrics(test_dir = cfg.log_dir + "test/", experiment_name = cfg.experiment_name):
 
@@ -56,6 +59,7 @@ def export_scores(test_dir = cfg.log_dir + "test/", experiment_name = cfg.experi
         alg_name = "GPND_reconerr"
 
     results, recon_errors = load_results(test_dir, experiment_name)
+    print("results: ", results)
     result = results[0][1]
     labels = [x[0] for x in result]
     scores = [x[1] for x in result]
@@ -77,7 +81,7 @@ def export_scores(test_dir = cfg.log_dir + "test/", experiment_name = cfg.experi
             f.write(experiment_name)
 
     export_one_score_type(scores,"GPND_pX")
-    export_one_score_type(recon_errors, "GPND_reconerr")
+    export_one_score_type(recon_errors[0], "GPND_reconerr")
 
     # common_results_dict = pickle.load(open('/home/exjobb_resultat/data/name_dict.pkl','rb'))
     # common_results_dict[dataset][alg_name] = experiment_name

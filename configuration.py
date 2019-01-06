@@ -16,10 +16,10 @@ class Configuration(object):
     # H: pad
 
     dataset = "prosivic"
-    experiment_name = "debug_4conv"
+    experiment_name = "final"
     log_dir = './log/' + dataset + '/' + experiment_name + '/'
     export_results = True
-    test_name = None # If you want to run several test sets for same trained model, specify a test name to store results separately
+    test_name = "foggy" # If you want to run several test sets for same trained model, specify a test name to store results separately
 
 
     # Diagnostics
@@ -40,7 +40,7 @@ class Configuration(object):
 
     # dataset specific options below
     if dataset == "prosivic":
-        training_mode = ("autoencoder","GPND_default")[0] # Options: "autoencoder", "GPND_default"
+        training_mode = ("autoencoder","GPND_default")[1] # Options: "autoencoder", "GPND_default"
         # Hyperparameters
         betas = (0.5,0.999) # adam solver standard is (0.5, 0.999), GPND standard is (0.9,0.999)
         n_train_epochs = 500
@@ -54,8 +54,8 @@ class Configuration(object):
         lr_zd = 0.001
         rec_loss_weight = 1
         weight_g_loss = 1
-        architecture = "0_5_1_16_512_4_2_1"
-        #architecture = "0_5_1_16_512_5_2_2"
+        #architecture = "0_5_1_16_512_4_2_1"
+        architecture = "0_5_1_16_512_5_2_2"
         n_dense_units = None
         inliers_name = "sunny"
         outliers_name = "foggy"
@@ -70,7 +70,7 @@ class Configuration(object):
 
         test_batch_size = 8 # Jacobian computations require smaller batches
         use_batchnorm = True
-        data_div = 30
+        data_div = 60
         n_train = 6785 // data_div
         n_val = 840 // data_div
         n_test = 500*2 // data_div # for GPND algorithm, the test set is split into val and test set during testing, since the valset contains outliers in order to compute an optimal threshold. This is used to compute some of the output values, but not AUPRIN or AUROC, which are threshold independent.
