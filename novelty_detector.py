@@ -716,7 +716,7 @@ def main(folding_id, inliner_classes, total_classes, folds=5, cfg = None):
         else:
             return result, total_time
 
-    if cfg.nd_original_GPND: # This is used in original GPND experiment
+    if cfg.nd_original_GPND and perform_tests: # This is used in original GPND experiment
         percentages = cfg.percentages
 
         results = {}
@@ -730,13 +730,14 @@ def main(folding_id, inliner_classes, total_classes, folds=5, cfg = None):
     else: # this is used in SMILE experiments, to get only metrics specified in reuse_results.get_performace_metrics
         log = ["Testing started at %s"%time.strftime("%a, %d %b %Y %H:%M:%S UTC")]
         total_time = []
+
         for p in cfg.percentages:
-            if not os.path.exists(results_dir + 'result_p%d.pkl'%(p)):
-                _, percentage_time = test(data_test,p)
-                total_time.append(percentage_time)
-            else:
+            if (cfg.test_name is None and os.path.exists(results_dir + 'result_p%d.pkl'%(p))) or (cfg.test_name is not None and os.path.exists(results_dir + 'result_%s_p%d.pkl'%(cfg.test_name,p))) :
                 total_time.append(0)
                 print("Result already found: p = %d"%p)
+            else:
+                _, percentage_time = test(data_test,p)
+                total_time.append(percentage_time)
 
         log.append("Results for experiment:")
         log.append("Inliers: %s"%cfg.outliers_name)

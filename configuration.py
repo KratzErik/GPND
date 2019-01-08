@@ -19,7 +19,7 @@ class Configuration(object):
     experiment_name = "final"
     log_dir = './log/' + dataset + '/' + experiment_name + '/'
     export_results = True
-    test_name = "foggy" # If you want to run several test sets for same trained model, specify a test name to store results separately
+    test_name = "urban" # If you want to run several test sets for same trained model, specify a test name to store results separately
 
 
     # Diagnostics
@@ -70,10 +70,10 @@ class Configuration(object):
 
         test_batch_size = 8 # Jacobian computations require smaller batches
         use_batchnorm = True
-        data_div = 60
+        data_div = 1
         n_train = 6785 // data_div
         n_val = 840 // data_div
-        n_test = 500*2 // data_div # for GPND algorithm, the test set is split into val and test set during testing, since the valset contains outliers in order to compute an optimal threshold. This is used to compute some of the output values, but not AUPRIN or AUROC, which are threshold independent.
+        n_test = 500*2 // data_div
         n_test_in = 500 // data_div
         batch_size = 64
 
@@ -81,8 +81,11 @@ class Configuration(object):
         train_folder = "../weather_detection_data/prosivic/train/"
         val_folder =   "../weather_detection_data/prosivic/val/"
         test_in_folder =  "../weather_detection_data/prosivic/test/in/"
-        test_out_folder =  "../weather_detection_data/prosivic/test/out/foggy/"
+        test_out_folder =  "../weather_detection_data/prosivic/test/out/urban/"
 
+        if "urban" in test_out_folder:
+            n_test = 488*2 // data_div 
+            n_test_in = 488 // data_div
 
     elif dataset == "dreyeve":
         training_mode = ("autoencoder","GPND_default")[1]
@@ -127,7 +130,7 @@ class Configuration(object):
         train_folder = "../weather_detection_data/dreyeve/sunny_highway_countryside_morning_evening_vs_rainy_highway_countryside_morning_evening/train/"
         val_folder =   "../weather_detection_data/dreyeve/sunny_highway_countryside_morning_evening_vs_rainy_highway_countryside_morning_evening/val/"
         test_in_folder =  "../weather_detection_data/dreyeve/sunny_highway_countryside_morning_evening_vs_rainy_highway_countryside_morning_evening/test/in/"
-        test_out_folder = "../weather_detection_data/dreyeve/sunny_highway_countryside_morning_evening_vs_rainy_highway_countryside_morning_evening/test/out/"
+        test_out_folder = "../weather_detection_data/dreyeve/sunny_highway_countryside_morning_evening_vs_rainy_highway_countryside_morning_evening/test/out/foggy/"
 
     elif dataset == "mnist":
         batch_size = 128

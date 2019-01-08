@@ -2,7 +2,7 @@ import pickle
 import os
 from configuration import Configuration as cfg
 from sklearn.metrics import roc_auc_score, roc_curve, precision_recall_curve, auc as compute_auc
-
+import numpy as np
 
 def load_results(test_dir = cfg.log_dir + "test/", experiment_name = cfg.experiment_name):
 
@@ -12,7 +12,8 @@ def load_results(test_dir = cfg.log_dir + "test/", experiment_name = cfg.experim
     if cfg.test_name is None:
         files = [filename for filename in os.listdir(test_dir) if "result_p" in filename]
     else:
-        files = [filename for filename in os.listdir(test_dir) if "result_p" in filename and cfg.test_name in filename]
+        files = [filename for filename in os.listdir(test_dir) if "result_%s_p"%cfg.test_name in filename]
+    print("Files to read: ", files)
     results = []
     recon_error_list = []
     for filename in files:
@@ -23,8 +24,10 @@ def load_results(test_dir = cfg.log_dir + "test/", experiment_name = cfg.experim
 
         with open(test_dir+filename,'rb') as file:
             [result, recon_errors] = pickle.load(file)
+
+        # Add to lists
         results.append((percentage,result))
-        recon_error_list.append(recon_errors)
+        recon_error_list.append(np.array(recon_errors))
 
     return results, recon_error_list
 
@@ -59,13 +62,12 @@ def export_scores(test_dir = cfg.log_dir + "test/", experiment_name = cfg.experi
         alg_name = "GPND_reconerr"
 
     results, recon_errors = load_results(test_dir, experiment_name)
-    print("results: ", results)
     result = results[0][1]
-    labels = [x[0] for x in result]
-    scores = [x[1] for x in result]
+    labels = np.array([x[0] for x in result])
+    scores = np.array([x[1] for x in result])
 
     def export_one_score_type(score_vector, score_name):
-        if Cfg.test_name is None:
+        if cfg.test_name is None:
             results_filepath = '/home/exjobb_resultat/data/%s_%s.pkl'%(dataset,score_name)
             exp_name_file = '/home/exjobb_resultat/data/experiment_names/%s_%s.txt'%(dataset,score_name)
         else:

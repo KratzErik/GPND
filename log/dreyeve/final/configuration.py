@@ -155,3 +155,35 @@ Percentage of outliers: 50
 	AUROC:	0.29904
 	AUPRC:	0.37853
 	Test time for percentage:	7h31m21.0s
+Testing started at Mon, 07 Jan 2019 15:05:13 UTC
+Results for experiment:
+Inliers: rainy_highway
+Outliers: sunny_highway
+Percentage of outliers: 50
+	AUROC:	0.42740
+	AUPRC:	0.43394
+	Test time for percentage:	7h20m48.7s
+Testing started at Mon, 07 Jan 2019 22:52:18 UTC
+Results for experiment:
+Inliers: rainy_highway
+Outliers: sunny_highway
+Percentage of outliers: 50
+	AUROC:	0.38457
+	AUPRC:	0.43412
+	Test time for percentage:	7h10m23.3s
+Testing started at Tue, 08 Jan 2019 08:27:07 UTC
+Results for experiment:
+Inliers: rainy_highway
+Outliers: sunny_highway
+Percentage of outliers: 50
+	AUROC:	0.38457
+	AUPRC:	0.43412
+	Test time for percentage:	0h0m0.0s
+Testing started at Tue, 08 Jan 2019 08:27:42 UTC
+Results for experiment:
+Inliers: rainy_highway
+Outliers: sunny_highway
+Percentage of outliers: 50
+	AUROC:	0.42740
+	AUPRC:	0.43394
+	Test time for percentage:	0h0m0.0s
