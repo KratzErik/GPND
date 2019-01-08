@@ -65,7 +65,11 @@ def export_scores(test_dir = cfg.log_dir + "test/", experiment_name = cfg.experi
     result = results[0][1]
     labels = np.array([x[0] for x in result])
     scores = np.array([x[1] for x in result])
-
+    recon_errors = recon_errors[0]
+    print("Scores: ", type(scores))
+    print("Labels", type(labels))
+    print("Rec err", type(recon_errors))
+    print(recon_errors.shape)
     def export_one_score_type(score_vector, score_name):
         if cfg.test_name is None:
             results_filepath = '/home/exjobb_resultat/data/%s_%s.pkl'%(dataset,score_name)
@@ -83,7 +87,7 @@ def export_scores(test_dir = cfg.log_dir + "test/", experiment_name = cfg.experi
             f.write(experiment_name)
 
     export_one_score_type(scores,"GPND_pX")
-    export_one_score_type(recon_errors[0], "GPND_reconerr")
+    export_one_score_type(recon_errors, "GPND_reconerr")
 
     # common_results_dict = pickle.load(open('/home/exjobb_resultat/data/name_dict.pkl','rb'))
     # common_results_dict[dataset][alg_name] = experiment_name
