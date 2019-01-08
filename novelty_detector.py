@@ -605,10 +605,15 @@ def main(folding_id, inliner_classes, total_classes, folds=5, cfg = None):
         # Pickle results, they are then extracted by other function to produce metrics
         if cfg.test_name is None:
             results_path = results_dir + 'result_p%d.pkl'%(percentage)
+            results_path_rec = results_dir + 'result_p%d_rec.pkl'%(percentage)
         else:
             results_path = results_dir + 'result_%s_p%d.pkl'%(cfg.test_name,percentage)
+            results_path_rec = results_dir + 'result_%s_p%d_rec.pkl'%(cfg.test_name,percentage)
+        
         with open(results_path, 'wb') as output:
-            pickle.dump([result,recon_losses], output)
+            pickle.dump(result, output)
+         with open(results_path_rec, 'wb') as output:
+            pickle.dump(recon_losses, output)
             
     
         if cfg.nd_original_GPND:
