@@ -126,9 +126,15 @@ def main(folding_id, inliner_classes, total_classes, folds=5, cfg = None):
     perform_tests = False
     for p in cfg.percentages:
         if cfg.test_name is None:
-            wanted_result_name = results_dir + 'result_p%d.pkl'%(p)
+            if not cfg.only_recon_err:
+                wanted_result_name = results_dir + 'result_p%d.pkl'%(p)
+            else:
+                wanted_result_name = results_dir + 'result_p%d_rec.pkl'%(p)
         else:
-            wanted_result_name = results_dir + 'result_%s_p%d.pkl'%(cfg.test_name,p)
+            if not cfg.only_recon_err:
+                wanted_result_name = results_dir + 'result_%s_p%d.pkl'%(cfg.test_name,p)
+            else:
+                wanted_result_name = results_dir + 'result_%s_p%d_rec.pkl'%(cfg.test_name,p)
 
         if not os.path.exists(wanted_result_name):
             print("Result not found for p = %d"%p)
@@ -283,7 +289,7 @@ def main(folding_id, inliner_classes, total_classes, folds=5, cfg = None):
         sample = G(sample.view(-1, zsize)).cpu()
         save_image(sample.view(sample_size, channels, image_height, image_width), results_dir +  'Generator_sample.png')
 
-        if True:
+        if not cfg.only_recon_err:
             zlist = []
             rlist = []
 
@@ -362,12 +368,13 @@ def main(folding_id, inliner_classes, total_classes, folds=5, cfg = None):
         plt.cla()
         plt.close()
 
-        gennorm_param = np.zeros([3, zsize])
-        for i in range(zsize):
-            betta, loc, scale = scipy.stats.gennorm.fit(zlist[:, i])
-            gennorm_param[0, i] = betta
-            gennorm_param[1, i] = loc
-            gennorm_param[2, i] = scale
+        if not cfg.only_recon_err:
+            gennorm_param = np.zeros([3, zsize])
+            for i in range(zsize):
+                betta, loc, scale = scipy.stats.gennorm.fit(zlist[:, i])
+                gennorm_param[0, i] = betta
+                gennorm_param[1, i] = loc
+                gennorm_param[2, i] = scale
 
         def compute_threshold(data_valid, percentage):
             #############################################################################################
@@ -480,9 +487,9 @@ def main(folding_id, inliner_classes, total_classes, folds=5, cfg = None):
 
         # Set recon_loss mode from config file
         if cfg.loss.lower() == "bce":
-            recon_loss = nn.BCELoss()
+            recon_loss = nn.BCELoss(reduce=False)
         elif cfg.loss.lower() == "l2":
-            recon_loss = nn.MSELoss()
+            recon_loss = nn.MSELoss(reduce=False)
         true_positive = 0
         true_negative = 0
         false_positive = 0
@@ -528,23 +535,22 @@ def main(folding_id, inliner_classes, total_classes, folds=5, cfg = None):
             recon_batch = G(z)
 
             # Compute reconstruction error for comparison with GPND result
-            recon_losses_batch = recon_loss(x,Variable(recon_batch),reduce = False)
-            print(recon_losses_batch)
-            print(recon_losses_batch.item())
-            recon_losses.append(recon_losses_batch.item())
-
-            z = z.squeeze()
-
-            J = compute_jacobian(x, z)
-
-            J = J.cpu().numpy()
-
-            z = z.cpu().detach().numpy()
-
-            recon_batch = recon_batch.squeeze().cpu().detach().numpy()
-            x = x.squeeze().cpu().detach().numpy()
+            recon_losses_batch = recon_loss(x,Variable(recon_batch))
+            recon_losses_batch = recon_losses_batch.cpu().detach().numpy()
+            recon_losses_batch = np.sum(recon_losses_batch,axis=1)
+            recon_losses.extend(recon_losses_batch)
 
             if not cfg.only_recon_err:
+                z = z.squeeze()
+
+                J = compute_jacobian(x, z)
+
+                J = J.cpu().numpy()
+
+                z = z.cpu().detach().numpy()
+
+                recon_batch = recon_batch.squeeze().cpu().detach().numpy()
+                x = x.squeeze().cpu().detach().numpy()
 
                 for i in range(batch_size):
                     u, s, vh = np.linalg.svd(J[i, :, :], full_matrices=False)
@@ -566,11 +572,11 @@ def main(folding_id, inliner_classes, total_classes, folds=5, cfg = None):
 
                     logPe = np.log(r_pdf(distance, bin_edges, counts))
                     logPe -= np.log(distance) * (channels * image_height * image_width - zsize)
-                    
+
                     count += 1
 
                     P = logD + logPz + logPe
-                    
+
                     if e is not None:
                         if (label[i].item() in inliner_classes) != (P > e):
                             if not label[i].item() in inliner_classes:
@@ -586,12 +592,14 @@ def main(folding_id, inliner_classes, total_classes, folds=5, cfg = None):
                     result.append(((label[i].item() in outlier_classes), -P))
 
                     print("Batch %d/%d: image %d/%d"%(it+1,len(data_test_x)//batch_size,i+1, batch_size))
+
             per_batch_time = time.time()-start_time
             total_time += per_batch_time 
             complete_batches = it + 1
             remaining_time = (n_batches - complete_batches)*total_time/complete_batches
             print("Batch %d/%d complete\ttime: %.2f\tETA:%dh%dm%.1fs"%(it+1,len(data_test_x)//batch_size, per_batch_time, remaining_time//3600, (remaining_time%3600)//60, remaining_time%60))
-        if not cfg.only_recon_err: 
+
+        if not cfg.only_recon_err:
             error  = 100 * (true_positive + true_negative) / count
 
             y_true = [x[0] for x in result]
@@ -609,10 +617,10 @@ def main(folding_id, inliner_classes, total_classes, folds=5, cfg = None):
         else:
             results_path = results_dir + 'result_%s_p%d.pkl'%(cfg.test_name,percentage)
             results_path_rec = results_dir + 'result_%s_p%d_rec.pkl'%(cfg.test_name,percentage)
-        
-        with open(results_path, 'wb') as output:
-            pickle.dump(result, output)
-         with open(results_path_rec, 'wb') as output:
+        if not cfg.only_recon_err:
+            with open(results_path, 'wb') as output:
+                pickle.dump(result, output)
+        with open(results_path_rec, 'wb') as output:
             pickle.dump(recon_losses, output)
             
     
@@ -742,12 +750,20 @@ def main(folding_id, inliner_classes, total_classes, folds=5, cfg = None):
         total_time = []
 
         for p in cfg.percentages:
-            if (cfg.test_name is None and os.path.exists(results_dir + 'result_p%d.pkl'%(p))) or (cfg.test_name is not None and os.path.exists(results_dir + 'result_%s_p%d.pkl'%(cfg.test_name,p))) :
-                total_time.append(0)
-                print("Result already found: p = %d"%p)
+            if not cfg.only_recon_err:
+                if (cfg.test_name is None and os.path.exists(results_dir + 'result_p%d.pkl'%(p))) or (cfg.test_name is not None and os.path.exists(results_dir + 'result_%s_p%d.pkl'%(cfg.test_name,p))) :
+                    total_time.append(0)
+                    print("Result already found: p = %d"%p)
+                else:
+                    _, percentage_time = test(data_test,p)
+                    total_time.append(percentage_time)
             else:
-                _, percentage_time = test(data_test,p)
-                total_time.append(percentage_time)
+                if (cfg.test_name is None and os.path.exists(results_dir + 'result_p%d_rec.pkl'%(p))) or (cfg.test_name is not None and os.path.exists(results_dir + 'result_%s_p%d_rec.pkl'%(cfg.test_name,p))) :
+                    total_time.append(0)
+                    print("Result already found: p = %d"%p)
+                else:
+                    _, percentage_time = test(data_test,p)
+                    total_time.append(percentage_time)
 
         log.append("Results for experiment:")
         log.append("Inliers: %s"%cfg.outliers_name)

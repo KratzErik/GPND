@@ -19,15 +19,19 @@ def load_results(test_dir = cfg.log_dir + "test/", experiment_name = cfg.experim
     for filename in files:
         if cfg.test_name is None:
             percentage = int(filename.replace("result_p","").replace(".pkl",""))
+        elif "rec" in filename:
+            percentage = int(filename.replace("result_%s_p"%cfg.test_name,"").replace("_rec.pkl",""))
         else:
             percentage = int(filename.replace("result_%s_p"%cfg.test_name,"").replace(".pkl",""))
 
         with open(test_dir+filename,'rb') as file:
-            [result, recon_errors] = pickle.load(file)
+            result = pickle.load(file)
 
         # Add to lists
-        results.append((percentage,result))
-        recon_error_list.append(np.array(recon_errors))
+        if not "rec" in filename:
+            results.append((percentage,result))
+        else:
+            recon_error_list.append(np.array(result))
 
     return results, recon_error_list
 
@@ -35,7 +39,7 @@ def get_performance_metrics(test_dir = cfg.log_dir + "test/", experiment_name = 
 
     results, recon_errors = load_results(test_dir, experiment_name)
     output_str = []
-    for y in results:
+    for idx,y in enumerate(results):
         y_output_str = ""
         percentage = y[0]
         result = y[1]
@@ -50,6 +54,16 @@ def get_performance_metrics(test_dir = cfg.log_dir + "test/", experiment_name = 
             pr, rc, _ = precision_recall_curve(y_true, y_scores)
             AUPRC = compute_auc(rc,pr)
             y_output_str += "\tAUPRC:\t%.5f\n"%AUPRC
+
+        if cfg.auroc:
+            AUROC = roc_auc_score(y_true, recon_errors[idx])
+            y_output_str += "\tAUROC:\t%.5f\n"%AUROC
+
+        if cfg.auprc:
+            pr, rc, _ = precision_recall_curve(y_true, recon_errors[idx])
+            AUPRC = compute_auc(rc,pr)
+            y_output_str += "\tAUPRC:\t%.5f\n"%AUPRC
+
         output_str.append(y_output_str)
 
     return output_str
@@ -85,8 +99,8 @@ def export_scores(test_dir = cfg.log_dir + "test/", experiment_name = cfg.experi
         # Update data source dict with experiment name
         with open(exp_name_file, 'w') as f:
             f.write(experiment_name)
-
-    export_one_score_type(scores,"GPND_pX")
+    if not cfg.only_recon_err:
+        export_one_score_type(scores,"GPND_pX")
     export_one_score_type(recon_errors, "GPND_reconerr")
 
     # common_results_dict = pickle.load(open('/home/exjobb_resultat/data/name_dict.pkl','rb'))
