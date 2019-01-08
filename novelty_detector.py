@@ -528,8 +528,10 @@ def main(folding_id, inliner_classes, total_classes, folds=5, cfg = None):
             recon_batch = G(z)
 
             # Compute reconstruction error for comparison with GPND result
-            recon_losses_batch = recon_loss(x,Variable(recon_batch))
-            recon_losses.append(recon_losses_batch)
+            recon_losses_batch = recon_loss(x,Variable(recon_batch),reduce = False)
+            print(recon_losses_batch)
+            print(recon_losses_batch.item())
+            recon_losses.append(recon_losses_batch.item())
 
             z = z.squeeze()
 
@@ -542,61 +544,63 @@ def main(folding_id, inliner_classes, total_classes, folds=5, cfg = None):
             recon_batch = recon_batch.squeeze().cpu().detach().numpy()
             x = x.squeeze().cpu().detach().numpy()
 
-            for i in range(batch_size):
-                u, s, vh = np.linalg.svd(J[i, :, :], full_matrices=False)
-                logD = np.sum(np.log(np.abs(s)))
+            if not cfg.only_recon_err:
 
-                p = scipy.stats.gennorm.pdf(z[i], gennorm_param[0, :], gennorm_param[1, :], gennorm_param[2, :])
-                logPz = np.sum(np.log(p))
+                for i in range(batch_size):
+                    u, s, vh = np.linalg.svd(J[i, :, :], full_matrices=False)
+                    logD = np.sum(np.log(np.abs(s)))
 
-                # Sometimes, due to rounding some element in p may be zero resulting in Inf in logPz
-                # In this case, just assign some large negative value to make sure that the sample 
-                # is classified as unknown. 
-                if not np.isfinite(logPz):
-                    logPz = -1000
+                    p = scipy.stats.gennorm.pdf(z[i], gennorm_param[0, :], gennorm_param[1, :], gennorm_param[2, :])
+                    logPz = np.sum(np.log(p))
 
-                if not np.isfinite(logD):
-                    logD = -1000
+                    # Sometimes, due to rounding some element in p may be zero resulting in Inf in logPz
+                    # In this case, just assign some large negative value to make sure that the sample 
+                    # is classified as unknown. 
+                    if not np.isfinite(logPz):
+                        logPz = -1000
 
-                distance = np.sum(np.power(x[i].flatten() - recon_batch[i].flatten(), power))
+                    if not np.isfinite(logD):
+                        logD = -1000
 
-                logPe = np.log(r_pdf(distance, bin_edges, counts))
-                logPe -= np.log(distance) * (channels * image_height * image_width - zsize)
-                
-                count += 1
+                    distance = np.sum(np.power(x[i].flatten() - recon_batch[i].flatten(), power))
 
-                P = logD + logPz + logPe
-                
-                if e is not None:
-                    if (label[i].item() in inliner_classes) != (P > e):
-                        if not label[i].item() in inliner_classes:
-                            false_positive += 1
-                        if label[i].item() in inliner_classes:
-                            false_negative += 1
-                    else:
-                        if label[i].item() in inliner_classes:
-                            true_positive += 1
+                    logPe = np.log(r_pdf(distance, bin_edges, counts))
+                    logPe -= np.log(distance) * (channels * image_height * image_width - zsize)
+                    
+                    count += 1
+
+                    P = logD + logPz + logPe
+                    
+                    if e is not None:
+                        if (label[i].item() in inliner_classes) != (P > e):
+                            if not label[i].item() in inliner_classes:
+                                false_positive += 1
+                            if label[i].item() in inliner_classes:
+                                false_negative += 1
                         else:
-                            true_negative += 1
+                            if label[i].item() in inliner_classes:
+                                true_positive += 1
+                            else:
+                                true_negative += 1
 
-                result.append(((label[i].item() in outlier_classes), -P))
+                    result.append(((label[i].item() in outlier_classes), -P))
 
-                print("Batch %d/%d: image %d/%d"%(it+1,len(data_test_x)//batch_size,i+1, batch_size))
+                    print("Batch %d/%d: image %d/%d"%(it+1,len(data_test_x)//batch_size,i+1, batch_size))
             per_batch_time = time.time()-start_time
             total_time += per_batch_time 
             complete_batches = it + 1
             remaining_time = (n_batches - complete_batches)*total_time/complete_batches
             print("Batch %d/%d complete\ttime: %.2f\tETA:%dh%dm%.1fs"%(it+1,len(data_test_x)//batch_size, per_batch_time, remaining_time//3600, (remaining_time%3600)//60, remaining_time%60))
+        if not cfg.only_recon_err: 
+            error  = 100 * (true_positive + true_negative) / count
 
-        error = 100 * (true_positive + true_negative) / count
+            y_true = [x[0] for x in result]
+            y_scores = [x[1] for x in result]
 
-        y_true = [x[0] for x in result]
-        y_scores = [x[1] for x in result]
-
-        try:
-            auc = roc_auc_score(y_true, y_scores)
-        except:
-            auc = 0
+            try:
+                auc = roc_auc_score(y_true, y_scores)
+            except:
+                auc = 0
 
         # Pickle results, they are then extracted by other function to produce metrics
         if cfg.test_name is None:
@@ -605,6 +609,7 @@ def main(folding_id, inliner_classes, total_classes, folds=5, cfg = None):
             results_path = results_dir + 'result_%s_p%d.pkl'%(cfg.test_name,percentage)
         with open(results_path, 'wb') as output:
             pickle.dump([result,recon_losses], output)
+            
     
         if cfg.nd_original_GPND:
 
