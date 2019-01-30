@@ -106,7 +106,6 @@ def main(folding_id, inliner_classes, total_classes, folds=5, cfg = None):
         data_train_x, valid_imgs, _ , _ = loadbdd100k.load_bdd100k_data_filename_list(cfg.img_folder, cfg.norm_filenames, cfg.out_filenames, cfg.n_train, cfg.n_val, cfg.n_test, cfg.out_frac, image_height, image_width, channels, shuffle=cfg.shuffle)
         architecture = cfg.architecture
         model_name = cfg.model_name
-        #experiment_name = cfg.experiment_name
 
         print("Transposing data to 'channels first'")
         data_train_x = np.moveaxis(data_train_x,-1,1)
@@ -175,7 +174,7 @@ def main(folding_id, inliner_classes, total_classes, folds=5, cfg = None):
         for i in range(total_classes):
             if i not in inliner_classes:
                 outlier_classes.append(i)
-        # experiment_name = "-".join(str(inliner_classes))
+        
         #keep only train classes
         data_train = [x for x in data_train if x[0] in inliner_classes]
 
@@ -295,11 +294,6 @@ def main(folding_id, inliner_classes, total_classes, folds=5, cfg = None):
         n_batches = len(data_train_x) // batch_size
         for it in range(n_batches):
             x = extract_batch(data_train_x, it, batch_size).view(-1, channels, image_height, image_width)
-           # print("Batch type:")
-           # print(type(x))
-           # print("Shape of batch:")
-           # print(x.shape)
-            #############################################
             if cfg.training_mode == "GPND_default":
                 D.zero_grad()
 
@@ -310,7 +304,6 @@ def main(folding_id, inliner_classes, total_classes, folds=5, cfg = None):
                 z = Variable(z)
 
                 x_fake = G(z).detach()
-    #           print("Shape of x_fake:",x_fake.shape)
                 D_result = D(x_fake).squeeze()
                 D_fake_loss = loss(D_result, y_fake_)
 
@@ -375,7 +368,6 @@ def main(folding_id, inliner_classes, total_classes, folds=5, cfg = None):
                 Recon_loss = cfg.rec_loss_weight*F.binary_cross_entropy(x_d, x)
 
                 (Recon_loss + E_loss).backward()
-    #            Recon_loss.backward()
 
                 GE_optimizer.step()
 
@@ -397,12 +389,8 @@ def main(folding_id, inliner_classes, total_classes, folds=5, cfg = None):
 
                 GEtrain_loss  += Recon_loss.item()
 
-
-            #print("[%d/%d]: (%d/%d): Recon_loss: %.6f"%(epoch+1,train_epoch,it+1,n_batches,Recon_loss/batch_size))
             if it == 0 and (epoch+1) % max(train_epoch//cfg.num_sample_epochs,1) == 0:
                 comparison = torch.cat([x[:cfg.sample_size//2], x_d[:cfg.sample_size//2]])
-                #comparison = [comparison[i] if i%2 == 0 else comparison[cfg.sample_size//2+i] for i in range(cfg.sample_size//2)]
-                #comparison = torch.cat([x[i//2] if i%2 == 0 else x_d[i//2] for i in range(cfg.sample_size)])
                 save_image(comparison.cpu(), train_dir + 'reconstruction_' + str(epoch) + '.png', nrow=cfg.sample_rows)
 
         GEtrain_loss /= (len(data_train_x))
@@ -495,6 +483,7 @@ def main(folding_id, inliner_classes, total_classes, folds=5, cfg = None):
         with open("./configuration.py", "r") as f_in:
             for line in f_in:
                     f_out.write(line)
+            
             # write additional logs
             f_out.write("# Training logged at %s\n"%time.strftime("%a, %d %b %Y %H:%M:%S UTC"))
             f_out.write("# Total training time:\t%dh%dm%.1fs\n"%(total_time//3600, (total_time%3600)//60, total_time%60))

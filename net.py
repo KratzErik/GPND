@@ -456,10 +456,6 @@ class Generator(nn.Module):
                 print("\tAdded dense layer")
                 num_filters = num_filters // 2
 
-                #if use_pool:
-                #    self.upsample_layers = []
-                #    self.upsample_layers.append(F.interpolate(scale_factor = 2, mode = 'nearest'))
-
                 self.deconv_layers.append(nn.ConvTranspose2d(num_filters*2, num_filters, ksize, stride, pad, output_padding = outpad ))
                 self.bn_layers.append(nn.BatchNorm2d(num_filters))
 
@@ -468,10 +464,6 @@ class Generator(nn.Module):
                 num_filters //=2
 
             else:
-                #if use_pool:
-                #    self.upsample_layers = []
-                #    self.upsample_layers.append(F.interpolate(scale_factor = 2, mode = 'nearest'))
-
                 h2 = cfg.image_height // (2**(n_conv-1)) # height of image going in to second conv layer
                 num_filters = c_out * (2**(n_conv-2))
                 self.deconv_layers.append(nn.ConvTranspose2d(zsize, num_filters, h2, 1, 0))
@@ -481,19 +473,11 @@ class Generator(nn.Module):
 
             # Add remaining deconv layers
             for i in range(n_conv-2):
-                #if use_pool:
-                #    self.upsample_layers = []
-                #    self.upsample_layers.append(F.interpolate(scale_factor = 2, mode = 'nearest'))
-
                 self.deconv_layers.append(nn.ConvTranspose2d(num_filters*2, num_filters, ksize, stride, pad, output_padding = outpad ))
                 self.bn_layers.append(nn.BatchNorm2d(num_filters))
 
                 print("\tAdded deconv_layer %d" % (len(self.deconv_layers)))
                 num_filters //=2
-
-            # add reconstruction layer
-            #if use_pool:
-            #    self.final_upsample = F.interpolate(scale_factor = 2, mode = 'nearest')
 
             self.output_layer = nn.ConvTranspose2d(num_filters*2, cfg.channels, ksize, stride, pad, output_padding = outpad)
             print("\tAdded deconv_layer %d (reconstruction)" % (len(self.deconv_layers)+1))
@@ -550,13 +534,9 @@ class Generator(nn.Module):
 
             # height of image at start of deconvolutions
             if n_dense > 0:
-                #print("G() input:", input.shape)
-                #input = input.permute(0,2,3,1)
                 h1 = cfg.image_height // (2**n_conv) # height = width of image going into first conv layer
                 num_filters =  c_out * (2**(n_conv-1))
                 x = self.dense_layer(input)
-                #x = x.permute(0,3,1,2)
-                #x = x.view(-1,h1**2 * num_filters)
                 if cfg.use_batchnorm:
                     x = self.dense_bn(x)
                 x = F.leaky_relu(x)
@@ -570,13 +550,11 @@ class Generator(nn.Module):
                 if cfg.use_batchnorm:
                     x = bn(x)
                 x = F.leaky_relu(x)
-                #print("x: ",x.shape)
 
             if use_pool:
                 x = F.interpolate(x, scale_factor = 2, mode = 'nearest')
 
             x = sigmoid(self.output_layer(x))
-            #print("G() output: ", x.shape)
             return x
 
 class Discriminator(nn.Module):
@@ -732,20 +710,17 @@ class Discriminator(nn.Module):
                 if use_pool:
                     x = pool(x)
                 x = F.leaky_relu(x)
-               # print("After conv: ", x.shape)
 
             if n_dense > 0:
                 x = x.view(self.batch_size,-1)
                 for dense_i in range(n_dense):
                     x = self.dense_layers[dense_i](x)
-                    #print("After dense: ", x.shape)
                     if dense_i < n_dense-1:
                         if cfg.use_batchnorm:
                             x = self.dense_bn[dense_i](x)
                         x = F.leaky_relu(x)
             else:
                 x = self.output_convlayer(x)
-            #print("Output: ", x.shape)
             return sigmoid(x)
 
 
@@ -897,9 +872,6 @@ class Encoder(nn.Module):
             self.batch_size = input.shape[0]
             x = self.input_layer(input)
 
-            #print("input: ",input.shape)
-            #print("x: ",x.shape)
-
             if cfg.use_batchnorm:
                 x = self.input_bn(x)
 
@@ -910,7 +882,6 @@ class Encoder(nn.Module):
 
             for conv, bn, pool in zip(self.conv_layers, self.bn_layers, self.pool_layers):
                 x = conv(x)
-                #print("x: ",x.shape)
                 if cfg.use_batchnorm:
                     x = bn(x)
                 if use_pool:
@@ -918,19 +889,14 @@ class Encoder(nn.Module):
                 x = F.leaky_relu(x)
 
             if n_dense > 0:
-                #x = x.view(self.batch_size, 1,1,-1)
                 x = x.view(-1, self.num_dense_in)
 
-                #print("into dense: ", x.shape)
                 x = self.dense_layer(x)
-                #x = x.view(self.batch_size,-1)
                 if cfg.use_batchnorm:
                     x = self.dense_bn(x)
                 x = F.leaky_relu(x)
             else:
                 x = F.leaky_relu(self.output_convlayer(x))
-            #print("E() output: ", x.shape)
-            #print("Image dim: %d, encoded dim: %d"%(input.shape[1]*input.shape[2]*input.shape[3],x.shape[1]*x.shape[2]*x.shape[3]))
             return x
 
 class ZDiscriminator(nn.Module):
