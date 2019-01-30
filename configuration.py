@@ -1,24 +1,31 @@
 from utils import loadbdd100k
 from pathlib import Path
 
-class Configuration(object):
+# In this file, settings for experiments are defined. If you don't want to change the
+# algorithm it self, but only run experiments with defined or new datasets, you should only 
+# need to edit this file
 
-
-    # Neural network architecture options 
+# Neural network architecture options 
     # How to specify architecture: (order of numbers in string, separated by "_" as A_B_C_...)
-    # A: use_maxpool = #1 or 0
+    # A: use_maxpool = #1 or 0. (If A=0, G should be > 1, so that dim. reduction is done with stride instead of pooling)
     # B: n_conv
-    # C: n_dense
-    # D: channels out of first conv. layer
+    # C: use dense layer, set to 1 or 0
+    # D: number of filters of first conv. layer (will be doubled in each layer)
     # E: zsize, dimension of latent vector
-    # F: filter size 
-    # G: stride 
-    # H: pad
+    # F: filter size in conv layers
+    # G: stride in conv layers
+    # H: zero padding in conv layers
+
+    # Example: architecture = "0_5_1_16_5_2_2" is used for prosivic experiments in the default settings
+
+
+class Configuration(object):
 
     dataset = "prosivic"
     experiment_name = "timetest"
     log_dir = './log/' + dataset + '/' + experiment_name + '/'
     export_results = True
+    export_results_dir = '/home/exjobb_resultat/data/'
     test_name = "urban" # If you want to run several test sets for same trained model, specify a test name to store results separately
 
 

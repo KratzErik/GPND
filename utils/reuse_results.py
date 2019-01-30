@@ -4,7 +4,17 @@ from configuration import Configuration as cfg
 from sklearn.metrics import roc_auc_score, roc_curve, precision_recall_curve, auc as compute_auc
 import numpy as np
 
+
+# The functions in this file are used by "novelty_detector/main()" if the configuration
+# option "nd_original_GPND" is set to False (default setting).
+
 def load_results(test_dir = cfg.log_dir + "test/", experiment_name = cfg.experiment_name):
+    # Loads results corresponding to 'experiment_name', stored in 'test_dir' and returns
+    # a list of results (GPND novelty scores and labels) and a list of reconstruction errors 
+    # corresponding to the same experiment.
+
+    # This function is called by export_results, to save nd results as pickle files for 
+    # GPND scores and reconstruction loss separately.
 
     assert(os.path.exists(test_dir))
     
@@ -56,6 +66,12 @@ def get_performance_metrics(test_dir = cfg.log_dir + "test/", experiment_name = 
 
 def export_scores(test_dir = cfg.log_dir + "test/", experiment_name = cfg.experiment_name, dataset = cfg.dataset):
 
+    # Loads novelty scores and labels saved by 'novelty_detector/main()' and exports them
+    # as scores, labels for both reconstruction error scores and GPND scores. 
+    # Labels are 1 for outliers/novelties and 0 for inliers/normal samples. 
+    # Scores are higher for outliers.
+    # pkl files are saved to cfg.export_dir, defined in 'configuration.py'
+
     if cfg.training_mode == "GPND_default":
         alg_name = "GPND_pX"
     elif cfg.training_mode.lower() == "autoencoder":
@@ -72,11 +88,11 @@ def export_scores(test_dir = cfg.log_dir + "test/", experiment_name = cfg.experi
     print(recon_errors.shape)
     def export_one_score_type(score_vector, score_name):
         if cfg.test_name is None:
-            results_filepath = '/home/exjobb_resultat/data/%s_%s.pkl'%(dataset,score_name)
-            exp_name_file = '/home/exjobb_resultat/data/experiment_names/%s_%s.txt'%(dataset,score_name)
+            results_filepath = cfg.export_results_dir + '%s_%s.pkl'%(dataset,score_name)
+            exp_name_file = cfg.export_results_dir + 'experiment_names/%s_%s.txt'%(dataset,score_name)
         else:
-            results_filepath = '/home/exjobb_resultat/data/%s_%s_%s.pkl'%(dataset,score_name,cfg.test_name)
-            exp_name_file = '/home/exjobb_resultat/data/experiment_names/%s_%s_%s.txt'%(dataset,score_name, cfg.test_name)
+            results_filepath = cfg.export_results_dir + '%s_%s_%s.pkl'%(dataset,score_name,cfg.test_name)
+            exp_name_file = cfg.export_results_dir + 'experiment_names/%s_%s_%s.txt'%(dataset,score_name, cfg.test_name)
         
         pickle.dump([score_vector,labels], open(results_filepath,'wb'))
 
@@ -88,8 +104,3 @@ def export_scores(test_dir = cfg.log_dir + "test/", experiment_name = cfg.experi
 
     export_one_score_type(scores,"GPND_pX")
     export_one_score_type(recon_errors, "GPND_reconerr")
-
-    # common_results_dict = pickle.load(open('/home/exjobb_resultat/data/name_dict.pkl','rb'))
-    # common_results_dict[dataset][alg_name] = experiment_name
-    # pickle.dump(common_results_dict,open('/home/exjobb_resultat/data/name_dict.pkl','wb'), protocol=2)
-    # print("Updated entry ['%s']['%s'] = '%s' in file /home/exjobb_resultat/data/name_dict.pkl"%(dataset,alg_name,experiment_name))

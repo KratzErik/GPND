@@ -15,6 +15,7 @@
 # limitations under the License.
 # ==============================================================================
 # 
+
 from __future__ import print_function
 import torch.utils.data
 from torch import optim
@@ -72,6 +73,16 @@ def extract_batch(data, it, batch_size, scale = False):
     return Variable(x)
 
 def main(folding_id, inliner_classes, total_classes, folds=5, cfg = None):
+    # This function creates and trains the neural network models needed in the GPND algorithm
+    # All training settings are defined in 'configuration.py'
+    # The option 'training_mode' should be set to one of "autoencoder" and "GPND_default"
+    # "GPND_default" creates both autoencoder (AE) and discriminator models and trains the 
+    # AE with the adversarial objective described in the GPND paper.
+    # "autoencoder" trains just an AE, using only reconstruction loss and no adversaries.
+    # This is a valid option since the GPND novelty detection method only requires the AE,
+    # adversarial training is optional and used only to improve the AE model.
+
+    # Trained models are saved in cfg.log_dir/train/
 
     if cfg is None:
         print("No configuration provided, aborting...")

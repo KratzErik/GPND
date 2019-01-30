@@ -3,6 +3,37 @@ from torch import nn, sigmoid, tanh
 from torch.nn import functional as F
 from configuration import Configuration as cfg
 
+# How to configure models (by Erik Kratz):
+#
+# The autoencoder and discriminator models, which are trained in train_AAE/main() and
+# tested in novelty_detector/main(), are defined here.
+#
+# The autoencoder is defined i two classes: Encoder and Generator (decoder)
+# The discriminators are defined in Discriminator (called D_x in the GPND paper) and 
+# ZDiscriminator (called D_z in the paper). 
+# The class VAE is not used.
+# 
+# You can modify architectures for Encoder, 
+# Generator and Discriminator in 2 ways: 
+# 1) Add your own architecture under the respective class, and give that architecture 
+# a name such as "my_architecture". Set 'architecture= "my_architecture"' in 
+# 'configuration.py' to use this in experiments.
+# 2) Use a predefined type of architecture, where you only specify the number of conv 
+# layers, if there is a dense layer, and the number of conv. filters in the first conv
+# layer. This is done by setting 'architecture= "A_B_C_D_E_F_G_H"', with the letters 
+# replaced by integers as shown below
+
+    # A: use_maxpool = #1 or 0. (If A=0, G should be > 1, so that dim. reduction is done with stride instead of pooling)
+    # B: n_conv
+    # C: use dense layer, set to 1 or 0
+    # D: number of filters of first conv. layer (will be doubled in each layer)
+    # E: zsize, dimension of latent vector
+    # F: filter size in conv layers
+    # G: stride in conv layers
+    # H: zero padding in conv layers
+
+    # Example: archtecture = "0_5_1_16_5_2_2" is used for prosivic experiments in the default settings
+
 class VAE(nn.Module):
     def __init__(self, zsize, channels = 1, architecture = None):
         super(VAE, self).__init__()

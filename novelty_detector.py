@@ -112,6 +112,14 @@ def GetF1(true_positive, false_positive, false_negative):
 
 
 def main(folding_id, inliner_classes, total_classes, folds=5, cfg = None):
+    # This function loads a trained AE model from cfg.log_dir/train/ and  computes the GPND 
+    # novelty score for all samples in the test/in/ and test/out/ directories specified in 
+    # configuration.py'. 
+    # 
+    # To get only novelty scores with corresponding labels, make sure 'nd_original_GPND' is 
+    # set to False in 'configuration.py'. Otherwise, the original GPND program will use 
+    # outlier samples to compute an "optimal threshold", and compute corresponding accuracy, 
+    # F1-score, etc. 
 
     if cfg is None:
         print("No configuration provided, aborting...")
@@ -409,6 +417,7 @@ def main(folding_id, inliner_classes, total_classes, folds=5, cfg = None):
                 x = x.squeeze().cpu().detach().numpy()
 
                 for i in range(batch_size):
+                    # The svd step accounts for >99.9% of the time when processing large images (tested for 256x256pixels)
                     u, s, vh = np.linalg.svd(J[i, :, :], full_matrices=False)
                     logD = np.sum(np.log(np.abs(s))) # | \mathrm{det} S^{-1} |
 
