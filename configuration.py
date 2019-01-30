@@ -16,7 +16,7 @@ class Configuration(object):
     # H: pad
 
     dataset = "prosivic"
-    experiment_name = "final"
+    experiment_name = "timetest"
     log_dir = './log/' + dataset + '/' + experiment_name + '/'
     export_results = True
     test_name = "urban" # If you want to run several test sets for same trained model, specify a test name to store results separately
@@ -68,7 +68,7 @@ class Configuration(object):
         channels = 3
         model_name = "_".join([inliers_name, architecture])
 
-        test_batch_size = 8 # Jacobian computations require smaller batches
+        test_batch_size = 16 # Jacobian computations require smaller batches
         use_batchnorm = True
         data_div = 1
         n_train = 6785 // data_div

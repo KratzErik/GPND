@@ -528,13 +528,17 @@ def main(folding_id, inliner_classes, total_classes, folds=5, cfg = None):
             recon_batch = G(z)
 
             # Compute reconstruction error for comparison with GPND result
-            recon_losses_batch = recon_loss(x,Variable(recon_batch))
-            recon_losses.append(recon_losses_batch)
+#            recon_losses_batch = recon_loss(x,Variable(recon_batch))
+#            recon_losses_batch = recon_losses_batch.cpu().detach().numpy()
+#            recon_losses_batch = np.sum(recon_losses_batch,axis=1)
+#            recon_losses.extend(recon_losses_batch)
+
 
             z = z.squeeze()
-
+            jac_start_time = time.time()
             J = compute_jacobian(x, z)
-
+            jac_end_time = time.time()
+            print("Time to compute jacobian:",jac_end_time-jac_start_time)
             J = J.cpu().numpy()
 
             z = z.cpu().detach().numpy()
@@ -543,7 +547,10 @@ def main(folding_id, inliner_classes, total_classes, folds=5, cfg = None):
             x = x.squeeze().cpu().detach().numpy()
 
             for i in range(batch_size):
+                im_start = time.time()
                 u, s, vh = np.linalg.svd(J[i, :, :], full_matrices=False)
+                svd_end = time.time()
+                print("SVD decomp. time: ",svd_end-im_start)
                 logD = np.sum(np.log(np.abs(s)))
 
                 p = scipy.stats.gennorm.pdf(z[i], gennorm_param[0, :], gennorm_param[1, :], gennorm_param[2, :])
@@ -580,7 +587,7 @@ def main(folding_id, inliner_classes, total_classes, folds=5, cfg = None):
                             true_negative += 1
 
                 result.append(((label[i].item() in outlier_classes), -P))
-
+                print("Image time: ",time.time()-im_start)
                 print("Batch %d/%d: image %d/%d"%(it+1,len(data_test_x)//batch_size,i+1, batch_size))
             per_batch_time = time.time()-start_time
             total_time += per_batch_time 
